@@ -1,0 +1,47 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.74'
+}
+
+group = mod_group_id
+version = mod_version
+
+repositories {
+    mavenCentral()
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = neo_version
+
+    parchment {
+        mappingsVersion = "2024.11.17"
+        minecraftVersion = minecraft_version
+    }
+
+    runs {
+        client {
+            client()
+            systemProperty('neoforged.enabledGameTestNamespaces', mod_id)
+        }
+        server {
+            server()
+            systemProperty('neoforged.enabledGameTestNamespaces', mod_id)
+        }
+    }
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+sourceSets.main.resources {
+    srcDirs += 'src/main/generated'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
