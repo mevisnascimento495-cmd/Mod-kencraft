@@ -49,19 +49,50 @@ jobs:
           gradle --version
           gradle clean build --no-daemon --stacktrace --refresh-dependencies
 
-      - name: Verify generated JAR
+      - name: Diagnose Gradle outputs
         shell: bash
         run: |
           set -euo pipefail
-          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit)"
-          test -n "$JAR"
+          echo "=== JAR files anywhere under build ==="
+          find build -type f -name '*.jar' -print | sort || true
+          echo "=== Relevant Gradle tasks ==="
+          gradle tasks --all --no-daemon | grep -Ei '(^| )jar|reobf|assemble|build' | head -80 || true
+          echo "=== build directory ==="
+          find build -maxdepth 3 -type f | sort | head -200 || true
+
+      - name: Ensure production JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
+
+          if [ -z "$JAR" ]; then
+            echo "No JAR in build/libs. Checking for a reobfuscation task..."
+            if gradle tasks --all --no-daemon | grep -Eq '^reobfJar|[[:space:]]reobfJar[[:space:]]'; then
+              echo "Running reobfJar..."
+              gradle reobfJar --no-daemon --stacktrace
+            fi
+            JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
+          fi
+
+          if [ -z "$JAR" ]; then
+            echo "No production JAR found in build/libs."
+            echo "Available JARs:"
+            find build -type f -name '*.jar' -print | sort || true
+            exit 1
+          fi
+
+          mkdir -p dist
+          cp "$JAR" dist/kencraft-${GITHUB_SHA::7}.jar
           unzip -p "$JAR" META-INF/neoforge.mods.toml | grep -q 'modId = "kencraft"'
-          echo "Generated: $JAR"
+          echo "Production JAR: $JAR"
+          echo "Artifact copy: dist/kencraft-${GITHUB_SHA::7}.jar"
 
       - name: Upload KenCraft Alpha JAR
         uses: actions/upload-artifact@v4
         with:
           name: KenCraft-Alpha-JAR
-          path: build/libs/*.jar
+          path: dist/kencraft-*.jar
           if-no-files-found: error
           retention-days: 14
