@@ -23,65 +23,82 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Setup Gradle
+      - name: Setup Gradle 8.13
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.8"
+          gradle-version: "8.13"
 
-      - name: Locate KenCraft Gradle project
+      - name: Locate KenCraft project
         id: project
         shell: bash
         run: |
           set -euo pipefail
+          echo "Repository files:"
+          find . -maxdepth 4 -type f | sort | sed -n '1,160p'
 
-          # Prefer the repository root when it already contains the complete project.
           if [ -f "build.gradle" ] && [ -f "settings.gradle" ] && [ -f "gradle.properties" ] && [ -f "src/main/resources/META-INF/neoforge.mods.toml" ]; then
             echo "project_dir=." >> "$GITHUB_OUTPUT"
-            echo "Using Gradle project from repository root."
+            echo "Using complete Gradle project from repository root."
             exit 0
           fi
 
           ZIP="$(find . -maxdepth 3 -type f -name 'KenCraft-Alpha-*-project.zip' -print -quit)"
           if [ -z "$ZIP" ]; then
-            echo "ERROR: No complete Gradle project found and no KenCraft project ZIP was found."
+            echo "ERROR: KenCraft project ZIP not found."
             exit 1
           fi
 
+          echo "Using ZIP: $ZIP"
           rm -rf work
           mkdir -p work
           unzip -q "$ZIP" -d work
 
-          BUILD_FILE="$(find work -type f \( -name 'build.gradle' -o -name 'build.gradle.kts' \) -print -quit)"
-          if [ -z "$BUILD_FILE" ]; then
-            echo "ERROR: build.gradle/build.gradle.kts not found inside the ZIP."
-            exit 1
-          fi
+          echo "ZIP contents:"
+          find work -type f | sort
+
+          BUILD_FILE="$(find work -type f -name 'build.gradle' -print -quit)"
+          SETTINGS_FILE="$(find work -type f -name 'settings.gradle' -print -quit)"
+          PROPS_FILE="$(find work -type f -name 'gradle.properties' -print -quit)"
+          MOD_FILE="$(find work -type f -path '*/src/main/resources/META-INF/neoforge.mods.toml' -print -quit)"
+
+          test -n "$BUILD_FILE" || { echo "ERROR: build.gradle missing inside ZIP."; exit 1; }
+          test -n "$SETTINGS_FILE" || { echo "ERROR: settings.gradle missing inside ZIP."; exit 1; }
+          test -n "$PROPS_FILE" || { echo "ERROR: gradle.properties missing inside ZIP."; exit 1; }
+          test -n "$MOD_FILE" || { echo "ERROR: neoforge.mods.toml missing inside ZIP."; exit 1; }
 
           PROJECT_DIR="$(dirname "$BUILD_FILE")"
-          test -f "$PROJECT_DIR/settings.gradle" || test -f "$PROJECT_DIR/settings.gradle.kts"
-          test -f "$PROJECT_DIR/gradle.properties"
-          test -f "$PROJECT_DIR/src/main/resources/META-INF/neoforge.mods.toml"
-
           echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
           echo "Using extracted project: $PROJECT_DIR"
+
+      - name: Inspect project
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Java:"
+          java -version
+          echo "Gradle:"
+          gradle --version
+          echo "Project files:"
+          find . -maxdepth 5 -type f | sort
 
       - name: Build KenCraft mod
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
         run: |
           set -euo pipefail
-          java -version
-          gradle --version
-          gradle clean build --no-daemon --stacktrace
+          gradle clean build --no-daemon --stacktrace --info
 
       - name: List generated JARs
+        if: always()
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
         run: |
-          set -euo pipefail
-          find build/libs -maxdepth 1 -type f -name '*.jar' -print
+          echo "Generated JARs:"
+          find build/libs -maxdepth 1 -type f -name '*.jar' -print 2>/dev/null || true
 
       - name: Upload KenCraft Alpha JAR
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: KenCraft-Alpha-JAR
