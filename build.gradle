@@ -42,6 +42,21 @@ sourceSets.main.resources {
     srcDirs += 'src/main/generated'
 }
 
+// Replace the ${...} placeholders in neoforge.mods.toml with the
+// values from gradle.properties before the resources are packed into the JAR.
+tasks.named('processResources', ProcessResources).configure {
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(
+            loader_version: loader_version,
+            mod_id: mod_id,
+            mod_version: mod_version,
+            mod_name: mod_name,
+            mod_authors: mod_authors,
+            mod_description: mod_description
+        )
+    }
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
