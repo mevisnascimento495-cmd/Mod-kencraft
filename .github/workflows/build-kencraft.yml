@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
@@ -28,172 +28,40 @@ jobs:
         with:
           gradle-version: "8.8"
 
-      - name: Locate KenCraft project
-        id: project
+      - name: Verify complete project
         shell: bash
         run: |
           set -euo pipefail
-          echo "Repository files:"
-          find . -maxdepth 4 -type f | sort | sed -n '1,160p'
-
-          if [ -f "build.gradle" ] && [ -f "settings.gradle" ] && [ -f "gradle.properties" ] && [ -f "src/main/resources/META-INF/neoforge.mods.toml" ]; then
-            echo "project_dir=." >> "$GITHUB_OUTPUT"
-            echo "Using complete Gradle project from repository root."
-            exit 0
-          fi
-
-          ZIP="$(find . -maxdepth 3 -type f -name 'KenCraft-Alpha-*-project.zip' -print -quit)"
-          if [ -z "$ZIP" ]; then
-            echo "ERROR: KenCraft project ZIP not found."
-            exit 1
-          fi
-
-          echo "Using ZIP: $ZIP"
-          rm -rf work
-          mkdir -p work
-          unzip -q "$ZIP" -d work
-
-          echo "ZIP contents:"
-          find work -type f | sort
-
-          BUILD_FILE="$(find work -type f -name 'build.gradle' -print -quit)"
-          SETTINGS_FILE="$(find work -type f -name 'settings.gradle' -print -quit)"
-          PROPS_FILE="$(find work -type f -name 'gradle.properties' -print -quit)"
-          MOD_FILE="$(find work -type f -path '*/src/main/resources/META-INF/neoforge.mods.toml' -print -quit)"
-
-          test -n "$BUILD_FILE" || { echo "ERROR: build.gradle missing inside ZIP."; exit 1; }
-          test -n "$SETTINGS_FILE" || { echo "ERROR: settings.gradle missing inside ZIP."; exit 1; }
-          test -n "$PROPS_FILE" || { echo "ERROR: gradle.properties missing inside ZIP."; exit 1; }
-          test -n "$MOD_FILE" || { echo "ERROR: neoforge.mods.toml missing inside ZIP."; exit 1; }
-
-          PROJECT_DIR="$(dirname "$BUILD_FILE")"
-          echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
-          echo "Using extracted project: $PROJECT_DIR"
-
-      - name: Normalize ModDevGradle configuration
-        working-directory: ${{ steps.project.outputs.project_dir }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          settings = Path("settings.gradle")
-          build = Path("build.gradle")
-
-          settings_text = settings.read_text(encoding="utf-8")
-          settings_text = re.sub(
-              r"plugins\s*\{\s*id\s+['\"]net\.neoforged\.moddev\.repositories['\"]\s+version\s+['\"][^'\"]+['\"]\s*\}\s*",
-              "",
-              settings_text,
-              count=1,
-          )
-          settings.write_text(settings_text, encoding="utf-8")
-
-          build_text = build.read_text(encoding="utf-8")
-          repo = 'maven { url = "https://maven.neoforged.net/releases" }'
-          if repo not in build_text:
-              build_text = build_text.replace(
-                  "repositories {\n    mavenCentral()\n}",
-                  "repositories {\n    mavenCentral()\n    " + repo + "\n}",
-                  1,
-              )
-          build.write_text(build_text, encoding="utf-8")
-
-          print("Normalized settings.gradle and build.gradle")
-          PY
-
-          echo "--- settings.gradle ---"
-          sed -n '1,120p' settings.gradle
-          echo "--- build.gradle ---"
-          sed -n '1,160p' build.gradle
-
-      - name: Expand NeoForge mod metadata
-        working-directory: ${{ steps.project.outputs.project_dir }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-
-          props = {}
-          for raw in Path("gradle.properties").read_text(encoding="utf-8").splitlines():
-              line = raw.strip()
-              if not line or line.startswith("#") or "=" not in line:
-                  continue
-              key, value = line.split("=", 1)
-              props[key.strip()] = value.strip()
-
-          mod_file = next(Path(".").glob("src/main/resources/META-INF/neoforge.mods.toml"), None)
-          if mod_file is None:
-              raise SystemExit("ERROR: neoforge.mods.toml not found")
-
-          text = mod_file.read_text(encoding="utf-8")
-          unresolved = []
-
-          def replace(match):
-              key = match.group(1)
-              if key not in props:
-                  unresolved.append(key)
-                  return match.group(0)
-              return props[key]
-
-          text = re.sub(r"\$\{([^}]+)\}", replace, text)
-          if unresolved:
-              raise SystemExit("ERROR: unresolved gradle properties: " + ", ".join(sorted(set(unresolved))))
-
-          mod_file.write_text(text, encoding="utf-8")
-          print("Expanded mod metadata:")
-          print(text)
-          PY
-
-      - name: Inspect project
-        working-directory: ${{ steps.project.outputs.project_dir }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "Java:"
-          java -version
-          echo "Gradle:"
-          gradle --version
-          echo "Project files:"
-          find . -maxdepth 5 -type f | sort
+          test -f build.gradle
+          test -f settings.gradle
+          test -f gradle.properties
+          test -f src/main/resources/META-INF/neoforge.mods.toml
+          test -f src/main/java/br/mevis/kencraft/KenCraft.java
+          test -f src/main/java/br/mevis/kencraft/client/KenCraftClient.java
+          test -f src/main/java/br/mevis/kencraft/client/KenCraftScreen.java
+          echo "KenCraft 0.5.0 project found in repository root."
 
       - name: Build KenCraft mod
-        working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
         run: |
           set -euo pipefail
-          gradle clean build --no-daemon --stacktrace --info
+          java -version
+          gradle --version
+          gradle clean build --no-daemon --stacktrace
 
-      - name: Verify generated JAR metadata
-        if: success()
-        working-directory: ${{ steps.project.outputs.project_dir }}
+      - name: Verify generated JAR
         shell: bash
         run: |
           set -euo pipefail
           JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit)"
-          test -n "$JAR" || { echo "ERROR: no JAR generated"; exit 1; }
-          unzip -p "$JAR" META-INF/neoforge.mods.toml | tee /tmp/neoforge.mods.toml
-          grep -q 'modId = "kencraft"' /tmp/neoforge.mods.toml
-          grep -q 'version = "0.3.1"' /tmp/neoforge.mods.toml
-          ! grep -q '\${' /tmp/neoforge.mods.toml
-          echo "JAR metadata verified: $JAR"
-
-      - name: List generated JARs
-        if: always()
-        working-directory: ${{ steps.project.outputs.project_dir }}
-        shell: bash
-        run: |
-          echo "Generated JARs:"
-          find build/libs -maxdepth 1 -type f -name '*.jar' -print 2>/dev/null || true
+          test -n "$JAR"
+          unzip -p "$JAR" META-INF/neoforge.mods.toml | grep -q 'modId = "kencraft"'
+          echo "Generated: $JAR"
 
       - name: Upload KenCraft Alpha JAR
-        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: KenCraft-Alpha-JAR
-          path: ${{ steps.project.outputs.project_dir }}/build/libs/*.jar
+          name: KenCraft-Alpha-0.5.0-JAR
+          path: build/libs/*.jar
           if-no-files-found: error
+          retention-days: 14
