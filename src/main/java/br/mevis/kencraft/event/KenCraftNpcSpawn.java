@@ -1,36 +1,26 @@
 package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.entity.ArfInvestigatorEntity;
+import br.mevis.kencraft.entity.KenCraftEntities;
+import br.mevis.kencraft.entity.RinkaEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkEvent;
 
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/**
- * Automatic KenCraft NPC spawning.
- *
- * At night, loaded chunks maintain up to 4 named Rinka NPCs.
- * During the day, loaded chunks maintain up to 2 named ARF investigators.
- */
+/** Natural KenCraft NPC spawning. Deliberately sparse rather than filling every loaded chunk. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    private static final int RINKAS_PER_CHUNK = 4;
-    private static final int ARF_PER_CHUNK = 2;
+    private static final double RINKA_CHANCE = 0.08D;
+    private static final double ARF_CHANCE = 0.05D;
 
     private KenCraftNpcSpawn() {}
 
@@ -38,23 +28,30 @@ public final class KenCraftNpcSpawn {
     public static void onChunkLoad(ChunkEvent.Load event) {
         if (!(event.getLevel() instanceof ServerLevel level)) return;
         if (!(event.getChunk() instanceof LevelChunk chunk)) return;
+        if (!level.dimensionType().natural()) return;
+        if (level.getDifficulty().getId() == 0) return;
+
+        boolean night = isNight(level);
+        if (ThreadLocalRandom.current().nextDouble() >= (night ? RINKA_CHANCE : ARF_CHANCE)) return;
 
         ChunkPos chunkPos = chunk.getPos();
-        boolean night = isNight(level);
-        String targetName = night ? KenCraftNpcCommand.RINKA_NAME : KenCraftNpcCommand.ARF_NAME;
-        int targetCount = night ? RINKAS_PER_CHUNK : ARF_PER_CHUNK;
+        BlockPos pos = findSpawnPosition(level, chunkPos);
+        if (pos == null) return;
 
-        AABB chunkBox = new AABB(
-                chunkPos.getMinBlockX(), level.getMinBuildHeight(), chunkPos.getMinBlockZ(),
-                chunkPos.getMaxBlockX() + 1, level.getMaxBuildHeight(), chunkPos.getMaxBlockZ() + 1);
-
-        List<Villager> existing = level.getEntitiesOfClass(Villager.class, chunkBox,
-                villager -> villager.hasCustomName()
-                        && targetName.equals(villager.getCustomName().getString()));
-
-        int missing = Math.max(0, targetCount - existing.size());
-        for (int i = 0; i < missing; i++) {
-            spawnNpcInChunk(level, chunkPos, targetName);
+        if (night) {
+            if (!level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) return;
+            RinkaEntity entity = KenCraftEntities.RINKA.get().create(level);
+            if (entity == null) return;
+            entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+            entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+            level.addFreshEntity(entity);
+        } else {
+            if (!level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) return;
+            ArfInvestigatorEntity entity = KenCraftEntities.ARF_INVESTIGATOR.get().create(level);
+            if (entity == null) return;
+            entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+            entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+            level.addFreshEntity(entity);
         }
     }
 
@@ -63,26 +60,20 @@ public final class KenCraftNpcSpawn {
         return time >= 13000L && time < 23000L;
     }
 
-    private static void spawnNpcInChunk(ServerLevel level, ChunkPos chunkPos, String name) {
-        int x = chunkPos.getMinBlockX() + ThreadLocalRandom.current().nextInt(16);
-        int z = chunkPos.getMinBlockZ() + ThreadLocalRandom.current().nextInt(16);
-        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        BlockPos pos = new BlockPos(x, y, z);
+    private static net.minecraft.world.phys.AABB chunkBounds(ServerLevel level, ChunkPos pos) {
+        return new net.minecraft.world.phys.AABB(
+                pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ(),
+                pos.getMaxBlockX() + 1, level.getMaxBuildHeight(), pos.getMaxBlockZ() + 1);
+    }
 
-        if (level.getBlockState(pos.below()).isAir()) return;
-
-        Villager npc = EntityType.VILLAGER.spawn(level, pos, MobSpawnType.EVENT);
-        if (npc == null) return;
-
-        npc.setCustomName(Component.literal(name));
-        npc.setCustomNameVisible(true);
-        npc.setNoAi(true);
-        npc.setInvulnerable(true);
-        npc.setSilent(true);
-        npc.setPersistenceRequired();
-
-        npc.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
-        npc.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.LEATHER_LEGGINGS));
-        npc.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.LEATHER_BOOTS));
+    private static BlockPos findSpawnPosition(ServerLevel level, ChunkPos chunkPos) {
+        for (int attempt = 0; attempt < 8; attempt++) {
+            int x = chunkPos.getMinBlockX() + ThreadLocalRandom.current().nextInt(16);
+            int z = chunkPos.getMinBlockZ() + ThreadLocalRandom.current().nextInt(16);
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            BlockPos pos = new BlockPos(x, y, z);
+            if (level.getBlockState(pos.below()).isSolid() && level.getBlockState(pos).isAir()) return pos;
+        }
+        return null;
     }
 }
