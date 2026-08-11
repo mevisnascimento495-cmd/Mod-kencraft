@@ -17,6 +17,7 @@ public final class ModAttachments {
             ATTACHMENT_TYPES.register("player_data",
                     () -> AttachmentType.builder(() -> PlayerData.DEFAULT)
                             .serialize(PlayerData.CODEC)
+                            .sync(PlayerData.STREAM_CODEC)
                             .copyOnDeath()
                             .build());
 }
