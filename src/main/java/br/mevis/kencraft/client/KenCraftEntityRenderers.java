@@ -22,18 +22,28 @@ public final class KenCraftEntityRenderers {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(KenCraftEntities.RINKA.get(), ctx -> new SteveMobRenderer<>(ctx, 0.5F));
-        event.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ctx -> new SteveMobRenderer<>(ctx, 0.5F));
+        event.registerEntityRenderer(KenCraftEntities.RINKA.get(), RinkaRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfRenderer::new);
     }
 
-    private static final class SteveMobRenderer<T extends net.minecraft.world.entity.LivingEntity>
-            extends HumanoidMobRenderer<T, HumanoidModel<T>> {
-        private SteveMobRenderer(EntityRendererProvider.Context context, float shadow) {
-            super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), shadow);
+    private static final class RinkaRenderer extends HumanoidMobRenderer<RinkaEntity, HumanoidModel<RinkaEntity>> {
+        private RinkaRenderer(EntityRendererProvider.Context context) {
+            super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), 0.5F);
         }
 
         @Override
-        public ResourceLocation getTextureLocation(T entity) {
+        public ResourceLocation getTextureLocation(RinkaEntity entity) {
+            return STEVE_TEXTURE;
+        }
+    }
+
+    private static final class ArfRenderer extends HumanoidMobRenderer<ArfInvestigatorEntity, HumanoidModel<ArfInvestigatorEntity>> {
+        private ArfRenderer(EntityRendererProvider.Context context) {
+            super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), 0.5F);
+        }
+
+        @Override
+        public ResourceLocation getTextureLocation(ArfInvestigatorEntity entity) {
             return STEVE_TEXTURE;
         }
     }
