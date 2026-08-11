@@ -54,7 +54,9 @@ public final class KenCraftScreen extends Screen {
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(graphics);
+        // NeoForge/Minecraft 1.21.1 in this build environment exposes
+        // Screen#renderBackground with the full render signature.
+        this.renderBackground(graphics, mouseX, mouseY, partialTick);
 
         graphics.fill(panelLeft, panelTop, panelLeft + PANEL_WIDTH, panelTop + PANEL_HEIGHT, 0xE8101018);
         graphics.fill(panelLeft + 1, panelTop + 1, panelLeft + PANEL_WIDTH - 1, panelTop + 2, 0xFF7AD7FF);
