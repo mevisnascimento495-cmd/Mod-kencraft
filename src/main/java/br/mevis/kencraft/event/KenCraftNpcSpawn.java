@@ -5,9 +5,9 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.item.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
@@ -21,6 +21,12 @@ import net.neoforged.neoforge.event.level.ChunkEvent;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+/**
+ * Automatic KenCraft NPC spawning.
+ *
+ * At night, loaded chunks maintain up to 4 named Rinka NPCs.
+ * During the day, loaded chunks maintain up to 2 named ARF investigators.
+ */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
     private static final int RINKAS_PER_CHUNK = 4;
