@@ -6,14 +6,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-/**
- * Persistent KenCraft data attached to each player.
- *
- * Status levels are intentionally stored from 1 to 20. A fresh character
- * starts at level 1 in every status and therefore has 0 spent status points.
- * XP pools are kept separate from status levels so future NPCs/rewards can
- * grant mental or physical XP without automatically changing attributes.
- */
+/** Persistent KenCraft data attached to each player. */
 public record PlayerData(
         Race race,
         int jio,
@@ -25,33 +18,22 @@ public record PlayerData(
         int genetics,
         int perception,
         int spiritualDevelopment,
+        int life,
         int mentalXp,
         int physicalXp
 ) {
     public static final int MIN_STATUS = 1;
     public static final int MAX_STATUS = 20;
 
-    /** Default values used for players that have not selected a race yet. */
     public static final PlayerData DEFAULT = new PlayerData(
-            Race.NONE,
-            0,
-            0,
-            MIN_STATUS,
-            MIN_STATUS,
-            MIN_STATUS,
-            MIN_STATUS,
-            MIN_STATUS,
-            MIN_STATUS,
-            MIN_STATUS,
-            0,
-            0
+            Race.NONE, 0, 0,
+            MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
+            MIN_STATUS, MIN_STATUS, MIN_STATUS,
+            0, 0
     );
 
-    private static final Codec<Race> RACE_CODEC =
-            Codec.STRING.xmap(Race::valueOf, Race::name);
+    private static final Codec<Race> RACE_CODEC = Codec.STRING.xmap(Race::valueOf, Race::name);
 
-    // optionalFieldOf keeps existing KenCraft worlds compatible when these
-    // new fields are first introduced. Old saves get the defaults below.
     public static final Codec<PlayerData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     RACE_CODEC.fieldOf("race").forGetter(PlayerData::race),
@@ -64,6 +46,7 @@ public record PlayerData(
                     Codec.INT.optionalFieldOf("genetics", MIN_STATUS).forGetter(PlayerData::genetics),
                     Codec.INT.optionalFieldOf("perception", MIN_STATUS).forGetter(PlayerData::perception),
                     Codec.INT.optionalFieldOf("spiritualDevelopment", MIN_STATUS).forGetter(PlayerData::spiritualDevelopment),
+                    Codec.INT.optionalFieldOf("life", MIN_STATUS).forGetter(PlayerData::life),
                     Codec.INT.optionalFieldOf("mentalXp", 0).forGetter(PlayerData::mentalXp),
                     Codec.INT.optionalFieldOf("physicalXp", 0).forGetter(PlayerData::physicalXp)
             ).apply(instance, PlayerData::new)
@@ -76,58 +59,52 @@ public record PlayerData(
         return race != Race.NONE;
     }
 
-    /** Number of points spent in an attribute at its current level. */
     public static int spentPoints(int level) {
         return Math.max(0, Math.min(MAX_STATUS, level) - MIN_STATUS);
     }
 
-    /**
-     * Jio multiplier for humans. Each spent spiritual-development point adds
-     * 3% over the base Jio amount. At the starting level (1), the multiplier
-     * remains 1.00x.
-     */
     public double jioMultiplier() {
         return 1.0D + (spentPoints(spiritualDevelopment) * 0.03D);
     }
 
     public int calculatedHumanMaxJio() {
-        if (race != Race.HUMAN) {
-            return maxJio;
-        }
-        return (int) Math.round(100.0D * jioMultiplier());
+        return race == Race.HUMAN ? (int) Math.round(100.0D * jioMultiplier()) : maxJio;
     }
 
     public static PlayerData forRinka() {
-        return new PlayerData(
-                Race.RINKA,
-                0,
-                0,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                0,
-                0
-        );
+        return new PlayerData(Race.RINKA, 0, 0,
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0);
     }
 
     public static PlayerData forHuman() {
-        return new PlayerData(
-                Race.HUMAN,
-                100,
-                100,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                MIN_STATUS,
-                0,
-                0
-        );
+        return new PlayerData(Race.HUMAN, 100, 100,
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0);
+    }
+
+    public PlayerData withStatus(String attribute, int value) {
+        value = Math.max(MIN_STATUS, Math.min(MAX_STATUS, value));
+        return switch (attribute) {
+            case "strength" -> new PlayerData(race, jio, maxJio, value, defense, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp);
+            case "defense" -> new PlayerData(race, jio, maxJio, strength, value, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp);
+            case "intelligence" -> new PlayerData(race, jio, maxJio, strength, defense, value, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp);
+            case "speed" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, value, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp);
+            case "genetics" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, value, perception, spiritualDevelopment, life, mentalXp, physicalXp);
+            case "perception" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, value, spiritualDevelopment, life, mentalXp, physicalXp);
+            case "spiritual" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception, value, life, mentalXp, physicalXp);
+            case "life" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception, spiritualDevelopment, value, mentalXp, physicalXp);
+            default -> this;
+        };
+    }
+
+    public PlayerData withXp(int mental, int physical) {
+        return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
+                perception, spiritualDevelopment, life, Math.max(0, mental), Math.max(0, physical));
+    }
+
+    public PlayerData withJio(int current, int max) {
+        return new PlayerData(race, Math.max(0, current), Math.max(0, max), strength, defense,
+                intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp);
     }
 }
