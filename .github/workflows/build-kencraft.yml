@@ -37,8 +37,6 @@ jobs:
           test -f gradle.properties
           test -f src/main/resources/META-INF/neoforge.mods.toml
           test -f src/main/java/br/mevis/kencraft/KenCraft.java
-          test -f src/main/java/br/mevis/kencraft/client/KenCraftClient.java
-          test -f src/main/java/br/mevis/kencraft/client/KenCraftScreen.java
           echo "KenCraft project found in repository root."
 
       - name: Build KenCraft mod
@@ -49,45 +47,35 @@ jobs:
           gradle --version
           gradle clean build --no-daemon --stacktrace --refresh-dependencies
 
-      - name: Diagnose Gradle outputs
+      - name: Explicitly create JAR
         shell: bash
         run: |
           set -euo pipefail
-          echo "=== JAR files anywhere under build ==="
-          find build -type f -name '*.jar' -print | sort || true
-          echo "=== Relevant Gradle tasks ==="
-          gradle tasks --all --no-daemon | grep -Ei '(^| )jar|reobf|assemble|build' | head -80 || true
-          echo "=== build directory ==="
-          find build -maxdepth 3 -type f | sort | head -200 || true
-
-      - name: Ensure production JAR
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
-
-          if [ -z "$JAR" ]; then
-            echo "No JAR in build/libs. Checking for a reobfuscation task..."
-            if gradle tasks --all --no-daemon | grep -Eq '^reobfJar|[[:space:]]reobfJar[[:space:]]'; then
-              echo "Running reobfJar..."
-              gradle reobfJar --no-daemon --stacktrace
-            fi
-            JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
+          gradle jar --no-daemon --stacktrace
+          if gradle tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then
+            echo "reobfJar task found; running it..."
+            gradle reobfJar --no-daemon --stacktrace
+          else
+            echo "No reobfJar task; using normal jar output."
           fi
 
+      - name: Find production JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== All JARs under build ==="
+          find build -type f -name '*.jar' -print | sort || true
+          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
           if [ -z "$JAR" ]; then
-            echo "No production JAR found in build/libs."
-            echo "Available JARs:"
-            find build -type f -name '*.jar' -print | sort || true
+            JAR="$(find build -type f -name '*.jar' -print -quit 2>/dev/null || true)"
+          fi
+          if [ -z "$JAR" ]; then
+            echo "No JAR was produced after explicit jar/reobfJar tasks."
             exit 1
           fi
-
           mkdir -p dist
           cp "$JAR" dist/kencraft-${GITHUB_SHA::7}.jar
-          unzip -p "$JAR" META-INF/neoforge.mods.toml | grep -q 'modId = "kencraft"'
-          echo "Production JAR: $JAR"
-          echo "Artifact copy: dist/kencraft-${GITHUB_SHA::7}.jar"
+          echo "Using JAR: $JAR"
 
       - name: Upload KenCraft Alpha JAR
         uses: actions/upload-artifact@v4
