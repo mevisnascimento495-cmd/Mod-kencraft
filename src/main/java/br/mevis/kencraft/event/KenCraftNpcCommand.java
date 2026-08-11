@@ -1,6 +1,9 @@
 package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.entity.ArfInvestigatorEntity;
+import br.mevis.kencraft.entity.KenCraftEntities;
+import br.mevis.kencraft.entity.RinkaEntity;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -8,12 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
-import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -41,31 +39,19 @@ public final class KenCraftNpcCommand {
 
         ServerLevel level = player.serverLevel();
         BlockPos base = player.blockPosition();
-        spawnNpc(level, base.offset(2, 0, 0), ARF_NAME, false);
-        spawnNpc(level, base.offset(-2, 0, 0), RINKA_NAME, true);
-        source.sendSuccess(() -> Component.literal("KenCraft: Investigador da ARF e Rinka criados. Use clique direito neles para receber XP."), true);
+        RinkaEntity rinka = KenCraftEntities.RINKA.get().create(level);
+        ArfInvestigatorEntity arf = KenCraftEntities.ARF_INVESTIGATOR.get().create(level);
+        if (rinka == null || arf == null) return 0;
+
+        rinka.moveTo(base.offset(-2, 0, 0), 0, 0);
+        rinka.finalizeSpawn(level, level.getCurrentDifficultyAt(rinka.blockPosition()), MobSpawnType.COMMAND, null);
+        level.addFreshEntity(rinka);
+
+        arf.moveTo(base.offset(2, 0, 0), 0, 0);
+        arf.finalizeSpawn(level, level.getCurrentDifficultyAt(arf.blockPosition()), MobSpawnType.COMMAND, null);
+        level.addFreshEntity(arf);
+
+        source.sendSuccess(() -> Component.literal("KenCraft: Rinka e Investigador da ARF criados."), true);
         return 1;
-    }
-
-    private static void spawnNpc(ServerLevel level, BlockPos pos, String displayName, boolean rinka) {
-        Villager npc = EntityType.VILLAGER.spawn(level, pos, MobSpawnType.COMMAND);
-        if (npc == null) return;
-
-        npc.setCustomName(Component.literal(displayName));
-        npc.setCustomNameVisible(true);
-        npc.setNoAi(true);
-        npc.setInvulnerable(true);
-        npc.setSilent(true);
-        npc.setPersistenceRequired();
-
-        if (rinka) {
-            npc.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
-            npc.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.LEATHER_LEGGINGS));
-            npc.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.LEATHER_BOOTS));
-        } else {
-            npc.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
-            npc.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.LEATHER_LEGGINGS));
-            npc.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.LEATHER_BOOTS));
-        }
     }
 }
