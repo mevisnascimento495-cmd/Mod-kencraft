@@ -52,10 +52,6 @@ public record PlayerData(
 
     // optionalFieldOf keeps existing KenCraft worlds compatible when these
     // new fields are first introduced. Old saves get the defaults below.
-    private static Codec<Integer> intWithDefault(int value) {
-        return Codec.INT;
-    }
-
     public static final Codec<PlayerData> CODEC = RecordCodecBuilder.create(instance ->
             instance.group(
                     RACE_CODEC.fieldOf("race").forGetter(PlayerData::race),
