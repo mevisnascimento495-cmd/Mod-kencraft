@@ -11,10 +11,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.LeatherArmorItem;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -61,21 +59,13 @@ public final class KenCraftNpcCommand {
         npc.setPersistenceRequired();
 
         if (rinka) {
-            npc.setItemSlot(EquipmentSlot.CHEST, dyed(Items.LEATHER_CHESTPLATE, 0x7A0E16));
-            npc.setItemSlot(EquipmentSlot.LEGS, dyed(Items.LEATHER_LEGGINGS, 0x4A090D));
-            npc.setItemSlot(EquipmentSlot.FEET, dyed(Items.LEATHER_BOOTS, 0x5E0B11));
+            npc.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
+            npc.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.LEATHER_LEGGINGS));
+            npc.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.LEATHER_BOOTS));
         } else {
-            npc.setItemSlot(EquipmentSlot.CHEST, dyed(Items.LEATHER_CHESTPLATE, DyeColor.WHITE.getTextureDiffuseColor()));
-            npc.setItemSlot(EquipmentSlot.LEGS, dyed(Items.LEATHER_LEGGINGS, DyeColor.BLACK.getTextureDiffuseColor()));
-            npc.setItemSlot(EquipmentSlot.FEET, dyed(Items.LEATHER_BOOTS, DyeColor.WHITE.getTextureDiffuseColor()));
+            npc.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.LEATHER_CHESTPLATE));
+            npc.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.LEATHER_LEGGINGS));
+            npc.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.LEATHER_BOOTS));
         }
-    }
-
-    private static ItemStack dyed(net.minecraft.world.item.Item item, int color) {
-        ItemStack stack = new ItemStack(item);
-        if (stack.getItem() instanceof LeatherArmorItem) {
-            LeatherArmorItem.setColor(stack, color);
-        }
-        return stack;
     }
 }
