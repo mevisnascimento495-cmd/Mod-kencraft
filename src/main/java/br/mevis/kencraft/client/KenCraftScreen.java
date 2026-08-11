@@ -32,22 +32,20 @@ public final class KenCraftScreen extends Screen {
         addTab(Component.translatable("screen.kencraft.kikan"), panelLeft + 252, true);
 
         if (data.race() == Race.RINKA) {
-            addStatusButton("strength", panelTop + 122, data.physicalXp() > 0 && data.strength() < PlayerData.MAX_STATUS);
-            addStatusButton("defense", panelTop + 144, data.physicalXp() > 0 && data.defense() < PlayerData.MAX_STATUS);
-            addStatusButton("intelligence", panelTop + 166, data.mentalXp() > 0 && data.intelligence() < PlayerData.MAX_STATUS);
-            addStatusButton("speed", panelTop + 188, data.physicalXp() > 0 && data.speed() < PlayerData.MAX_STATUS);
-            addStatusButton("genetics", panelTop + 210, data.physicalXp() > 0 && data.genetics() < PlayerData.MAX_STATUS);
+            addStatusButton("strength", "Força", data.strength(), panelTop + 122, data.physicalXp() > 0);
+            addStatusButton("defense", "Defesa/Resistência", data.defense(), panelTop + 144, data.physicalXp() > 0);
+            addStatusButton("intelligence", "Inteligência", data.intelligence(), panelTop + 166, data.mentalXp() > 0);
+            addStatusButton("speed", "Velocidade", data.speed(), panelTop + 188, data.physicalXp() > 0);
+            addStatusButton("genetics", "Genética", data.genetics(), panelTop + 210, data.physicalXp() > 0);
         } else if (data.race() == Race.HUMAN) {
-            addStatusButton("strength", panelTop + 122, data.physicalXp() > 0 && data.strength() < PlayerData.MAX_STATUS);
-            addStatusButton("life", panelTop + 144, data.physicalXp() > 0 && data.life() < PlayerData.MAX_STATUS);
-            addStatusButton("perception", panelTop + 166, data.mentalXp() > 0 && data.perception() < PlayerData.MAX_STATUS);
-            addStatusButton("spiritual", panelTop + 188, data.mentalXp() > 0 && data.spiritualDevelopment() < PlayerData.MAX_STATUS);
-            addStatusButton("speed", panelTop + 210, data.physicalXp() > 0 && data.speed() < PlayerData.MAX_STATUS);
+            addStatusButton("strength", "Força", data.strength(), panelTop + 122, data.physicalXp() > 0);
+            addStatusButton("life", "Vida", data.life(), panelTop + 144, data.physicalXp() > 0);
+            addStatusButton("perception", "Percepção", data.perception(), panelTop + 166, data.mentalXp() > 0);
+            addStatusButton("spiritual", "Desenvolvimento espiritual", data.spiritualDevelopment(), panelTop + 188, data.mentalXp() > 0);
+            addStatusButton("speed", "Velocidade", data.speed(), panelTop + 210, data.physicalXp() > 0);
         }
 
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Fechar"),
-                        button -> this.onClose())
+        this.addRenderableWidget(Button.builder(Component.literal("Fechar"), button -> this.onClose())
                 .bounds(panelLeft + 174, panelTop + 311, 122, 24)
                 .build());
     }
@@ -58,11 +56,15 @@ public final class KenCraftScreen extends Screen {
                 .build());
     }
 
-    private void addStatusButton(String attribute, int y, boolean enabled) {
+    private void addStatusButton(String attribute, String name, int value, int y, boolean hasXp) {
+        String text = name + ": " + value + "/" + PlayerData.MAX_STATUS + " (" + PlayerData.spentPoints(value) + " points)";
+        int textWidth = this.font.width(text);
+        int buttonX = Math.min(panelLeft + 360, panelLeft + 28 + textWidth + 8);
+
         Button button = Button.builder(Component.literal("+"), b -> addStatus(attribute))
-                .bounds(panelLeft + 392, y - 2, 28, 18)
+                .bounds(buttonX, y - 3, 28, 18)
                 .build();
-        button.active = enabled;
+        button.active = hasXp && value < PlayerData.MAX_STATUS;
         this.addRenderableWidget(button);
     }
 
