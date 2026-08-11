@@ -8,11 +8,11 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.DyeItem;
-import net.minecraft.world.item.EquipmentSlot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.DyedItemColor;
@@ -45,7 +45,6 @@ public class ArfInvestigatorEntity extends PathfinderMob {
         this.goalSelector.addGoal(0, new FloatGoal(this));
         this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.75D));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
-        // Neutral: it only chooses a target after another mob/player hurts it.
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
     }
 }
