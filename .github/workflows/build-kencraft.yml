@@ -70,6 +70,45 @@ jobs:
           echo "project_dir=$PROJECT_DIR" >> "$GITHUB_OUTPUT"
           echo "Using extracted project: $PROJECT_DIR"
 
+      - name: Normalize ModDevGradle configuration
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          settings = Path("settings.gradle")
+          build = Path("build.gradle")
+
+          settings_text = settings.read_text(encoding="utf-8")
+          settings_text = re.sub(
+              r"plugins\s*\{\s*id\s+['\"]net\.neoforged\.moddev\.repositories['\"]\s+version\s+['\"][^'\"]+['\"]\s*\}\s*",
+              "",
+              settings_text,
+              count=1,
+          )
+          settings.write_text(settings_text, encoding="utf-8")
+
+          build_text = build.read_text(encoding="utf-8")
+          repo = 'maven { url = "https://maven.neoforged.net/releases" }'
+          if repo not in build_text:
+              build_text = build_text.replace(
+                  "repositories {\n    mavenCentral()\n}",
+                  "repositories {\n    mavenCentral()\n    " + repo + "\n}",
+                  1,
+              )
+          build.write_text(build_text, encoding="utf-8")
+
+          print("Normalized settings.gradle and build.gradle")
+          PY
+
+          echo "--- settings.gradle ---"
+          sed -n '1,120p' settings.gradle
+          echo "--- build.gradle ---"
+          sed -n '1,160p' build.gradle
+
       - name: Inspect project
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
