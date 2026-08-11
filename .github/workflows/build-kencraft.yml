@@ -109,6 +109,46 @@ jobs:
           echo "--- build.gradle ---"
           sed -n '1,160p' build.gradle
 
+      - name: Expand NeoForge mod metadata
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          props = {}
+          for raw in Path("gradle.properties").read_text(encoding="utf-8").splitlines():
+              line = raw.strip()
+              if not line or line.startswith("#") or "=" not in line:
+                  continue
+              key, value = line.split("=", 1)
+              props[key.strip()] = value.strip()
+
+          mod_file = next(Path(".").glob("src/main/resources/META-INF/neoforge.mods.toml"), None)
+          if mod_file is None:
+              raise SystemExit("ERROR: neoforge.mods.toml not found")
+
+          text = mod_file.read_text(encoding="utf-8")
+          unresolved = []
+
+          def replace(match):
+              key = match.group(1)
+              if key not in props:
+                  unresolved.append(key)
+                  return match.group(0)
+              return props[key]
+
+          text = re.sub(r"\$\{([^}]+)\}", replace, text)
+          if unresolved:
+              raise SystemExit("ERROR: unresolved gradle properties: " + ", ".join(sorted(set(unresolved))))
+
+          mod_file.write_text(text, encoding="utf-8")
+          print("Expanded mod metadata:")
+          print(text)
+          PY
+
       - name: Inspect project
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
@@ -127,6 +167,20 @@ jobs:
         run: |
           set -euo pipefail
           gradle clean build --no-daemon --stacktrace --info
+
+      - name: Verify generated JAR metadata
+        if: success()
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit)"
+          test -n "$JAR" || { echo "ERROR: no JAR generated"; exit 1; }
+          unzip -p "$JAR" META-INF/neoforge.mods.toml | tee /tmp/neoforge.mods.toml
+          grep -q 'modId = "kencraft"' /tmp/neoforge.mods.toml
+          grep -q 'version = "0.3.1"' /tmp/neoforge.mods.toml
+          ! grep -q '\${' /tmp/neoforge.mods.toml
+          echo "JAR metadata verified: $JAR"
 
       - name: List generated JARs
         if: always()
