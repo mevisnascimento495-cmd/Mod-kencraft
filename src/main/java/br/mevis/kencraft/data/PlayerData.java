@@ -2,6 +2,9 @@ package br.mevis.kencraft.data;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 
 public record PlayerData(Race race, int jio, int maxJio) {
     public static final PlayerData DEFAULT = new PlayerData(Race.NONE, 0, 0);
@@ -16,6 +19,9 @@ public record PlayerData(Race race, int jio, int maxJio) {
                     Codec.INT.fieldOf("maxJio").forGetter(PlayerData::maxJio)
             ).apply(instance, PlayerData::new)
     );
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, PlayerData> STREAM_CODEC =
+            ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
     public boolean hasRace() {
         return race != Race.NONE;
