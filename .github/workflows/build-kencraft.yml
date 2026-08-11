@@ -23,10 +23,10 @@ jobs:
           java-version: "21"
           cache: gradle
 
-      - name: Setup Gradle 8.8
+      - name: Setup Gradle 8.10.2
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "8.8"
+          gradle-version: "8.10.2"
 
       - name: Verify complete project
         shell: bash
@@ -39,7 +39,7 @@ jobs:
           test -f src/main/java/br/mevis/kencraft/KenCraft.java
           test -f src/main/java/br/mevis/kencraft/client/KenCraftClient.java
           test -f src/main/java/br/mevis/kencraft/client/KenCraftScreen.java
-          echo "KenCraft 0.5.0 project found in repository root."
+          echo "KenCraft project found in repository root."
 
       - name: Build KenCraft mod
         shell: bash
@@ -47,7 +47,7 @@ jobs:
           set -euo pipefail
           java -version
           gradle --version
-          gradle clean build --no-daemon --stacktrace
+          gradle clean build --no-daemon --stacktrace --refresh-dependencies
 
       - name: Verify generated JAR
         shell: bash
@@ -61,7 +61,7 @@ jobs:
       - name: Upload KenCraft Alpha JAR
         uses: actions/upload-artifact@v4
         with:
-          name: KenCraft-Alpha-0.5.0-JAR
+          name: KenCraft-Alpha-JAR
           path: build/libs/*.jar
           if-no-files-found: error
           retention-days: 14
