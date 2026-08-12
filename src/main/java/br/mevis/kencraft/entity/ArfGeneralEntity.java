@@ -12,6 +12,7 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -29,14 +30,17 @@ public class ArfGeneralEntity extends PathfinderMob {
                 .add(Attributes.MAX_HEALTH, 40.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.22D)
                 .add(Attributes.FOLLOW_RANGE, 24.0D)
-                .add(Attributes.ARMOR, 6.0D);
+                .add(Attributes.ARMOR, 6.0D)
+                .add(Attributes.ATTACK_DAMAGE, 6.0D);
     }
 
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.95D, true));
         this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        // No nearest-player target: the General only fights back after being attacked.
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
     }
 
