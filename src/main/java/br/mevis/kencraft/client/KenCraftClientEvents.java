@@ -1,6 +1,9 @@
 package br.mevis.kencraft.client;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.data.ModAttachments;
+import br.mevis.kencraft.data.PlayerData;
+import br.mevis.kencraft.data.Race;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -12,6 +15,8 @@ import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class KenCraftClientEvents {
+    private static int jioChargeTicker;
+
     private KenCraftClientEvents() {}
 
     @SubscribeEvent
@@ -25,11 +30,21 @@ public final class KenCraftClientEvents {
         }
 
         if (minecraft.screen == null && minecraft.player != null) {
-            if (KenCraftClient.KIKAN_Z.consumeClick()) {
+            PlayerData data = minecraft.player.getData(ModAttachments.PLAYER_DATA);
+            if (KenCraftClient.KIKAN_Z.isDown() && data.race() == Race.HUMAN) {
+                if (++jioChargeTicker >= 5) {
+                    jioChargeTicker = 0;
+                    minecraft.player.connection.sendCommand("kencraft jio charge");
+                }
+            } else {
+                jioChargeTicker = 0;
+            }
+
+            if (KenCraftClient.KIKAN_Z.consumeClick() && data.race() == Race.RINKA) {
                 KikanAnimationState.trigger("z");
                 minecraft.player.connection.sendCommand("kencraft kikan attack z");
             }
-            if (KenCraftClient.KIKAN_C.consumeClick()) {
+            if (KenCraftClient.KIKAN_C.consumeClick() && data.race() == Race.RINKA) {
                 KikanAnimationState.trigger("c");
                 minecraft.player.connection.sendCommand("kencraft kikan attack c");
             }
