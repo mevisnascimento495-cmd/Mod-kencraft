@@ -23,7 +23,9 @@ public record PlayerData(
         int physicalXp,
         int arfMissionKills,
         int arfClass,
-        String rinkaClass
+        String rinkaClass,
+        int jinsuikakuConsumed,
+        String kikanType
 ) {
     public static final int MIN_STATUS = 1;
     public static final int MAX_STATUS = 20;
@@ -32,7 +34,7 @@ public record PlayerData(
             Race.NONE, 0, 0,
             MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
             MIN_STATUS, MIN_STATUS, MIN_STATUS,
-            0, 0, -1, 0, "NONE"
+            0, 0, -1, 0, "NONE", 0, "NONE"
     );
 
     private static final Codec<Race> RACE_CODEC = Codec.STRING.xmap(Race::valueOf, Race::name);
@@ -54,16 +56,16 @@ public record PlayerData(
                     Codec.INT.optionalFieldOf("physicalXp", 0).forGetter(PlayerData::physicalXp),
                     Codec.INT.optionalFieldOf("arfMissionKills", -1).forGetter(PlayerData::arfMissionKills),
                     Codec.INT.optionalFieldOf("arfClass", 0).forGetter(PlayerData::arfClass),
-                    Codec.STRING.optionalFieldOf("rinkaClass", "NONE").forGetter(PlayerData::rinkaClass)
+                    Codec.STRING.optionalFieldOf("rinkaClass", "NONE").forGetter(PlayerData::rinkaClass),
+                    Codec.INT.optionalFieldOf("jinsuikakuConsumed", 0).forGetter(PlayerData::jinsuikakuConsumed),
+                    Codec.STRING.optionalFieldOf("kikanType", "NONE").forGetter(PlayerData::kikanType)
             ).apply(instance, PlayerData::new)
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerData> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
-    public boolean hasRace() {
-        return race != Race.NONE;
-    }
+    public boolean hasRace() { return race != Race.NONE; }
 
     public static int spentPoints(int level) {
         return Math.max(0, Math.min(MAX_STATUS, level) - MIN_STATUS);
@@ -80,53 +82,82 @@ public record PlayerData(
     public static PlayerData forRinka() {
         return new PlayerData(Race.RINKA, 0, 0,
                 MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
-                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE");
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE", 0, "NONE");
     }
 
     public static PlayerData forHuman() {
         return new PlayerData(Race.HUMAN, 100, 100,
-                MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
-                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE");
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
+                0, 0, -1, 0, "NONE", 0, "NONE");
     }
 
     public PlayerData withStatus(String attribute, int value) {
         value = Math.max(MIN_STATUS, Math.min(MAX_STATUS, value));
         return switch (attribute) {
-            case "strength" -> new PlayerData(race, jio, maxJio, value, defense, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "defense" -> new PlayerData(race, jio, maxJio, strength, value, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "intelligence" -> new PlayerData(race, jio, maxJio, strength, defense, value, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "speed" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, value, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "genetics" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, value, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "perception" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, value, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "spiritual" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception, value, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
-            case "life" -> new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception, spiritualDevelopment, value, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
+            case "strength" -> copy(value, defense, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "defense" -> copy(strength, value, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "intelligence" -> copy(strength, defense, value, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "speed" -> copy(strength, defense, intelligence, value, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "genetics" -> copy(strength, defense, intelligence, speed, value, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "perception" -> copy(strength, defense, intelligence, speed, genetics, value, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "spiritual" -> copy(strength, defense, intelligence, speed, genetics, perception, value, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
+            case "life" -> copy(strength, defense, intelligence, speed, genetics, perception, spiritualDevelopment, value, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
             default -> this;
         };
     }
 
+    private PlayerData copy(int strength, int defense, int intelligence, int speed, int genetics,
+                            int perception, int spiritual, int life, int mentalXp, int physicalXp,
+                            int missionKills, int arfClass, String rinkaClass, int consumed, String kikanType) {
+        return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
+                perception, spiritual, life, mentalXp, physicalXp, missionKills, arfClass,
+                rinkaClass, consumed, kikanType);
+    }
+
     public PlayerData withXp(int mental, int physical) {
         return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
-                perception, spiritualDevelopment, life, Math.max(0, mental), Math.max(0, physical), arfMissionKills, arfClass, rinkaClass);
+                perception, spiritualDevelopment, life, Math.max(0, mental), Math.max(0, physical),
+                arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
     }
 
     public PlayerData withJio(int current, int max) {
         return new PlayerData(race, Math.max(0, current), Math.max(0, max), strength, defense,
-                intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass);
+                intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp,
+                physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType);
     }
 
     public PlayerData withArfMissionKills(int kills) {
         return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
-                perception, spiritualDevelopment, life, mentalXp, physicalXp, kills, arfClass, rinkaClass);
+                perception, spiritualDevelopment, life, mentalXp, physicalXp, kills, arfClass,
+                rinkaClass, jinsuikakuConsumed, kikanType);
     }
 
     public PlayerData withArfClass(int newClass) {
         return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
-                perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, Math.max(0, newClass), rinkaClass);
+                perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills,
+                Math.max(0, newClass), rinkaClass, jinsuikakuConsumed, kikanType);
     }
 
     public PlayerData withRinkaClass(String newClass) {
         return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
-                perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass,
-                newClass == null ? "NONE" : newClass);
+                perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills,
+                arfClass, newClass == null ? "NONE" : newClass, jinsuikakuConsumed, kikanType);
+    }
+
+    public PlayerData withJinsuikakuConsumed(int amount) {
+        return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
+                perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills,
+                arfClass, rinkaClass, Math.max(0, amount), kikanType);
+    }
+
+    public PlayerData withKikanType(String type) {
+        return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
+                perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills,
+                arfClass, rinkaClass, jinsuikakuConsumed, type == null ? "NONE" : type);
+    }
+
+    public boolean canUseKikan() {
+        return race == Race.RINKA && ("C".equals(rinkaClass) || "B".equals(rinkaClass) || "A".equals(rinkaClass) || "S".equals(rinkaClass));
     }
 }
