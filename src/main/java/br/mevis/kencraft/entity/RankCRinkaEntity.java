@@ -3,6 +3,7 @@ package br.mevis.kencraft.entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
 
 /** Rank C Rinka: an elite aggressive Rinka with a random Kikan type. */
@@ -17,7 +18,7 @@ public class RankCRinkaEntity extends RinkaEntity {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return RinkaEntity.createAttributes()
+        return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 70.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.34D)
                 .add(Attributes.ATTACK_DAMAGE, 11.0D)
