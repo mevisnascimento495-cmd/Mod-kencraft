@@ -25,6 +25,14 @@ public final class KenCraftClient {
             "key.kencraft.kikan_c", KeyConflictContext.IN_GAME, KeyModifier.NONE,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.kencraft");
 
+    public static final KeyMapping JIO_F = new KeyMapping(
+            "key.kencraft.jio_f", KeyConflictContext.IN_GAME, KeyModifier.NONE,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F, "key.categories.kencraft");
+
+    public static final KeyMapping JIO_G = new KeyMapping(
+            "key.kencraft.jio_g", KeyConflictContext.IN_GAME, KeyModifier.NONE,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.kencraft");
+
     private KenCraftClient() {}
 
     @SubscribeEvent
@@ -32,5 +40,7 @@ public final class KenCraftClient {
         event.register(OPEN_MENU);
         event.register(KIKAN_Z);
         event.register(KIKAN_C);
+        event.register(JIO_F);
+        event.register(JIO_G);
     }
 }
