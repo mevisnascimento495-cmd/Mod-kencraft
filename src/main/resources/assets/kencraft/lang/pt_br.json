@@ -9,5 +9,9 @@
   "screen.kencraft.close": "Fechar",
   "screen.kencraft.selected": "SEÇÃO SELECIONADA",
   "screen.kencraft.race_info": "Sistema de raça",
-  "screen.kencraft.r_info": "Pressione R para abrir este menu."
+  "screen.kencraft.r_info": "Pressione R para abrir este menu.",
+  "item.kencraft.jinsuikaku": "Jinsuikaku",
+  "entity.kencraft.arf_general": "Investigador ARF General",
+  "entity.kencraft.arf_investigator": "Investigador da ARF",
+  "entity.kencraft.rinka": "Rinka"
 }
