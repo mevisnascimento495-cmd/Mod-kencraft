@@ -28,6 +28,17 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
+      - name: Materialize generated Jinsuikaku texture
+        shell: bash
+        run: |
+          set -euo pipefail
+          TEXTURE="src/main/resources/assets/kencraft/textures/item/jinsuikaku.png"
+          SOURCE="src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64"
+          test -f "$SOURCE"
+          base64 -d "$SOURCE" > "$TEXTURE"
+          file "$TEXTURE"
+          test "$(wc -c < "$TEXTURE")" -gt 0
+
       - name: Verify complete project
         shell: bash
         run: |
