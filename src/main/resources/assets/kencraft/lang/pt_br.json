@@ -13,7 +13,11 @@
   "screen.kencraft.race_info": "Sistema de raça",
   "screen.kencraft.r_info": "Pressione R para abrir este menu.",
   "item.kencraft.jinsuikaku": "Jinsuikaku",
+  "item.kencraft.rinka_spawn_egg": "Ovo de Rinka",
+  "item.kencraft.arf_investigator_spawn_egg": "Ovo de Investigador ARF",
+  "item.kencraft.arf_general_spawn_egg": "Ovo de General ARF",
   "entity.kencraft.arf_general": "Investigador ARF General",
   "entity.kencraft.arf_investigator": "Investigador da ARF",
-  "entity.kencraft.rinka": "Rinka"
+  "entity.kencraft.rinka": "Rinka",
+  "entity.kencraft.rishin": "Rishin"
 }
