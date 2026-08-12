@@ -8,6 +8,7 @@ import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
+import br.mevis.kencraft.entity.RishinEntity;
 import br.mevis.kencraft.item.KenCraftItems;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
@@ -17,8 +18,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.ItemStack;
@@ -34,6 +33,7 @@ public final class KenCraftNpcCommand {
     public static final String ARF_NAME = "Investigador da ARF";
     public static final String ARF_GENERAL_NAME = "Investigador ARF General";
     public static final String RINKA_NAME = "Rinka";
+    public static final String RISHIN_NAME = "Rishin";
 
     private KenCraftNpcCommand() {}
 
@@ -41,14 +41,14 @@ public final class KenCraftNpcCommand {
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("kencraft")
-                .then(Commands.literal("npcs")
-                        .executes(context -> spawnNpcs(context.getSource())))
+                .then(Commands.literal("npcs").executes(context -> spawnNpcs(context.getSource())))
                 .then(Commands.literal("give")
-                        .then(Commands.literal("jinsuikaku")
-                                .executes(context -> giveJinsuikaku(context.getSource()))))
+                        .then(Commands.literal("jinsuikaku").executes(context -> giveJinsuikaku(context.getSource()))))
+                .then(Commands.literal("jio")
+                        .then(Commands.literal("charge").executes(context -> chargeJio(context.getSource())))
+                        .then(Commands.literal("random").executes(context -> randomJioTechnique(context.getSource()))))
                 .then(Commands.literal("kikan")
-                        .then(Commands.literal("random")
-                                .executes(context -> randomKikan(context.getSource())))
+                        .then(Commands.literal("random").executes(context -> randomKikan(context.getSource())))
                         .then(Commands.literal("attack")
                                 .then(Commands.argument("key", StringArgumentType.word())
                                         .executes(context -> kikanAttack(context.getSource(), StringArgumentType.getString(context, "key")))))));
@@ -64,18 +64,22 @@ public final class KenCraftNpcCommand {
         RinkaEntity rinka = KenCraftEntities.RINKA.get().create(level);
         ArfInvestigatorEntity arf = KenCraftEntities.ARF_INVESTIGATOR.get().create(level);
         ArfGeneralEntity general = KenCraftEntities.ARF_GENERAL.get().create(level);
-        if (rinka == null || arf == null || general == null) return 0;
+        RishinEntity rishin = KenCraftEntities.RISHIN.get().create(level);
+        if (rinka == null || arf == null || general == null || rishin == null) return 0;
 
-        rinka.moveTo(base.offset(-3, 0, 0), 0, 0);
+        rinka.moveTo(base.offset(-4, 0, 0), 0, 0);
         rinka.finalizeSpawn(level, level.getCurrentDifficultyAt(rinka.blockPosition()), MobSpawnType.COMMAND, null);
         level.addFreshEntity(rinka);
-        arf.moveTo(base.offset(3, 0, 0), 0, 0);
+        arf.moveTo(base.offset(4, 0, 0), 0, 0);
         arf.finalizeSpawn(level, level.getCurrentDifficultyAt(arf.blockPosition()), MobSpawnType.COMMAND, null);
         level.addFreshEntity(arf);
-        general.moveTo(base.offset(0, 0, 3), 0, 0);
+        general.moveTo(base.offset(0, 0, 4), 0, 0);
         general.finalizeSpawn(level, level.getCurrentDifficultyAt(general.blockPosition()), MobSpawnType.COMMAND, null);
         level.addFreshEntity(general);
-        source.sendSuccess(() -> Component.literal("KenCraft: Rinka, Investigador da ARF e General da ARF criados."), true);
+        rishin.moveTo(base.offset(0, 0, -4), 0, 0);
+        rishin.finalizeSpawn(level, level.getCurrentDifficultyAt(rishin.blockPosition()), MobSpawnType.COMMAND, null);
+        level.addFreshEntity(rishin);
+        source.sendSuccess(() -> Component.literal("KenCraft: Rinka, Investigador da ARF, General da ARF e Rishin criados."), true);
         return 1;
     }
 
@@ -83,6 +87,34 @@ public final class KenCraftNpcCommand {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         player.getInventory().placeItemBackInInventory(new ItemStack(KenCraftItems.JINSUIKAKU.get()));
         source.sendSuccess(() -> Component.literal("KenCraft: Jinsuikaku adicionada ao inventário."), false);
+        return 1;
+    }
+
+    private static int chargeJio(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.race() != Race.HUMAN) {
+            source.sendFailure(Component.literal("Somente humanos podem carregar Jio desta forma."));
+            return 0;
+        }
+        int max = data.calculatedHumanMaxJio();
+        int next = Math.min(max, data.jio() + 2);
+        if (next == data.jio()) return 0;
+        player.setData(ModAttachments.PLAYER_DATA, data.withJio(next, max));
+        return 1;
+    }
+
+    private static int randomJioTechnique(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.race() != Race.HUMAN) {
+            source.sendFailure(Component.literal("A técnica Jio é exclusiva dos humanos."));
+            return 0;
+        }
+        String[] choices = {"REFORCO", "RAJADA", "BARREIRA"};
+        String chosen = choices[player.getRandom().nextInt(choices.length)];
+        player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(chosen));
+        source.sendSuccess(() -> Component.literal("Sua técnica Jio foi definida como: " + prettyJioTechnique(chosen)), false);
         return 1;
     }
 
@@ -121,8 +153,8 @@ public final class KenCraftNpcCommand {
         float damage = attackKey.equals("z") ? 6.0F : 9.0F;
         target.hurt(player.damageSources().playerAttack(player), damage);
         switch (data.kikanType()) {
-            case "TENTACLE" -> target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, attackKey.equals("c") ? 1 : 0));
-            case "SCORPION_TAIL" -> target.addEffect(new MobEffectInstance(MobEffects.POISON, attackKey.equals("c") ? 100 : 60, 0));
+            case "TENTACLE" -> target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 60, attackKey.equals("c") ? 1 : 0));
+            case "SCORPION_TAIL" -> target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, attackKey.equals("c") ? 100 : 60, 0));
             case "CROCODILE_TAIL" -> target.setDeltaMovement(target.getDeltaMovement().add(player.getLookAngle().scale(0.45D)));
             default -> {}
         }
@@ -135,6 +167,15 @@ public final class KenCraftNpcCommand {
             case "CROCODILE_TAIL" -> "Cauda de crocodilo";
             case "TENTACLE" -> "Tentáculo";
             case "SCORPION_TAIL" -> "Cauda de escorpião";
+            default -> "Nenhuma";
+        };
+    }
+
+    private static String prettyJioTechnique(String type) {
+        return switch (type) {
+            case "REFORCO" -> "Reforço";
+            case "RAJADA" -> "Rajada";
+            case "BARREIRA" -> "Barreira";
             default -> "Nenhuma";
         };
     }
