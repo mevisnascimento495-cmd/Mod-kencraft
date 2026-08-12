@@ -30,22 +30,17 @@ public final class KenCraftScreen extends Screen {
         addTab(Component.translatable("screen.kencraft.jio"), panelLeft + 134, 1);
         addTab(Component.translatable("screen.kencraft.kikan"), panelLeft + 252, 2);
 
-        if (activeTab == 2) {
-            initKikanTab();
-        } else {
-            initStatusTab();
-        }
+        if (activeTab == 2) initKikanTab();
+        else if (activeTab == 1) initJioTab();
+        else initStatusTab();
 
         this.addRenderableWidget(Button.builder(Component.literal("Fechar"), button -> this.onClose())
-                .bounds(panelLeft + 174, panelTop + 311, 122, 24)
-                .build());
+                .bounds(panelLeft + 174, panelTop + 311, 122, 24).build());
     }
 
     private void addTab(Component text, int x, int tab) {
-        Button button = Button.builder(text, b -> {
-            activeTab = tab;
-            this.rebuildWidgets();
-        }).bounds(x, panelTop + 62, 112, 24).build();
+        Button button = Button.builder(text, b -> { activeTab = tab; this.rebuildWidgets(); })
+                .bounds(x, panelTop + 62, 112, 24).build();
         button.active = activeTab != tab;
         this.addRenderableWidget(button);
     }
@@ -67,20 +62,29 @@ public final class KenCraftScreen extends Screen {
         }
     }
 
+    private void initJioTab() {
+        PlayerData data = currentData();
+        Button random = Button.builder(Component.literal("GIRAR TÉCNICA"), b -> randomJio())
+                .bounds(panelLeft + 158, panelTop + 215, 154, 28).build();
+        random.active = data.race() == Race.HUMAN;
+        this.addRenderableWidget(random);
+    }
+
+    private void randomJio() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null && minecraft.player.connection != null) {
+            minecraft.player.connection.sendCommand("kencraft jio random");
+            this.rebuildWidgets();
+        }
+    }
+
     private void initKikanTab() {
         PlayerData data = currentData();
         boolean unlocked = data.canUseKikan();
-        String rank = data.race() == Race.RINKA ? data.rinkaClass() : "—";
-
         Button random = Button.builder(Component.literal("ALEATÓRIO"), b -> randomKikan())
-                .bounds(panelLeft + 158, panelTop + 215, 154, 28)
-                .build();
-        random.active = unlocked;
+                .bounds(panelLeft + 158, panelTop + 215, 154, 28).build();
+        random.active = unlocked && data.race() == Race.RINKA;
         this.addRenderableWidget(random);
-
-        if (data.race() != Race.RINKA) {
-            random.active = false;
-        }
     }
 
     private void randomKikan() {
@@ -123,12 +127,21 @@ public final class KenCraftScreen extends Screen {
         graphics.fill(panelLeft + 16, panelTop + 96, panelLeft + PANEL_WIDTH - 16, panelTop + 288, 0xFF172531);
         graphics.drawString(this.font, Component.literal("Raça: " + raceName(data.race())), panelLeft + 28, panelTop + 106, 0xFF7AD7FF);
 
-        if (activeTab == 2) {
-            renderKikan(graphics, data);
-        } else {
-            renderStatus(graphics, data);
-        }
+        if (activeTab == 2) renderKikan(graphics, data);
+        else if (activeTab == 1) renderJio(graphics, data);
+        else renderStatus(graphics, data);
         super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderJio(GuiGraphics graphics, PlayerData data) {
+        if (data.race() != Race.HUMAN) {
+            graphics.drawString(this.font, Component.literal("O Jio é exclusivo dos humanos."), panelLeft + 28, panelTop + 122, 0xFFFFFFFF);
+            return;
+        }
+        graphics.drawString(this.font, Component.literal("Jio: " + data.jio() + "/" + data.calculatedHumanMaxJio()), panelLeft + 28, panelTop + 122, 0xFF7AD7FF);
+        graphics.drawString(this.font, Component.literal("Técnica Jio: " + prettyJio(data.jioTechnique())), panelLeft + 28, panelTop + 142, 0xFFFFFFFF);
+        graphics.drawString(this.font, Component.literal("Segure Z para carregar Jio."), panelLeft + 28, panelTop + 166, 0xFFB8C5D1);
+        graphics.drawString(this.font, Component.literal("Use este botão para girar aleatoriamente sua técnica Jio."), panelLeft + 28, panelTop + 184, 0xFFB8C5D1);
     }
 
     private void renderStatus(GuiGraphics graphics, PlayerData data) {
@@ -193,6 +206,15 @@ public final class KenCraftScreen extends Screen {
             case "CROCODILE_TAIL" -> "Cauda de crocodilo";
             case "TENTACLE" -> "Tentáculo";
             case "SCORPION_TAIL" -> "Cauda de escorpião";
+            default -> "Nenhuma";
+        };
+    }
+
+    private String prettyJio(String type) {
+        return switch (type) {
+            case "REFORCO" -> "Reforço";
+            case "RAJADA" -> "Rajada";
+            case "BARREIRA" -> "Barreira";
             default -> "Nenhuma";
         };
     }
