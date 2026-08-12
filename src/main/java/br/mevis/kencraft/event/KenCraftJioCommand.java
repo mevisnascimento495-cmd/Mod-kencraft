@@ -67,9 +67,9 @@ public final class KenCraftJioCommand {
     }
 
     private static void kataKyoka(ServerPlayer player) {
-        player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 20 * 12, 2, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 20 * 12, 1, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.SPEED, 20 * 12, 1, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 12, 2, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 20 * 12, 1, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20 * 12, 1, false, true));
         player.sendSystemMessage(Component.literal("Kata Kyōka 体強化 ativado! Defesa, força e velocidade aumentadas."));
     }
 
@@ -87,9 +87,11 @@ public final class KenCraftJioCommand {
         int spiritual = player.getData(ModAttachments.PLAYER_DATA).spiritualDevelopment();
         if (target != null) {
             target.hurt(player.damageSources().playerAttack(player), 4.0F + spiritual);
-            target.setSecondsOnFire(2);
-            for (LivingEntity nearby : player.level().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(2.5D), e -> e != player && e != target))
+            target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), 40));
+            for (LivingEntity nearby : player.level().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(2.5D), e -> e != player && e != target && e.isAlive())) {
                 nearby.hurt(player.damageSources().playerAttack(player), 2.0F + spiritual * 0.5F);
+                nearby.setRemainingFireTicks(Math.max(nearby.getRemainingFireTicks(), 40));
+            }
             player.sendSystemMessage(Component.literal("生命喰 Hakai Satsu Tōtetsu: Seimei Kui!"));
         }
     }
