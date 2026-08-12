@@ -16,7 +16,6 @@ import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class KenCraftClientEvents {
     private static int jioChargeTicker;
-
     private KenCraftClientEvents() {}
 
     @SubscribeEvent
@@ -47,6 +46,13 @@ public final class KenCraftClientEvents {
             if (KenCraftClient.KIKAN_C.consumeClick() && data.race() == Race.RINKA) {
                 KikanAnimationState.trigger("c");
                 minecraft.player.connection.sendCommand("kencraft kikan attack c");
+            }
+
+            if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN) {
+                minecraft.player.connection.sendCommand("kencraft jio attack 0");
+            }
+            if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN) {
+                minecraft.player.connection.sendCommand("kencraft jio cycle");
             }
         }
     }
