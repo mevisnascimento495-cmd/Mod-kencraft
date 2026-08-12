@@ -1,6 +1,7 @@
 package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
@@ -21,6 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public final class KenCraftNpcSpawn {
     private static final double RINKA_CHANCE = 0.08D;
     private static final double ARF_CHANCE = 0.05D;
+    private static final double GENERAL_CHANCE = 0.01D;
 
     private KenCraftNpcSpawn() {}
 
@@ -32,7 +34,13 @@ public final class KenCraftNpcSpawn {
         if (level.getDifficulty().getId() == 0) return;
 
         boolean night = isNight(level);
-        if (ThreadLocalRandom.current().nextDouble() >= (night ? RINKA_CHANCE : ARF_CHANCE)) return;
+        double chance = night ? RINKA_CHANCE : ARF_CHANCE;
+        if (ThreadLocalRandom.current().nextDouble() >= chance) {
+            if (!night && ThreadLocalRandom.current().nextDouble() >= GENERAL_CHANCE) return;
+            if (night) return;
+            spawnGeneral(level, chunk.getPos());
+            return;
+        }
 
         ChunkPos chunkPos = chunk.getPos();
         BlockPos pos = findSpawnPosition(level, chunkPos);
@@ -53,6 +61,17 @@ public final class KenCraftNpcSpawn {
             entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
             level.addFreshEntity(entity);
         }
+    }
+
+    private static void spawnGeneral(ServerLevel level, ChunkPos chunkPos) {
+        if (!level.getEntitiesOfClass(ArfGeneralEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) return;
+        BlockPos pos = findSpawnPosition(level, chunkPos);
+        if (pos == null) return;
+        ArfGeneralEntity entity = KenCraftEntities.ARF_GENERAL.get().create(level);
+        if (entity == null) return;
+        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+        level.addFreshEntity(entity);
     }
 
     private static boolean isNight(ServerLevel level) {
