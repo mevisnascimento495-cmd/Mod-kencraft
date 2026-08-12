@@ -1,18 +1,18 @@
 package br.mevis.kencraft.client;
 
-import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.geom.CubeListBuilder;
-import net.minecraft.client.model.geom.LayerDefinition;
-import net.minecraft.client.model.geom.MeshDefinition;
+import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartDefinition;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.RenderType;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
-public final class KikanModel extends EntityModel<AbstractClientPlayer> {
+public final class KikanModel extends HierarchicalModel<AbstractClientPlayer> {
     private final ModelPart root;
     private final ModelPart crocodile1;
     private final ModelPart crocodile2;
@@ -26,10 +26,9 @@ public final class KikanModel extends EntityModel<AbstractClientPlayer> {
     private final ModelPart scorpion3;
     private final ModelPart scorpion4;
     private final ModelPart scorpionStinger;
-    private String type = "";
 
     public KikanModel(ModelPart root) {
-        super(root, RenderType::entityCutoutNoCull);
+        super(RenderType::entityCutoutNoCull);
         this.root = root;
         this.crocodile1 = root.getChild("crocodile1");
         this.crocodile2 = crocodile1.getChild("crocodile2");
@@ -92,10 +91,9 @@ public final class KikanModel extends EntityModel<AbstractClientPlayer> {
     }
 
     public void setType(String type) {
-        this.type = type == null ? "" : type;
-        crocodile1.visible = type.equals("CROCODILE_TAIL");
-        tentacle1.visible = type.equals("TENTACLE");
-        scorpion1.visible = type.equals("SCORPION_TAIL");
+        crocodile1.visible = "CROCODILE_TAIL".equals(type);
+        tentacle1.visible = "TENTACLE".equals(type);
+        scorpion1.visible = "SCORPION_TAIL".equals(type);
     }
 
     public void animate(float progress, boolean heavy) {
@@ -105,12 +103,10 @@ public final class KikanModel extends EntityModel<AbstractClientPlayer> {
         crocodile1.xRot = swing * 0.18F * power;
         crocodile2.yRot = swing * -0.45F * power;
         crocodile3.yRot = swing * 0.55F * power;
-
         tentacle1.yRot = swing * 0.45F * power;
         tentacle2.yRot = swing * -0.65F * power;
         tentacle3.yRot = swing * 0.75F * power;
         tentacle4.yRot = swing * -0.85F * power;
-
         scorpion1.xRot = swing * 0.2F * power;
         scorpion2.xRot = swing * -0.3F * power;
         scorpion3.xRot = swing * 0.45F * power;
@@ -119,7 +115,17 @@ public final class KikanModel extends EntityModel<AbstractClientPlayer> {
     }
 
     @Override
+    public ModelPart root() {
+        return root;
+    }
+
+    @Override
+    public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, int color) {
+        root.render(poseStack, buffer, packedLight, packedOverlay, color);
+    }
+
+    @Override
     public void setupAnim(AbstractClientPlayer entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // The Kikan layer has its own lightweight animation controller.
+        // Lightweight custom animation is driven by KikanAnimationState.
     }
 }
