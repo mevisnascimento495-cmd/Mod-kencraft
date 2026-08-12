@@ -96,14 +96,6 @@ public class ArfGeneralEntity extends PathfinderMob {
         };
     }
 
-    private static int requiredRishins(int newRank) {
-        return switch (newRank) {
-            case 3 -> 10;
-            case 2 -> 20;
-            default -> 0;
-        };
-    }
-
     private static String rankName(int rank) {
         return switch (rank) {
             case 4 -> "Quarta Classe";
