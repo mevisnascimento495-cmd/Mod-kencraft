@@ -1,11 +1,13 @@
 package br.mevis.kencraft;
 
 import br.mevis.kencraft.data.ModAttachments;
+import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.event.ChatSelectionHandler;
 import br.mevis.kencraft.event.PlayerLoginHandler;
+import br.mevis.kencraft.item.KenCraftItems;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -20,6 +22,7 @@ public class KenCraft {
     public KenCraft(IEventBus modEventBus) {
         ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         KenCraftEntities.ENTITY_TYPES.register(modEventBus);
+        KenCraftItems.ITEMS.register(modEventBus);
         NeoForge.EVENT_BUS.register(PlayerLoginHandler.class);
         NeoForge.EVENT_BUS.register(ChatSelectionHandler.class);
     }
@@ -32,6 +35,7 @@ public class KenCraft {
         public static void createAttributes(EntityAttributeCreationEvent event) {
             event.put(KenCraftEntities.RINKA.get(), RinkaEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorEntity.createAttributes().build());
+            event.put(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralEntity.createAttributes().build());
         }
     }
 }
