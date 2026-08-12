@@ -40,7 +40,7 @@ public final class KenCraftEntityRenderers {
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.add(KIKAN_LAYER, KikanModel::createBodyLayer);
+        event.registerLayerDefinition(KIKAN_LAYER, KikanModel::createBodyLayer);
     }
 
     @SubscribeEvent
