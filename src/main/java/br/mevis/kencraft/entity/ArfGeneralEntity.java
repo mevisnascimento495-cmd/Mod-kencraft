@@ -26,12 +26,8 @@ public class ArfGeneralEntity extends PathfinderMob {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Mob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 40.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.22D)
-                .add(Attributes.FOLLOW_RANGE, 24.0D)
-                .add(Attributes.ARMOR, 6.0D)
-                .add(Attributes.ATTACK_DAMAGE, 6.0D);
+        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 40.0D).add(Attributes.MOVEMENT_SPEED, 0.22D)
+                .add(Attributes.FOLLOW_RANGE, 24.0D).add(Attributes.ARMOR, 6.0D).add(Attributes.ATTACK_DAMAGE, 6.0D);
     }
 
     @Override
@@ -40,14 +36,12 @@ public class ArfGeneralEntity extends PathfinderMob {
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.95D, true));
         this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
-        // No nearest-player target: the General only fights back after being attacked.
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
     }
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (player.level().isClientSide) return InteractionResult.SUCCESS;
-
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (data.race() != Race.HUMAN) {
             player.sendSystemMessage(Component.literal("O General da ARF só recruta humanos."));
@@ -57,26 +51,26 @@ public class ArfGeneralEntity extends PathfinderMob {
         if (data.arfClass() == 0) {
             if (data.arfMissionKills() < 0) {
                 player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(0));
-                sendRecruitmentMission(player);
+                player.sendSystemMessage(Component.literal("Olá jogador(a), vejo que vc quer se tornar parte da ARF e aprender a controlar Jio, você precisa matar 5 Rinkas, depois disso volte até mim vou te tornar um investigador de quarta classe"));
                 return InteractionResult.CONSUME;
             }
             if (data.arfMissionKills() >= 5) {
                 player.setData(ModAttachments.PLAYER_DATA, data.withArfClass(4).withArfMissionKills(0));
                 player.sendSystemMessage(Component.literal("Você eliminou 5 Rinkas. Você entrou para a ARF como Investigador de Quarta Classe!"));
-                player.sendSystemMessage(Component.literal("Próxima missão: elimine 5 Rishins da organização secreta e volte ao General."));
+                player.sendSystemMessage(Component.literal("Próxima missão: elimine 3 Rinkas Rank C e volte ao General."));
                 return InteractionResult.CONSUME;
             }
             player.sendSystemMessage(Component.literal("Missão de recrutamento: Rinkas derrotados " + data.arfMissionKills() + "/5."));
             return InteractionResult.CONSUME;
         }
 
-        int required = requiredRishins(data.arfClass());
+        int required = requiredRankCRinkas(data.arfClass());
         if (data.arfClass() > 1 && data.arfMissionKills() >= required) {
             int newRank = data.arfClass() - 1;
             player.setData(ModAttachments.PLAYER_DATA, data.withArfClass(newRank).withArfMissionKills(0));
             player.sendSystemMessage(Component.literal("Parabéns! Você foi promovido para Investigador de " + rankName(newRank) + "."));
             if (newRank > 1) {
-                player.sendSystemMessage(Component.literal("Próxima missão: elimine " + requiredRishins(newRank) + " Rishins e volte ao General."));
+                player.sendSystemMessage(Component.literal("Próxima missão: elimine " + requiredRankCRinkas(newRank) + " Rinkas Rank C e volte ao General."));
             } else {
                 player.sendSystemMessage(Component.literal("Você alcançou o Rank 1 da ARF. Novas missões especiais serão desbloqueadas em breve."));
             }
@@ -84,18 +78,18 @@ public class ArfGeneralEntity extends PathfinderMob {
         }
 
         if (data.arfClass() > 1) {
-            player.sendSystemMessage(Component.literal("Missão ARF Rank " + data.arfClass() + ": Rishins derrotados " + Math.max(0, data.arfMissionKills()) + "/" + required + "."));
+            player.sendSystemMessage(Component.literal("Missão ARF: Rinkas Rank C derrotados " + Math.max(0, data.arfMissionKills()) + "/" + required + "."));
         } else {
             player.sendSystemMessage(Component.literal("Você já alcançou o Rank 1 da ARF."));
         }
         return InteractionResult.CONSUME;
     }
 
-    private static int requiredRishins(int arfClass) {
+    private static int requiredRankCRinkas(int arfClass) {
         return switch (arfClass) {
-            case 4 -> 5;
-            case 3 -> 10;
-            case 2 -> 20;
+            case 4 -> 3;
+            case 3 -> 6;
+            case 2 -> 10;
             default -> 0;
         };
     }
@@ -108,9 +102,5 @@ public class ArfGeneralEntity extends PathfinderMob {
             case 1 -> "Primeira Classe (Rank 1)";
             default -> "Sem Rank";
         };
-    }
-
-    private static void sendRecruitmentMission(Player player) {
-        player.sendSystemMessage(Component.literal("Olá jogador(a), vejo que vc quer se tornar parte da ARF e aprender a controlar Jio, você precisa matar 5 Rinkas, depois disso volte até mim vou te tornar um investigador de quarta classe"));
     }
 }
