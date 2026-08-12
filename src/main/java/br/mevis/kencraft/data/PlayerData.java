@@ -31,6 +31,18 @@ public record PlayerData(
     public static final int MIN_STATUS = 1;
     public static final int MAX_STATUS = 20;
 
+    private record ProgressionData(String rinkaClass, int jinsuikakuConsumed, String kikanType, String jioTechnique) {
+        private static final ProgressionData DEFAULT = new ProgressionData("NONE", 0, "NONE", "NONE");
+        private static final Codec<ProgressionData> CODEC = RecordCodecBuilder.create(instance ->
+                instance.group(
+                        Codec.STRING.optionalFieldOf("rinkaClass", "NONE").forGetter(ProgressionData::rinkaClass),
+                        Codec.INT.optionalFieldOf("jinsuikakuConsumed", 0).forGetter(ProgressionData::jinsuikakuConsumed),
+                        Codec.STRING.optionalFieldOf("kikanType", "NONE").forGetter(ProgressionData::kikanType),
+                        Codec.STRING.optionalFieldOf("jioTechnique", "NONE").forGetter(ProgressionData::jioTechnique)
+                ).apply(instance, ProgressionData::new)
+        );
+    }
+
     public static final PlayerData DEFAULT = new PlayerData(
             Race.NONE, 0, 0,
             MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
@@ -57,11 +69,16 @@ public record PlayerData(
                     Codec.INT.optionalFieldOf("physicalXp", 0).forGetter(PlayerData::physicalXp),
                     Codec.INT.optionalFieldOf("arfMissionKills", -1).forGetter(PlayerData::arfMissionKills),
                     Codec.INT.optionalFieldOf("arfClass", 0).forGetter(PlayerData::arfClass),
-                    Codec.STRING.optionalFieldOf("rinkaClass", "NONE").forGetter(PlayerData::rinkaClass),
-                    Codec.INT.optionalFieldOf("jinsuikakuConsumed", 0).forGetter(PlayerData::jinsuikakuConsumed),
-                    Codec.STRING.optionalFieldOf("kikanType", "NONE").forGetter(PlayerData::kikanType),
-                    Codec.STRING.optionalFieldOf("jioTechnique", "NONE").forGetter(PlayerData::jioTechnique)
-            ).apply(instance, PlayerData::new)
+                    ProgressionData.CODEC.optionalFieldOf("progression", ProgressionData.DEFAULT).forGetter(data ->
+                            new ProgressionData(data.rinkaClass(), data.jinsuikakuConsumed(), data.kikanType(), data.jioTechnique()))
+            ).apply(instance, (race, jio, maxJio, strength, defense, intelligence, speed, genetics,
+                               perception, spiritualDevelopment, life, mentalXp, physicalXp,
+                               arfMissionKills, arfClass, progression) -> new PlayerData(
+                    race, jio, maxJio, strength, defense, intelligence, speed, genetics,
+                    perception, spiritualDevelopment, life, mentalXp, physicalXp,
+                    arfMissionKills, arfClass, progression.rinkaClass(), progression.jinsuikakuConsumed(),
+                    progression.kikanType(), progression.jioTechnique()
+            ))
     );
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerData> STREAM_CODEC =
@@ -104,7 +121,7 @@ public record PlayerData(
             case "genetics" -> copy(strength, defense, intelligence, speed, value, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType, jioTechnique);
             case "perception" -> copy(strength, defense, intelligence, speed, genetics, value, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType, jioTechnique);
             case "spiritual" -> copy(strength, defense, intelligence, speed, genetics, perception, value, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType, jioTechnique);
-            case "life" -> copy(strength, defense, intelligence, speed, genetics, perception, spiritualDevelopment, value, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType, jioTechnique);
+            case "life" -> copy(strength, defense, intelligence, speed, genetics, perception, spiritualDevelopment, life, mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, kikanType, jioTechnique);
             default -> this;
         };
     }
