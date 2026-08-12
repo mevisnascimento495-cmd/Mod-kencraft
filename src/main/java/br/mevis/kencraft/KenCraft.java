@@ -45,7 +45,7 @@ public class KenCraft {
         @SubscribeEvent
         public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
             if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
-                event.accept(KenCraftItems.JINSUIKAKU);
+                event.accept(KenCraftItems.JINSUIKAKU.get());
             }
         }
     }
