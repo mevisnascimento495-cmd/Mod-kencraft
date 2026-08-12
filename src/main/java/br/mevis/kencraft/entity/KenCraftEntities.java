@@ -21,5 +21,10 @@ public final class KenCraftEntities {
                     .sized(0.6F, 1.8F)
                     .build("kencraft:arf_investigator"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<ArfGeneralEntity>> ARF_GENERAL = ENTITY_TYPES.register("arf_general",
+            () -> EntityType.Builder.of(ArfGeneralEntity::new, MobCategory.CREATURE)
+                    .sized(0.6F, 1.8F)
+                    .build("kencraft:arf_general"));
+
     private KenCraftEntities() {}
 }
