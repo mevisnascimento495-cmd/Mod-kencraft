@@ -5,6 +5,7 @@ import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
+import br.mevis.kencraft.entity.RishinEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobSpawnType;
@@ -21,6 +22,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
     private static final double RINKA_CHANCE = 0.08D;
+    private static final double RISHIN_CHANCE = 0.02D;
     private static final double ARF_CHANCE = 0.05D;
     private static final double GENERAL_CHANCE = 0.01D;
 
@@ -34,33 +36,57 @@ public final class KenCraftNpcSpawn {
         if (level.getDifficulty().getId() == 0) return;
 
         boolean night = isNight(level);
-        double chance = night ? RINKA_CHANCE : ARF_CHANCE;
-        if (ThreadLocalRandom.current().nextDouble() >= chance) {
-            if (!night && ThreadLocalRandom.current().nextDouble() >= GENERAL_CHANCE) return;
-            if (night) return;
-            spawnGeneral(level, chunk.getPos());
+        ChunkPos chunkPos = chunk.getPos();
+        double roll = ThreadLocalRandom.current().nextDouble();
+
+        if (night) {
+            if (roll < RISHIN_CHANCE && level.getEntitiesOfClass(RishinEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+                spawnRishin(level, chunkPos);
+                return;
+            }
+            if (roll < RISHIN_CHANCE + RINKA_CHANCE && level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+                spawnRinka(level, chunkPos);
+            }
             return;
         }
 
-        ChunkPos chunkPos = chunk.getPos();
+        if (roll < GENERAL_CHANCE) {
+            spawnGeneral(level, chunkPos);
+            return;
+        }
+        if (roll < GENERAL_CHANCE + ARF_CHANCE && level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+            spawnInvestigator(level, chunkPos);
+        }
+    }
+
+    private static void spawnRinka(ServerLevel level, ChunkPos chunkPos) {
         BlockPos pos = findSpawnPosition(level, chunkPos);
         if (pos == null) return;
+        RinkaEntity entity = KenCraftEntities.RINKA.get().create(level);
+        if (entity == null) return;
+        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+        level.addFreshEntity(entity);
+    }
 
-        if (night) {
-            if (!level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) return;
-            RinkaEntity entity = KenCraftEntities.RINKA.get().create(level);
-            if (entity == null) return;
-            entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-            entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-            level.addFreshEntity(entity);
-        } else {
-            if (!level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) return;
-            ArfInvestigatorEntity entity = KenCraftEntities.ARF_INVESTIGATOR.get().create(level);
-            if (entity == null) return;
-            entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-            entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-            level.addFreshEntity(entity);
-        }
+    private static void spawnRishin(ServerLevel level, ChunkPos chunkPos) {
+        BlockPos pos = findSpawnPosition(level, chunkPos);
+        if (pos == null) return;
+        RishinEntity entity = KenCraftEntities.RISHIN.get().create(level);
+        if (entity == null) return;
+        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+        level.addFreshEntity(entity);
+    }
+
+    private static void spawnInvestigator(ServerLevel level, ChunkPos chunkPos) {
+        BlockPos pos = findSpawnPosition(level, chunkPos);
+        if (pos == null) return;
+        ArfInvestigatorEntity entity = KenCraftEntities.ARF_INVESTIGATOR.get().create(level);
+        if (entity == null) return;
+        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+        level.addFreshEntity(entity);
     }
 
     private static void spawnGeneral(ServerLevel level, ChunkPos chunkPos) {
