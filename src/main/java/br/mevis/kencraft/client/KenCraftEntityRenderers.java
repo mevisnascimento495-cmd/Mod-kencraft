@@ -4,6 +4,7 @@ import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
+import br.mevis.kencraft.entity.RankCRinkaEntity;
 import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.entity.RishinEntity;
 import net.minecraft.client.model.HumanoidModel;
@@ -23,16 +24,15 @@ public final class KenCraftEntityRenderers {
     public static final ModelLayerLocation KIKAN_LAYER = new ModelLayerLocation(
             ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "kikan"), "main");
 
-    private static final ResourceLocation RINKA_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "textures/entity/rinka.png");
-    private static final ResourceLocation ARF_TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "textures/entity/arf.png");
+    private static final ResourceLocation RINKA_TEXTURE = ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "textures/entity/rinka.png");
+    private static final ResourceLocation ARF_TEXTURE = ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "textures/entity/arf.png");
 
     private KenCraftEntityRenderers() {}
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(KenCraftEntities.RINKA.get(), RinkaRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.RANK_C_RINKA.get(), RankCRinkaRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.RISHIN.get(), RishinRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.ARF_GENERAL.get(), GeneralRenderer::new);
@@ -52,31 +52,34 @@ public final class KenCraftEntityRenderers {
         }
     }
 
+    private static HumanoidModel<RinkaEntity> rinkaModel(EntityRendererProvider.Context context) {
+        return new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER));
+    }
+
     private static final class RinkaRenderer extends HumanoidMobRenderer<RinkaEntity, HumanoidModel<RinkaEntity>> {
-        private RinkaRenderer(EntityRendererProvider.Context context) {
-            super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F);
-        }
+        private RinkaRenderer(EntityRendererProvider.Context context) { super(context, rinkaModel(context), 0.5F); }
         @Override public ResourceLocation getTextureLocation(RinkaEntity entity) { return RINKA_TEXTURE; }
     }
 
-    private static final class RishinRenderer extends HumanoidMobRenderer<RishinEntity, HumanoidModel<RishinEntity>> {
-        private RishinRenderer(EntityRendererProvider.Context context) {
+    private static final class RankCRinkaRenderer extends HumanoidMobRenderer<RankCRinkaEntity, HumanoidModel<RankCRinkaEntity>> {
+        private RankCRinkaRenderer(EntityRendererProvider.Context context) {
             super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F);
         }
+        @Override public ResourceLocation getTextureLocation(RankCRinkaEntity entity) { return RINKA_TEXTURE; }
+    }
+
+    private static final class RishinRenderer extends HumanoidMobRenderer<RishinEntity, HumanoidModel<RishinEntity>> {
+        private RishinRenderer(EntityRendererProvider.Context context) { super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F); }
         @Override public ResourceLocation getTextureLocation(RishinEntity entity) { return RINKA_TEXTURE; }
     }
 
     private static final class ArfRenderer extends HumanoidMobRenderer<ArfInvestigatorEntity, HumanoidModel<ArfInvestigatorEntity>> {
-        private ArfRenderer(EntityRendererProvider.Context context) {
-            super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F);
-        }
+        private ArfRenderer(EntityRendererProvider.Context context) { super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F); }
         @Override public ResourceLocation getTextureLocation(ArfInvestigatorEntity entity) { return ARF_TEXTURE; }
     }
 
     private static final class GeneralRenderer extends HumanoidMobRenderer<ArfGeneralEntity, HumanoidModel<ArfGeneralEntity>> {
-        private GeneralRenderer(EntityRendererProvider.Context context) {
-            super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F);
-        }
+        private GeneralRenderer(EntityRendererProvider.Context context) { super(context, new HumanoidModel<>(context.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F); }
         @Override public ResourceLocation getTextureLocation(ArfGeneralEntity entity) { return ARF_TEXTURE; }
     }
 }
