@@ -12,9 +12,9 @@ import net.minecraft.network.chat.Component;
 public final class KenCraftScreen extends Screen {
     private static final int PANEL_WIDTH = 470;
     private static final int PANEL_HEIGHT = 350;
-
     private int panelLeft;
     private int panelTop;
+    private int activeTab = 0;
 
     public KenCraftScreen() {
         super(Component.translatable("screen.kencraft.title"));
@@ -26,11 +26,32 @@ public final class KenCraftScreen extends Screen {
         panelLeft = (this.width - PANEL_WIDTH) / 2;
         panelTop = (this.height - PANEL_HEIGHT) / 2;
 
-        PlayerData data = currentData();
-        addTab(Component.translatable("screen.kencraft.race"), panelLeft + 16, true);
-        addTab(Component.translatable("screen.kencraft.jio"), panelLeft + 134, true);
-        addTab(Component.translatable("screen.kencraft.kikan"), panelLeft + 252, true);
+        addTab(Component.translatable("screen.kencraft.race"), panelLeft + 16, 0);
+        addTab(Component.translatable("screen.kencraft.jio"), panelLeft + 134, 1);
+        addTab(Component.translatable("screen.kencraft.kikan"), panelLeft + 252, 2);
 
+        if (activeTab == 2) {
+            initKikanTab();
+        } else {
+            initStatusTab();
+        }
+
+        this.addRenderableWidget(Button.builder(Component.literal("Fechar"), button -> this.onClose())
+                .bounds(panelLeft + 174, panelTop + 311, 122, 24)
+                .build());
+    }
+
+    private void addTab(Component text, int x, int tab) {
+        Button button = Button.builder(text, b -> {
+            activeTab = tab;
+            this.rebuildWidgets();
+        }).bounds(x, panelTop + 62, 112, 24).build();
+        button.active = activeTab != tab;
+        this.addRenderableWidget(button);
+    }
+
+    private void initStatusTab() {
+        PlayerData data = currentData();
         if (data.race() == Race.RINKA) {
             addStatusButton("strength", "Força", data.strength(), panelTop + 122, data.physicalXp() > 0);
             addStatusButton("defense", "Defesa/Resistência", data.defense(), panelTop + 144, data.physicalXp() > 0);
@@ -44,26 +65,38 @@ public final class KenCraftScreen extends Screen {
             addStatusButton("spiritual", "Desenvolvimento espiritual", data.spiritualDevelopment(), panelTop + 188, data.mentalXp() > 0);
             addStatusButton("speed", "Velocidade", data.speed(), panelTop + 210, data.physicalXp() > 0);
         }
-
-        this.addRenderableWidget(Button.builder(Component.literal("Fechar"), button -> this.onClose())
-                .bounds(panelLeft + 174, panelTop + 311, 122, 24)
-                .build());
     }
 
-    private void addTab(Component text, int x, boolean active) {
-        this.addRenderableWidget(Button.builder(text, button -> {})
-                .bounds(x, panelTop + 62, 112, 24)
-                .build());
+    private void initKikanTab() {
+        PlayerData data = currentData();
+        boolean unlocked = data.canUseKikan();
+        String rank = data.race() == Race.RINKA ? data.rinkaClass() : "—";
+
+        Button random = Button.builder(Component.literal("ALEATÓRIO"), b -> randomKikan())
+                .bounds(panelLeft + 158, panelTop + 215, 154, 28)
+                .build();
+        random.active = unlocked;
+        this.addRenderableWidget(random);
+
+        if (data.race() != Race.RINKA) {
+            random.active = false;
+        }
+    }
+
+    private void randomKikan() {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null && minecraft.player.connection != null) {
+            minecraft.player.connection.sendCommand("kencraft kikan random");
+            this.rebuildWidgets();
+        }
     }
 
     private void addStatusButton(String attribute, String name, int value, int y, boolean hasXp) {
         String text = name + ": " + value + "/" + PlayerData.MAX_STATUS + " (" + PlayerData.spentPoints(value) + " points)";
         int textWidth = this.font.width(text);
         int buttonX = Math.min(panelLeft + 360, panelLeft + 28 + textWidth + 8);
-
         Button button = Button.builder(Component.literal("+"), b -> addStatus(attribute))
-                .bounds(buttonX, y - 3, 28, 18)
-                .build();
+                .bounds(buttonX, y - 3, 28, 18).build();
         button.active = hasXp && value < PlayerData.MAX_STATUS;
         this.addRenderableWidget(button);
     }
@@ -79,21 +112,26 @@ public final class KenCraftScreen extends Screen {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(graphics, mouseX, mouseY, partialTick);
-
         graphics.fill(panelLeft, panelTop, panelLeft + PANEL_WIDTH, panelTop + PANEL_HEIGHT, 0xE8101018);
         graphics.fill(panelLeft + 1, panelTop + 1, panelLeft + PANEL_WIDTH - 1, panelTop + 2, 0xFF7AD7FF);
         graphics.fill(panelLeft + 1, panelTop + PANEL_HEIGHT - 2, panelLeft + PANEL_WIDTH - 1, panelTop + PANEL_HEIGHT - 1, 0xFF263746);
         graphics.fill(panelLeft + 8, panelTop + 48, panelLeft + PANEL_WIDTH - 8, panelTop + 49, 0xFF263746);
-
         graphics.drawCenteredString(this.font, this.title, this.width / 2, panelTop + 14, 0xFFFFFFFF);
-        graphics.drawCenteredString(this.font, Component.literal("Status por raça • 1 XP = 1 ponto"), this.width / 2, panelTop + 31, 0xFFB8C5D1);
-        graphics.fill(panelLeft + PANEL_WIDTH - 52, panelTop + 12, panelLeft + PANEL_WIDTH - 20, panelTop + 40, 0xFF2B89B8);
-        graphics.drawCenteredString(this.font, Component.literal("R"), panelLeft + PANEL_WIDTH - 36, panelTop + 20, 0xFFFFFFFF);
+        graphics.drawCenteredString(this.font, Component.literal("Progressão KenCraft"), this.width / 2, panelTop + 31, 0xFFB8C5D1);
 
         PlayerData data = currentData();
         graphics.fill(panelLeft + 16, panelTop + 96, panelLeft + PANEL_WIDTH - 16, panelTop + 288, 0xFF172531);
         graphics.drawString(this.font, Component.literal("Raça: " + raceName(data.race())), panelLeft + 28, panelTop + 106, 0xFF7AD7FF);
 
+        if (activeTab == 2) {
+            renderKikan(graphics, data);
+        } else {
+            renderStatus(graphics, data);
+        }
+        super.render(graphics, mouseX, mouseY, partialTick);
+    }
+
+    private void renderStatus(GuiGraphics graphics, PlayerData data) {
         if (data.race() == Race.RINKA) {
             drawStatusLine(graphics, "Força", data.strength(), panelTop + 122);
             drawStatusLine(graphics, "Defesa/Resistência", data.defense(), panelTop + 144);
@@ -102,7 +140,7 @@ public final class KenCraftScreen extends Screen {
             drawStatusLine(graphics, "Genética", data.genetics(), panelTop + 210);
             graphics.drawString(this.font, Component.literal("XP Mental: " + data.mentalXp()), panelLeft + 28, panelTop + 240, 0xFFB8C5D1);
             graphics.drawString(this.font, Component.literal("XP Física: " + data.physicalXp()), panelLeft + 28, panelTop + 255, 0xFFB8C5D1);
-            graphics.drawString(this.font, Component.literal("Genética aumenta regeneração e será a base da força da Kikan."), panelLeft + 28, panelTop + 272, 0xFF7AD7FF);
+            graphics.drawString(this.font, Component.literal("Jinsuikaku devoradas: " + data.jinsuikakuConsumed()), panelLeft + 28, panelTop + 272, 0xFF7AD7FF);
         } else if (data.race() == Race.HUMAN) {
             drawStatusLine(graphics, "Força", data.strength(), panelTop + 122);
             drawStatusLine(graphics, "Vida", data.life(), panelTop + 144);
@@ -110,19 +148,31 @@ public final class KenCraftScreen extends Screen {
             drawStatusLine(graphics, "Desenvolvimento espiritual", data.spiritualDevelopment(), panelTop + 188);
             drawStatusLine(graphics, "Velocidade", data.speed(), panelTop + 210);
             graphics.drawString(this.font, Component.literal("Jio: " + data.jio() + "/" + data.calculatedHumanMaxJio()), panelLeft + 28, panelTop + 240, 0xFF7AD7FF);
-            graphics.drawString(this.font, Component.literal("Multiplicador de Jio: " + String.format(java.util.Locale.ROOT, "%.0f%%", (data.jioMultiplier() - 1.0D) * 100.0D)), panelLeft + 28, panelTop + 255, 0xFFB8C5D1);
-            graphics.drawString(this.font, Component.literal("XP Mental: " + data.mentalXp() + "   XP Física: " + data.physicalXp()), panelLeft + 28, panelTop + 272, 0xFFB8C5D1);
+            graphics.drawString(this.font, Component.literal("XP Mental: " + data.mentalXp() + "   XP Física: " + data.physicalXp()), panelLeft + 28, panelTop + 255, 0xFFB8C5D1);
         } else {
             graphics.drawString(this.font, Component.literal("Escolha Rinka ou Humano para liberar seus status."), panelLeft + 28, panelTop + 122, 0xFFFFFFFF);
         }
+    }
 
-        super.render(graphics, mouseX, mouseY, partialTick);
+    private void renderKikan(GuiGraphics graphics, PlayerData data) {
+        if (data.race() != Race.RINKA) {
+            graphics.drawString(this.font, Component.literal("A Kikan é exclusiva dos Rinkas."), panelLeft + 28, panelTop + 122, 0xFFFFFFFF);
+            return;
+        }
+        graphics.drawString(this.font, Component.literal("Classe atual: " + data.rinkaClass()), panelLeft + 28, panelTop + 122, 0xFFFF6666);
+        graphics.drawString(this.font, Component.literal("Jinsuikaku devoradas: " + data.jinsuikakuConsumed()), panelLeft + 28, panelTop + 140, 0xFFB8C5D1);
+        if (!data.canUseKikan()) {
+            graphics.drawString(this.font, Component.literal("Você precisa ser Classe C ou superior."), panelLeft + 28, panelTop + 166, 0xFFFFAA66);
+            graphics.drawString(this.font, Component.literal("E: 1 • D: 10 • C: 20 Jinsuikaku"), panelLeft + 28, panelTop + 184, 0xFFB8C5D1);
+            return;
+        }
+        graphics.drawString(this.font, Component.literal("Apertei no botão abaixo para girar sua Kikan animal"), panelLeft + 28, panelTop + 160, 0xFFFFFFFF);
+        graphics.drawString(this.font, Component.literal("Por exemplo, Cauda de crocodilo, tentáculo e cauda de escorpião."), panelLeft + 28, panelTop + 178, 0xFFB8C5D1);
+        graphics.drawString(this.font, Component.literal("Kikan atual: " + prettyKikan(data.kikanType())), panelLeft + 28, panelTop + 260, 0xFF7AD7FF);
     }
 
     private PlayerData currentData() {
-        return Minecraft.getInstance().player == null
-                ? PlayerData.DEFAULT
-                : Minecraft.getInstance().player.getData(ModAttachments.PLAYER_DATA);
+        return Minecraft.getInstance().player == null ? PlayerData.DEFAULT : Minecraft.getInstance().player.getData(ModAttachments.PLAYER_DATA);
     }
 
     private void drawStatusLine(GuiGraphics graphics, String name, int value, int y) {
@@ -135,6 +185,15 @@ public final class KenCraftScreen extends Screen {
             case RINKA -> "Rinka";
             case HUMAN -> "Humano";
             case NONE -> "Sem raça";
+        };
+    }
+
+    private String prettyKikan(String type) {
+        return switch (type) {
+            case "CROCODILE_TAIL" -> "Cauda de crocodilo";
+            case "TENTACLE" -> "Tentáculo";
+            case "SCORPION_TAIL" -> "Cauda de escorpião";
+            default -> "Nenhuma";
         };
     }
 }
