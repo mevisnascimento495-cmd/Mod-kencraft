@@ -5,6 +5,7 @@ import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
+import br.mevis.kencraft.entity.RankCRinkaEntity;
 import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.entity.RishinEntity;
 import br.mevis.kencraft.item.KenCraftItems;
@@ -24,26 +25,32 @@ public final class KenCraftNpcRewards {
     public static void onLivingDeath(LivingDeathEvent event) {
         LivingEntity victim = event.getEntity();
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
 
-        if (victim instanceof RishinEntity) {
+        if (victim instanceof RankCRinkaEntity) {
             int kills = data.arfMissionKills();
             if (data.race() == Race.HUMAN && data.arfClass() >= 2 && data.arfClass() <= 4 && kills >= 0) {
                 kills++;
                 player.setData(ModAttachments.PLAYER_DATA,
-                        data.withXp(data.mentalXp() + 5, data.physicalXp()).withArfMissionKills(kills));
-                player.sendSystemMessage(Component.literal("Rishin derrotado: +5 XP Mental. Missão ARF: " + kills + "/" + requiredRishins(data.arfClass()) + "."));
+                        data.withXp(data.mentalXp(), data.physicalXp() + 5).withArfMissionKills(kills));
+                int required = requiredRankCRinkas(data.arfClass());
+                player.sendSystemMessage(Component.literal("Rinka Rank C derrotado: +5 XP Física. Missão ARF: " + kills + "/" + required + "."));
+                if (kills >= required) player.sendSystemMessage(Component.literal("Missão ARF concluída: volte ao General da ARF para sua promoção."));
+            }
+            if (data.race() == Race.RINKA) {
+                player.spawnAtLocation(KenCraftItems.JINSUIKAKU.get());
+                player.sendSystemMessage(Component.literal("O Rinka Rank C derrotado deixou cair uma Jinsuikaku."));
             }
             return;
         }
 
+        if (victim instanceof RishinEntity) return;
+
         if (victim instanceof RinkaEntity) {
             int nextKills = data.arfMissionKills();
             if (data.race() == Race.HUMAN && data.arfClass() == 0 && data.arfMissionKills() >= 0 && data.arfMissionKills() < 5) {
-                nextKills = data.arfMissionKills() + 1;
+                nextKills++;
             }
-
             player.setData(ModAttachments.PLAYER_DATA,
                     data.withXp(data.mentalXp(), data.physicalXp() + 5).withArfMissionKills(nextKills));
             player.sendSystemMessage(Component.literal("Rinka derrotado: +5 XP Física."));
@@ -52,7 +59,6 @@ public final class KenCraftNpcRewards {
             } else if (data.race() == Race.HUMAN && data.arfClass() == 0 && nextKills == 5) {
                 player.sendSystemMessage(Component.literal("Missão ARF concluída: volte ao Investigador ARF General."));
             }
-
             if (data.race() == Race.RINKA) {
                 player.spawnAtLocation(KenCraftItems.JINSUIKAKU.get());
                 player.sendSystemMessage(Component.literal("O Rinka derrotado deixou cair uma Jinsuikaku."));
@@ -63,11 +69,11 @@ public final class KenCraftNpcRewards {
         }
     }
 
-    private static int requiredRishins(int arfClass) {
+    private static int requiredRankCRinkas(int arfClass) {
         return switch (arfClass) {
-            case 4 -> 5;
-            case 3 -> 10;
-            case 2 -> 20;
+            case 4 -> 3;
+            case 3 -> 6;
+            case 2 -> 10;
             default -> 0;
         };
     }
