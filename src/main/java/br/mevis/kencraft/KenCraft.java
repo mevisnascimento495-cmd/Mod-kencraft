@@ -5,6 +5,7 @@ import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
+import br.mevis.kencraft.entity.RishinEntity;
 import br.mevis.kencraft.event.ChatSelectionHandler;
 import br.mevis.kencraft.event.PlayerLoginHandler;
 import br.mevis.kencraft.item.KenCraftItems;
@@ -36,6 +37,7 @@ public class KenCraft {
         @SubscribeEvent
         public static void createAttributes(EntityAttributeCreationEvent event) {
             event.put(KenCraftEntities.RINKA.get(), RinkaEntity.createAttributes().build());
+            event.put(KenCraftEntities.RISHIN.get(), RishinEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralEntity.createAttributes().build());
         }
