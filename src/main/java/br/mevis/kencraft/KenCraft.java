@@ -48,6 +48,7 @@ public class KenCraft {
         public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
             if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
                 event.accept(KenCraftItems.JINSUIKAKU.get());
+                event.accept(KenCraftItems.JINSUIKAKU_RANK_C.get());
             }
             if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
                 event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());
