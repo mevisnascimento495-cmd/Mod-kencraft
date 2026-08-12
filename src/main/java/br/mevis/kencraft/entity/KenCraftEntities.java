@@ -16,6 +16,11 @@ public final class KenCraftEntities {
                     .sized(0.6F, 1.8F)
                     .build("kencraft:rinka"));
 
+    public static final DeferredHolder<EntityType<?>, EntityType<RishinEntity>> RISHIN = ENTITY_TYPES.register("rishin",
+            () -> EntityType.Builder.of(RishinEntity::new, MobCategory.MONSTER)
+                    .sized(0.6F, 1.8F)
+                    .build("kencraft:rishin"));
+
     public static final DeferredHolder<EntityType<?>, EntityType<ArfInvestigatorEntity>> ARF_INVESTIGATOR = ENTITY_TYPES.register("arf_investigator",
             () -> EntityType.Builder.of(ArfInvestigatorEntity::new, MobCategory.CREATURE)
                     .sized(0.6F, 1.8F)
