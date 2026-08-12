@@ -6,6 +6,7 @@ import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.entity.RishinEntity;
+import br.mevis.kencraft.entity.RankCRinkaEntity;
 import br.mevis.kencraft.event.ChatSelectionHandler;
 import br.mevis.kencraft.event.PlayerLoginHandler;
 import br.mevis.kencraft.item.KenCraftItems;
@@ -37,6 +38,7 @@ public class KenCraft {
         @SubscribeEvent
         public static void createAttributes(EntityAttributeCreationEvent event) {
             event.put(KenCraftEntities.RINKA.get(), RinkaEntity.createAttributes().build());
+            event.put(KenCraftEntities.RANK_C_RINKA.get(), RankCRinkaEntity.createAttributes().build());
             event.put(KenCraftEntities.RISHIN.get(), RishinEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralEntity.createAttributes().build());
@@ -49,6 +51,7 @@ public class KenCraft {
             }
             if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
                 event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());
+                event.accept(KenCraftItems.RANK_C_RINKA_SPAWN_EGG.get());
                 event.accept(KenCraftItems.ARF_INVESTIGATOR_SPAWN_EGG.get());
                 event.accept(KenCraftItems.ARF_GENERAL_SPAWN_EGG.get());
             }
