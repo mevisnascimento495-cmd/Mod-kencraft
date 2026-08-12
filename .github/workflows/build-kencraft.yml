@@ -28,16 +28,23 @@ jobs:
         with:
           gradle-version: "8.10.2"
 
-      - name: Materialize generated Jinsuikaku texture
+      - name: Materialize generated textures
         shell: bash
         run: |
           set -euo pipefail
-          TEXTURE="src/main/resources/assets/kencraft/textures/item/jinsuikaku.png"
-          SOURCE="src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64"
-          test -f "$SOURCE"
-          base64 -d "$SOURCE" > "$TEXTURE"
-          file "$TEXTURE"
-          test "$(wc -c < "$TEXTURE")" -gt 0
+          decode() {
+            local source="$1"
+            local target="$2"
+            test -f "$source"
+            mkdir -p "$(dirname "$target")"
+            base64 -d "$source" > "$target"
+            test "$(wc -c < "$target")" -gt 0
+            file "$target"
+          }
+          decode src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64 src/main/resources/assets/kencraft/textures/item/jinsuikaku.png
+          decode src/main/resources/assets/kencraft/textures/entity/rinka.png.b64 src/main/resources/assets/kencraft/textures/entity/rinka.png
+          decode src/main/resources/assets/kencraft/textures/entity/arf.png.b64 src/main/resources/assets/kencraft/textures/entity/arf.png
+          decode src/main/resources/assets/kencraft/textures/entity/kikan.png.b64 src/main/resources/assets/kencraft/textures/entity/kikan.png
 
       - name: Verify complete project
         shell: bash
