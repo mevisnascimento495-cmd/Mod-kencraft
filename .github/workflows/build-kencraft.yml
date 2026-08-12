@@ -42,6 +42,7 @@ jobs:
             file "$target"
           }
           decode src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64 src/main/resources/assets/kencraft/textures/item/jinsuikaku.png
+          decode src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png.b64 src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png
           decode src/main/resources/assets/kencraft/textures/entity/rinka.png.b64 src/main/resources/assets/kencraft/textures/entity/rinka.png
           decode src/main/resources/assets/kencraft/textures/entity/arf.png.b64 src/main/resources/assets/kencraft/textures/entity/arf.png
           decode src/main/resources/assets/kencraft/textures/entity/kikan.png.b64 src/main/resources/assets/kencraft/textures/entity/kikan.png
@@ -55,6 +56,8 @@ jobs:
           test -f gradle.properties
           test -f src/main/resources/META-INF/neoforge.mods.toml
           test -f src/main/java/br/mevis/kencraft/KenCraft.java
+          test -f src/main/resources/assets/kencraft/models/item/jinsuikaku_rank_c.json
+          test -f src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png
           echo "KenCraft project found in repository root."
 
       - name: Build KenCraft mod
