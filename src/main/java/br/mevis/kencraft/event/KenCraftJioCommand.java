@@ -5,7 +5,6 @@ import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -13,12 +12,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
-/** Server-side controls for the Human Jio techniques. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftJioCommand {
     private static final String[] TECHNIQUES = {"Kata Kyōka 体強化", "Seishin Dan 精神弾", "生命喰 Hakai Satsu Tōtetsu: Seimei Kui"};
@@ -29,8 +26,7 @@ public final class KenCraftJioCommand {
         CommandDispatcher<CommandSourceStack> d = event.getDispatcher();
         d.register(Commands.literal("kencraft").then(Commands.literal("jio")
                 .then(Commands.literal("cycle").executes(c -> cycle(c.getSource())))
-                .then(Commands.literal("attack").then(Commands.argument("slot", StringArgumentType.word())
-                        .executes(c -> attack(c.getSource(), Integer.parseInt(StringArgumentType.getString(c, "slot"))))))
+                .then(Commands.literal("attack").executes(c -> attack(c.getSource())))
                 .then(Commands.literal("charge").executes(c -> charge(c.getSource())))));
     }
 
@@ -40,23 +36,18 @@ public final class KenCraftJioCommand {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio.")); return 0; }
-        int current = techniqueIndex(data.jioTechnique());
-        int next = (current + 1) % TECHNIQUES.length;
+        int next = (techniqueIndex(data.jioTechnique()) + 1) % TECHNIQUES.length;
         player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(TECHNIQUES[next]));
         player.sendSystemMessage(Component.literal("Técnica Jio: " + TECHNIQUES[next]));
         return 1;
     }
 
-    private static int attack(CommandSourceStack source, int slot) {
+    private static int attack(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você ainda não possui Rank ARF suficiente para usar Jio.")); return 0; }
-        int current = techniqueIndex(data.jioTechnique());
-        if (current != Math.max(0, Math.min(2, slot))) {
-            player.sendSystemMessage(Component.literal("Troque para a técnica selecionada com G primeiro."));
-            return 0;
-        }
         if (data.jio() < 30) { player.sendSystemMessage(Component.literal("Jio insuficiente: cada técnica custa 30 Jio.")); return 0; }
+        int current = techniqueIndex(data.jioTechnique());
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - 30, data.calculatedHumanMaxJio()));
         switch (current) {
             case 0 -> kataKyoka(player);
@@ -88,10 +79,7 @@ public final class KenCraftJioCommand {
         if (target != null) {
             target.hurt(player.damageSources().magic(), 3.0F + spiritual * 1.5F);
             player.sendSystemMessage(Component.literal("Seishin Dan 精神弾 atingiu o alvo!"));
-        } else {
-            player.sendSystemMessage(Component.literal("Seishin Dan 精神弾 disparado, mas não atingiu um alvo."));
-        }
-        player.level().levelEvent(2001, player.blockPosition(), 0);
+        } else player.sendSystemMessage(Component.literal("Seishin Dan 精神弾 disparado, mas não atingiu um alvo."));
     }
 
     private static void seimeiKui(ServerPlayer player) {
@@ -100,9 +88,8 @@ public final class KenCraftJioCommand {
         if (target != null) {
             target.hurt(player.damageSources().playerAttack(player), 4.0F + spiritual);
             target.setSecondsOnFire(2);
-            for (LivingEntity nearby : player.level().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(2.5D), e -> e != player && e != target)) {
+            for (LivingEntity nearby : player.level().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(2.5D), e -> e != player && e != target))
                 nearby.hurt(player.damageSources().playerAttack(player), 2.0F + spiritual * 0.5F);
-            }
             player.sendSystemMessage(Component.literal("生命喰 Hakai Satsu Tōtetsu: Seimei Kui!"));
         }
     }
