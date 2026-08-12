@@ -8,11 +8,13 @@ import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.event.ChatSelectionHandler;
 import br.mevis.kencraft.event.PlayerLoginHandler;
 import br.mevis.kencraft.item.KenCraftItems;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
 @Mod(KenCraft.MOD_ID)
@@ -36,6 +38,13 @@ public class KenCraft {
             event.put(KenCraftEntities.RINKA.get(), RinkaEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralEntity.createAttributes().build());
+        }
+
+        @SubscribeEvent
+        public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
+            if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
+                event.accept(KenCraftItems.JINSUIKAKU);
+            }
         }
     }
 }
