@@ -93,8 +93,8 @@ public final class KenCraftNpcCommand {
     private static int chargeJio(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HUMAN) {
-            source.sendFailure(Component.literal("Somente humanos podem carregar Jio desta forma."));
+        if (data.race() != Race.HUMAN || data.arfClass() < 4) {
+            source.sendFailure(Component.literal("Você precisa ser humano e ter entrado na ARF para aprender a controlar Jio."));
             return 0;
         }
         int max = data.calculatedHumanMaxJio();
@@ -107,8 +107,8 @@ public final class KenCraftNpcCommand {
     private static int randomJioTechnique(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HUMAN) {
-            source.sendFailure(Component.literal("A técnica Jio é exclusiva dos humanos."));
+        if (data.race() != Race.HUMAN || data.arfClass() < 4) {
+            source.sendFailure(Component.literal("Você precisa entrar para a ARF antes de girar uma técnica Jio."));
             return 0;
         }
         String[] choices = {"REFORCO", "RAJADA", "BARREIRA"};
