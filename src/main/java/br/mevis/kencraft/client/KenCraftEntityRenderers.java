@@ -1,6 +1,7 @@
 package br.mevis.kencraft.client;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import br.mevis.kencraft.entity.RinkaEntity;
@@ -24,6 +25,7 @@ public final class KenCraftEntityRenderers {
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(KenCraftEntities.RINKA.get(), RinkaRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.ARF_GENERAL.get(), GeneralRenderer::new);
     }
 
     private static final class RinkaRenderer extends HumanoidMobRenderer<RinkaEntity, HumanoidModel<RinkaEntity>> {
@@ -44,6 +46,17 @@ public final class KenCraftEntityRenderers {
 
         @Override
         public ResourceLocation getTextureLocation(ArfInvestigatorEntity entity) {
+            return STEVE_TEXTURE;
+        }
+    }
+
+    private static final class GeneralRenderer extends HumanoidMobRenderer<ArfGeneralEntity, HumanoidModel<ArfGeneralEntity>> {
+        private GeneralRenderer(EntityRendererProvider.Context context) {
+            super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), 0.5F);
+        }
+
+        @Override
+        public ResourceLocation getTextureLocation(ArfGeneralEntity entity) {
             return STEVE_TEXTURE;
         }
     }
