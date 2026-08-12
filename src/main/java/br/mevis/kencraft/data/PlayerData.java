@@ -32,7 +32,7 @@ public record PlayerData(
             Race.NONE, 0, 0,
             MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
             MIN_STATUS, MIN_STATUS, MIN_STATUS,
-            0, 0, 0, 0, "NONE"
+            0, 0, -1, 0, "NONE"
     );
 
     private static final Codec<Race> RACE_CODEC = Codec.STRING.xmap(Race::valueOf, Race::name);
@@ -52,7 +52,7 @@ public record PlayerData(
                     Codec.INT.optionalFieldOf("life", MIN_STATUS).forGetter(PlayerData::life),
                     Codec.INT.optionalFieldOf("mentalXp", 0).forGetter(PlayerData::mentalXp),
                     Codec.INT.optionalFieldOf("physicalXp", 0).forGetter(PlayerData::physicalXp),
-                    Codec.INT.optionalFieldOf("arfMissionKills", 0).forGetter(PlayerData::arfMissionKills),
+                    Codec.INT.optionalFieldOf("arfMissionKills", -1).forGetter(PlayerData::arfMissionKills),
                     Codec.INT.optionalFieldOf("arfClass", 0).forGetter(PlayerData::arfClass),
                     Codec.STRING.optionalFieldOf("rinkaClass", "NONE").forGetter(PlayerData::rinkaClass)
             ).apply(instance, PlayerData::new)
@@ -80,13 +80,13 @@ public record PlayerData(
     public static PlayerData forRinka() {
         return new PlayerData(Race.RINKA, 0, 0,
                 MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
-                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, 0, 0, "NONE");
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE");
     }
 
     public static PlayerData forHuman() {
         return new PlayerData(Race.HUMAN, 100, 100,
                 MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
-                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, 0, 0, "NONE");
+                MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE");
     }
 
     public PlayerData withStatus(String attribute, int value) {
@@ -116,7 +116,7 @@ public record PlayerData(
 
     public PlayerData withArfMissionKills(int kills) {
         return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics,
-                perception, spiritualDevelopment, life, mentalXp, physicalXp, Math.max(0, kills), arfClass, rinkaClass);
+                perception, spiritualDevelopment, life, mentalXp, physicalXp, kills, arfClass, rinkaClass);
     }
 
     public PlayerData withArfClass(int newClass) {
