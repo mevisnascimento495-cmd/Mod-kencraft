@@ -1,8 +1,9 @@
 package br.mevis.kencraft.item;
 
 import br.mevis.kencraft.KenCraft;
-import net.minecraft.core.registries.Registries;
+import br.mevis.kencraft.entity.KenCraftEntities;
 import net.minecraft.world.item.Item;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -16,6 +17,15 @@ public final class KenCraftItems {
                             .saturationModifier(0.4F)
                             .alwaysEdible()
                             .build())));
+
+    public static final DeferredHolder<Item, DeferredSpawnEggItem> RINKA_SPAWN_EGG = ITEMS.register("rinka_spawn_egg",
+            () -> new DeferredSpawnEggItem(KenCraftEntities.RINKA, 0x241C1C, 0x8B1E2D, new Item.Properties()));
+
+    public static final DeferredHolder<Item, DeferredSpawnEggItem> ARF_INVESTIGATOR_SPAWN_EGG = ITEMS.register("arf_investigator_spawn_egg",
+            () -> new DeferredSpawnEggItem(KenCraftEntities.ARF_INVESTIGATOR, 0xF2F2F2, 0x242424, new Item.Properties()));
+
+    public static final DeferredHolder<Item, DeferredSpawnEggItem> ARF_GENERAL_SPAWN_EGG = ITEMS.register("arf_general_spawn_egg",
+            () -> new DeferredSpawnEggItem(KenCraftEntities.ARF_GENERAL, 0xE8E8E8, 0x111111, new Item.Properties()));
 
     private KenCraftItems() {}
 }
