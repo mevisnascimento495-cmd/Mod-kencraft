@@ -14,18 +14,23 @@ import org.lwjgl.glfw.GLFW;
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
 public final class KenCraftClient {
     public static final KeyMapping OPEN_MENU = new KeyMapping(
-            "key.kencraft.menu",
-            KeyConflictContext.IN_GAME,
-            KeyModifier.NONE,
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_R,
-            "key.categories.kencraft"
-    );
+            "key.kencraft.menu", KeyConflictContext.IN_GAME, KeyModifier.NONE,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.kencraft");
+
+    public static final KeyMapping KIKAN_Z = new KeyMapping(
+            "key.kencraft.kikan_z", KeyConflictContext.IN_GAME, KeyModifier.NONE,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.kencraft");
+
+    public static final KeyMapping KIKAN_C = new KeyMapping(
+            "key.kencraft.kikan_c", KeyConflictContext.IN_GAME, KeyModifier.NONE,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.kencraft");
 
     private KenCraftClient() {}
 
     @SubscribeEvent
     public static void registerKeyMapping(RegisterKeyMappingsEvent event) {
         event.register(OPEN_MENU);
+        event.register(KIKAN_Z);
+        event.register(KIKAN_C);
     }
 }
