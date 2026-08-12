@@ -25,12 +25,23 @@ public final class KenCraftJioCommand {
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> d = event.getDispatcher();
         d.register(Commands.literal("kencraft").then(Commands.literal("jio")
+                .then(Commands.literal("random").executes(c -> random(c.getSource())))
                 .then(Commands.literal("cycle").executes(c -> cycle(c.getSource())))
                 .then(Commands.literal("attack").executes(c -> attack(c.getSource())))
                 .then(Commands.literal("charge").executes(c -> charge(c.getSource())))));
     }
 
     private static boolean eligible(PlayerData data) { return data.race() == Race.HUMAN && data.arfClass() >= 4; }
+
+    private static int random(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio.")); return 0; }
+        String chosen = TECHNIQUES[player.getRandom().nextInt(TECHNIQUES.length)];
+        player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(chosen));
+        player.sendSystemMessage(Component.literal("Técnica Jio sorteada: " + chosen));
+        return 1;
+    }
 
     private static int cycle(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
@@ -49,11 +60,7 @@ public final class KenCraftJioCommand {
         if (data.jio() < 30) { player.sendSystemMessage(Component.literal("Jio insuficiente: cada técnica custa 30 Jio.")); return 0; }
         int current = techniqueIndex(data.jioTechnique());
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - 30, data.calculatedHumanMaxJio()));
-        switch (current) {
-            case 0 -> kataKyoka(player);
-            case 1 -> seishinDan(player);
-            default -> seimeiKui(player);
-        }
+        switch (current) { case 0 -> kataKyoka(player); case 1 -> seishinDan(player); default -> seimeiKui(player); }
         return 1;
     }
 
@@ -97,17 +104,12 @@ public final class KenCraftJioCommand {
     }
 
     private static LivingEntity findTarget(ServerPlayer player, double range) {
-        var eye = player.getEyePosition();
-        var end = eye.add(player.getLookAngle().scale(range));
+        var eye = player.getEyePosition(); var end = eye.add(player.getLookAngle().scale(range));
         var box = player.getBoundingBox().expandTowards(player.getLookAngle().scale(range)).inflate(1.0D);
-        LivingEntity best = null;
-        double bestDistance = range * range;
+        LivingEntity best = null; double bestDistance = range * range;
         for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != player && e.isAlive())) {
             var hit = entity.getBoundingBox().inflate(0.3D).clip(eye, end);
-            if (hit.isPresent()) {
-                double distance = eye.distanceToSqr(hit.get());
-                if (distance < bestDistance) { bestDistance = distance; best = entity; }
-            }
+            if (hit.isPresent()) { double distance = eye.distanceToSqr(hit.get()); if (distance < bestDistance) { bestDistance = distance; best = entity; } }
         }
         return best;
     }
