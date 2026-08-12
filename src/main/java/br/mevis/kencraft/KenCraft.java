@@ -47,6 +47,11 @@ public class KenCraft {
             if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
                 event.accept(KenCraftItems.JINSUIKAKU.get());
             }
+            if (event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
+                event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());
+                event.accept(KenCraftItems.ARF_INVESTIGATOR_SPAWN_EGG.get());
+                event.accept(KenCraftItems.ARF_GENERAL_SPAWN_EGG.get());
+            }
         }
     }
 }
