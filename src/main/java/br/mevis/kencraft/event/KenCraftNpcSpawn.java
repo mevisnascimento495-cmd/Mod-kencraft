@@ -4,6 +4,7 @@ import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.entity.ArfGeneralEntity;
 import br.mevis.kencraft.entity.ArfInvestigatorEntity;
 import br.mevis.kencraft.entity.KenCraftEntities;
+import br.mevis.kencraft.entity.RankCRinkaEntity;
 import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.entity.RishinEntity;
 import net.minecraft.core.BlockPos;
@@ -21,8 +22,9 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Natural KenCraft NPC spawning. Deliberately sparse rather than filling every loaded chunk. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
+    private static final double RANK_C_RINKA_CHANCE = 0.018D;
     private static final double RINKA_CHANCE = 0.08D;
-    private static final double RISHIN_CHANCE = 0.02D;
+    private static final double RISHIN_CHANCE = 0.0D;
     private static final double ARF_CHANCE = 0.05D;
     private static final double GENERAL_CHANCE = 0.01D;
 
@@ -40,11 +42,15 @@ public final class KenCraftNpcSpawn {
         double roll = ThreadLocalRandom.current().nextDouble();
 
         if (night) {
-            if (roll < RISHIN_CHANCE && level.getEntitiesOfClass(RishinEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+            if (roll < RANK_C_RINKA_CHANCE && level.getEntitiesOfClass(RankCRinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+                spawnRankCRinka(level, chunkPos);
+                return;
+            }
+            if (roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE && level.getEntitiesOfClass(RishinEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
                 spawnRishin(level, chunkPos);
                 return;
             }
-            if (roll < RISHIN_CHANCE + RINKA_CHANCE && level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+            if (roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE + RINKA_CHANCE && level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
                 spawnRinka(level, chunkPos);
             }
             return;
@@ -57,6 +63,16 @@ public final class KenCraftNpcSpawn {
         if (roll < GENERAL_CHANCE + ARF_CHANCE && level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
             spawnInvestigator(level, chunkPos);
         }
+    }
+
+    private static void spawnRankCRinka(ServerLevel level, ChunkPos chunkPos) {
+        BlockPos pos = findSpawnPosition(level, chunkPos);
+        if (pos == null) return;
+        RankCRinkaEntity entity = KenCraftEntities.RANK_C_RINKA.get().create(level);
+        if (entity == null) return;
+        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
+        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
+        level.addFreshEntity(entity);
     }
 
     private static void spawnRinka(ServerLevel level, ChunkPos chunkPos) {
@@ -106,8 +122,7 @@ public final class KenCraftNpcSpawn {
     }
 
     private static net.minecraft.world.phys.AABB chunkBounds(ServerLevel level, ChunkPos pos) {
-        return new net.minecraft.world.phys.AABB(
-                pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ(),
+        return new net.minecraft.world.phys.AABB(pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ(),
                 pos.getMaxBlockX() + 1, level.getMaxBuildHeight(), pos.getMaxBlockZ() + 1);
     }
 
