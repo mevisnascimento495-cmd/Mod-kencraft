@@ -36,32 +36,39 @@ jobs:
           import base64
           from pathlib import Path
 
-          files = [
+          regular_files = [
               ("src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku.png"),
               ("src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png"),
-              ("src/main/resources/assets/kencraft/textures/entity/rinka.png.b64", "src/main/resources/assets/kencraft/textures/entity/rinka.png"),
               ("src/main/resources/assets/kencraft/textures/entity/arf.png.b64", "src/main/resources/assets/kencraft/textures/entity/arf.png"),
               ("src/main/resources/assets/kencraft/textures/entity/kikan.png.b64", "src/main/resources/assets/kencraft/textures/entity/kikan.png"),
           ]
 
           png_signature = b"\x89PNG\r\n\x1a\n"
-          for source_name, target_name in files:
-              source = Path(source_name)
-              target = Path(target_name)
-              if not source.is_file():
-                  raise SystemExit(f"Missing texture source: {source}")
-              raw = source.read_text(encoding="utf-8").strip()
-              # Accept wrapped base64 and harmless whitespace from repository storage.
+
+          def decode(source_name: str, target_name: str, raw: str) -> None:
               raw = "".join(raw.split())
-              try:
-                  data = base64.b64decode(raw, validate=True)
-              except Exception as exc:
-                  raise SystemExit(f"Invalid base64 in {source}: {exc}")
+              data = base64.b64decode(raw, validate=True)
               if not data.startswith(png_signature):
-                  raise SystemExit(f"Decoded file is not PNG: {source}")
+                  raise SystemExit(f"Decoded file is not PNG: {source_name}")
+              target = Path(target_name)
               target.parent.mkdir(parents=True, exist_ok=True)
               target.write_bytes(data)
               print(f"OK: {target} ({len(data)} bytes)")
+
+          for source_name, target_name in regular_files:
+              source = Path(source_name)
+              if not source.is_file():
+                  raise SystemExit(f"Missing texture source: {source}")
+              decode(source_name, target_name, source.read_text(encoding="utf-8"))
+
+          chunk_dir = Path("src/main/resources/assets/kencraft/textures/entity/rinka_chunks")
+          chunks = sorted(chunk_dir.glob("*.txt"))
+          if len(chunks) != 6:
+              raise SystemExit(f"Expected 6 verified Rinka chunks, found {len(chunks)}")
+          rinka_b64 = "".join(chunk.read_text(encoding="utf-8").strip() for chunk in chunks)
+          if len(rinka_b64) != 5728:
+              raise SystemExit(f"Rinka Base64 length mismatch: {len(rinka_b64)} (expected 5728)")
+          decode("rinka_chunks/*.txt", "src/main/resources/assets/kencraft/textures/entity/rinka.png", rinka_b64)
           PY
 
       - name: Verify complete project
