@@ -18,7 +18,10 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftJioCommand {
-    private static final String[] TECHNIQUES = {"Seishin Dan", "Hakai Satsu Tōtetsu: Seimei Kui", "Kata Kyōka"};
+    private static final String TECH_SEISHIN = "Seishin Dan";
+    private static final String TECH_HAKAI = "Hakai Satsu Totetsu: Seimei kui";
+    private static final String TECH_KATA = "Kata kyoka";
+    private static final String[] TECHNIQUES = {TECH_SEISHIN, TECH_HAKAI, TECH_KATA};
     private KenCraftJioCommand() {}
 
     @SubscribeEvent
@@ -41,7 +44,7 @@ public final class KenCraftJioCommand {
             return 0;
         }
         if (!"NONE".equals(data.jioTechnique())) {
-            player.sendSystemMessage(Component.literal("Você já girou sua técnica Jio e ganhou: " + data.jioTechnique() + "."));
+            player.sendSystemMessage(Component.literal("Você já girou sua técnica Jio e ganhou: " + data.jioTechnique()));
             return 0;
         }
         String chosen = TECHNIQUES[player.getRandom().nextInt(TECHNIQUES.length)];
@@ -64,17 +67,14 @@ public final class KenCraftJioCommand {
         }
         int next = (data.jioAbilitySlot() + 1) % 3;
         player.setData(ModAttachments.PLAYER_DATA, data.withJioAbilitySlot(next));
-        player.sendSystemMessage(Component.literal("" + data.jioTechnique() + " — Habilidade " + (next + 1) + "/3 selecionada."));
+        player.sendSystemMessage(Component.literal(data.jioTechnique() + " — Habilidade " + (next + 1) + "/3 selecionada."));
         return 1;
     }
 
     private static int attack(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (!eligible(data)) {
-            player.sendSystemMessage(Component.literal("Você ainda não possui Rank ARF suficiente para usar Jio."));
-            return 0;
-        }
+        if (!eligible(data)) return 0;
         if ("NONE".equals(data.jioTechnique())) {
             player.sendSystemMessage(Component.literal("Você ainda não possui uma técnica Jio. Gire uma no menu R."));
             return 0;
@@ -91,8 +91,8 @@ public final class KenCraftJioCommand {
     }
 
     private static int abilityCost(int technique, int slot) {
-        if (technique == 1 && slot == 2) return 100; // Destruição total
-        if (technique == 0 && slot == 2) return 50;  // Intangibilidade espiritual
+        if (technique == 1 && slot == 2) return 100;
+        if (technique == 0 && slot == 2) return 50;
         return 30;
     }
 
@@ -100,7 +100,8 @@ public final class KenCraftJioCommand {
         switch (technique) {
             case 0 -> executeSeishinDan(player, slot);
             case 1 -> executeSeimeiKui(player, slot);
-            default -> executeKataKyoka(player, slot);
+            case 2 -> executeKataKyoka(player, slot);
+            default -> player.sendSystemMessage(Component.literal("Técnica Jio inválida."));
         }
     }
 
@@ -131,16 +132,16 @@ public final class KenCraftJioCommand {
                 target.hurt(player.damageSources().playerAttack(player), 8.0F + spiritual);
                 target.setDeltaMovement(target.getDeltaMovement().add(player.getLookAngle().scale(1.4D)));
             }
-            player.sendSystemMessage(Component.literal("Hakai Satsu Tōtetsu: Seimei Kui — Soco explosivo!"));
+            player.sendSystemMessage(Component.literal("Hakai Satsu Totetsu: Seimei kui — Soco explosivo!"));
         } else if (slot == 1) {
             if (target != null) {
                 for (int i = 0; i < 7; i++) target.hurt(player.damageSources().playerAttack(player), 3.5F + spiritual * 0.5F);
                 target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), 100));
             }
-            player.sendSystemMessage(Component.literal("Hakai Satsu Tōtetsu: Seimei Kui — Barragem de golpes da chama da luta!"));
+            player.sendSystemMessage(Component.literal("Hakai Satsu Totetsu: Seimei kui — Barragem de golpes da chama da luta!"));
         } else {
             if (target != null) target.hurt(player.damageSources().playerAttack(player), 70.0F);
-            player.sendSystemMessage(Component.literal("Hakai Satsu Tōtetsu: Seimei Kui — Destruição total!"));
+            player.sendSystemMessage(Component.literal("Hakai Satsu Totetsu: Seimei kui — Destruição total!"));
         }
     }
 
@@ -149,17 +150,17 @@ public final class KenCraftJioCommand {
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 12, 2, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 20 * 12, 1, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20 * 12, 1, false, true));
-            player.sendSystemMessage(Component.literal("Kata Kyōka — Reforço ativado!"));
+            player.sendSystemMessage(Component.literal("Kata kyoka — Reforço ativado!"));
         } else {
             LivingEntity target = findTarget(player, 4.0D);
             if (target != null) {
                 if (slot == 1) {
                     target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20 * 2, 10));
                     target.hurt(player.damageSources().playerAttack(player), 6.0F);
-                    player.sendSystemMessage(Component.literal("Kata Kyōka — Mão esmagadora!"));
+                    player.sendSystemMessage(Component.literal("Kata kyoka — Mão esmagadora!"));
                 } else {
                     for (int i = 0; i < 8; i++) target.hurt(player.damageSources().playerAttack(player), 3.0F);
-                    player.sendSystemMessage(Component.literal("Kata Kyōka — Combo de reforço!"));
+                    player.sendSystemMessage(Component.literal("Kata kyoka — Combo de reforço!"));
                 }
             }
         }
@@ -191,8 +192,7 @@ public final class KenCraftJioCommand {
     }
 
     private static int techniqueIndex(String technique) {
-        if (technique == null) return 0;
         for (int i = 0; i < TECHNIQUES.length; i++) if (TECHNIQUES[i].equals(technique)) return i;
-        return 0;
+        return -1;
     }
 }
