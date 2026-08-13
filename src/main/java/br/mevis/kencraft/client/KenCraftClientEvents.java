@@ -21,6 +21,7 @@ public final class KenCraftClientEvents {
     public static void onClientTick(ClientTickEvent.Post event) {
         Minecraft minecraft = Minecraft.getInstance();
         KikanAnimationState.tick();
+        JioAnimationState.tick();
         if (minecraft.screen == null && KenCraftClient.OPEN_MENU.consumeClick()) {
             minecraft.setScreen(new KenCraftScreen());
             return;
@@ -36,21 +37,80 @@ public final class KenCraftClientEvents {
             if (KenCraftClient.KIKAN_C.consumeClick() && data.race() == Race.RINKA) {
                 KikanAnimationState.trigger("c"); minecraft.player.connection.sendCommand("kencraft kikan attack c");
             }
-            if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN) minecraft.player.connection.sendCommand("kencraft jio attack");
+            if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN) {
+                if (!"NONE".equals(data.jioTechnique()) && !"Barreira".equals(data.jioTechnique())
+                        && !"Rajada".equals(data.jioTechnique()) && !"Reforço".equals(data.jioTechnique())) {
+                    JioAnimationState.trigger(data.jioTechnique(), data.jioAbilitySlot());
+                }
+                minecraft.player.connection.sendCommand("kencraft jio attack");
+            }
             if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN) minecraft.player.connection.sendCommand("kencraft jio cycle");
         }
     }
 
     @SubscribeEvent
     public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
-        if (!KikanAnimationState.active()) return;
         if (!(event.getRenderer().getModel() instanceof PlayerModel<?> model)) return;
-        float progress = KikanAnimationState.progress();
-        float swing = (float) Math.sin(progress * Math.PI);
-        float direction = KikanAnimationState.isHeavy() ? 1.0F : 0.72F;
-        model.rightArm.xRot -= swing * 1.25F * direction;
-        model.leftArm.xRot += swing * 0.35F;
-        model.rightArm.zRot += swing * 0.22F;
-        model.body.yRot += swing * 0.18F;
+
+        if (KikanAnimationState.active()) {
+            float progress = KikanAnimationState.progress();
+            float swing = (float) Math.sin(progress * Math.PI);
+            float direction = KikanAnimationState.isHeavy() ? 1.0F : 0.72F;
+            model.rightArm.xRot -= swing * 1.25F * direction;
+            model.leftArm.xRot += swing * 0.35F;
+            model.rightArm.zRot += swing * 0.22F;
+            model.body.yRot += swing * 0.18F;
+        }
+
+        if (JioAnimationState.active()) {
+            float progress = JioAnimationState.progress();
+            float swing = (float) Math.sin(progress * Math.PI);
+            int ability = JioAnimationState.ability();
+            String technique = JioAnimationState.technique();
+
+            if (technique.equals("Seishin Dan")) {
+                if (ability == 0) {
+                    model.rightArm.xRot -= swing * 1.05F;
+                    model.leftArm.xRot -= swing * 0.20F;
+                    model.body.yRot -= swing * 0.12F;
+                } else if (ability == 1) {
+                    model.rightArm.xRot -= swing * 1.35F;
+                    model.leftArm.xRot -= swing * 0.95F;
+                    model.body.yRot += swing * 0.10F;
+                } else {
+                    model.rightArm.xRot = -0.55F * swing;
+                    model.leftArm.xRot = 0.55F * swing;
+                }
+            } else if (technique.equals("Hakai Satsu Totetsu: Seimei kui")) {
+                if (ability == 0) {
+                    model.rightArm.xRot -= swing * 1.45F;
+                    model.body.yRot += swing * 0.20F;
+                } else if (ability == 1) {
+                    float rapid = (float) Math.sin(progress * Math.PI * 6.0F) * swing;
+                    model.rightArm.xRot -= rapid * 0.80F;
+                    model.leftArm.xRot += rapid * 0.80F;
+                    model.body.yRot += rapid * 0.10F;
+                } else {
+                    model.rightArm.xRot -= swing * 1.65F;
+                    model.leftArm.xRot -= swing * 0.95F;
+                    model.body.yRot -= swing * 0.25F;
+                }
+            } else if (technique.equals("Kata kyoka")) {
+                if (ability == 0) {
+                    model.rightArm.xRot -= swing * 0.25F;
+                    model.leftArm.xRot += swing * 0.25F;
+                    model.body.yRot += swing * 0.08F;
+                } else if (ability == 1) {
+                    model.rightArm.xRot -= swing * 1.55F;
+                    model.leftArm.xRot += swing * 0.25F;
+                    model.body.yRot += swing * 0.22F;
+                } else {
+                    float combo = (float) Math.sin(progress * Math.PI * 5.0F) * swing;
+                    model.rightArm.xRot -= combo * 0.95F;
+                    model.leftArm.xRot += combo * 0.95F;
+                    model.body.yRot += combo * 0.16F;
+                }
+            }
+        }
     }
 }
