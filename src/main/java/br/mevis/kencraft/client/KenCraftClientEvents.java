@@ -23,7 +23,7 @@ public final class KenCraftClientEvents {
         KikanAnimationState.tick();
         JioAnimationState.tick();
         if (minecraft.screen == null && KenCraftClient.OPEN_MENU.consumeClick()) {
-            minecraft.setScreen(new KenCraftScreen());
+            minecraft.setScreen(new KenCraftScreenV2());
             return;
         }
         if (minecraft.screen == null && minecraft.player != null) {
@@ -48,17 +48,13 @@ public final class KenCraftClientEvents {
                 minecraft.player.connection.sendCommand("kencraft kikan attack c");
             }
 
-            if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN) {
-                if (!"NONE".equals(technique)) {
-                    JioAnimationState.trigger(technique, data.jioAbilitySlot());
-                    minecraft.player.connection.sendCommand("kencraftjio use");
-                }
+            if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN && !"NONE".equals(technique)) {
+                JioAnimationState.trigger(technique, data.jioAbilitySlot());
+                minecraft.player.connection.sendCommand("kencraftjio use");
             }
 
-            if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN) {
-                if (!"NONE".equals(technique)) {
-                    minecraft.player.connection.sendCommand("kencraftjio next");
-                }
+            if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN && !"NONE".equals(technique)) {
+                minecraft.player.connection.sendCommand("kencraftjio next");
             }
         }
     }
