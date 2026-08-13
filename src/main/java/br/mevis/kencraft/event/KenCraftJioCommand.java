@@ -18,7 +18,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftJioCommand {
-    private static final String[] TECHNIQUES = {"Kata Kyōka 体強化", "Seishin Dan 精神弾", "生命喰 Hakai Satsu Tōtetsu: Seimei Kui"};
+    private static final String[] TECHNIQUES = {"Seishin Dan", "Hakai Satsu Tōtetsu: Seimei Kui", "Kata Kyōka"};
     private KenCraftJioCommand() {}
 
     @SubscribeEvent
@@ -36,157 +36,133 @@ public final class KenCraftJioCommand {
     private static int random(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio.")); return 0; }
-        if (!"NONE".equals(data.jioTechnique())) { player.sendSystemMessage(Component.literal("Você já possui uma técnica Jio: " + data.jioTechnique() + ".")); return 0; }
+        if (!eligible(data)) {
+            player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio."));
+            return 0;
+        }
+        if (!"NONE".equals(data.jioTechnique())) {
+            player.sendSystemMessage(Component.literal("Você já girou sua técnica Jio e ganhou: " + data.jioTechnique() + "."));
+            return 0;
+        }
         String chosen = TECHNIQUES[player.getRandom().nextInt(TECHNIQUES.length)];
         player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(chosen));
-        player.sendSystemMessage(Component.literal("Técnica Jio obtida: " + chosen));
-        player.sendSystemMessage(Component.literal("Use G para trocar a habilidade e F para usar a habilidade selecionada."));
+        player.sendSystemMessage(Component.literal("Você girou sua técnica Jio e ganhou: " + chosen));
+        player.sendSystemMessage(Component.literal("Use G para trocar de habilidade e F para usar a habilidade selecionada."));
         return 1;
     }
 
     private static int cycleAbility(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (!eligible(data)) return 0;
-        if ("NONE".equals(data.jioTechnique())) { player.sendSystemMessage(Component.literal("Primeiro gire sua técnica Jio no menu R.")); return 0; }
+        if (!eligible(data)) {
+            player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio."));
+            return 0;
+        }
+        if ("NONE".equals(data.jioTechnique())) {
+            player.sendSystemMessage(Component.literal("Primeiro gire sua técnica Jio no menu R."));
+            return 0;
+        }
         int next = (data.jioAbilitySlot() + 1) % 3;
         player.setData(ModAttachments.PLAYER_DATA, data.withJioAbilitySlot(next));
-        player.sendSystemMessage(Component.literal("Técnica: " + data.jioTechnique() + " | Habilidade " + (next + 1) + "/3 selecionada."));
+        player.sendSystemMessage(Component.literal("" + data.jioTechnique() + " — Habilidade " + (next + 1) + "/3 selecionada."));
         return 1;
     }
 
     private static int attack(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (!eligible(data) || "NONE".equals(data.jioTechnique())) return 0;
-        int technique = techniqueIndex(data.jioTechnique());
+        if (!eligible(data)) {
+            player.sendSystemMessage(Component.literal("Você ainda não possui Rank ARF suficiente para usar Jio."));
+            return 0;
+        }
+        if ("NONE".equals(data.jioTechnique())) {
+            player.sendSystemMessage(Component.literal("Você ainda não possui uma técnica Jio. Gire uma no menu R."));
+            return 0;
+        }
         int slot = data.jioAbilitySlot();
-        int cost = abilityCost(technique, slot);
-        if (data.jio() < cost) { player.sendSystemMessage(Component.literal("Jio insuficiente. Esta habilidade custa " + cost + " Jio.")); return 0; }
+        int cost = abilityCost(techniqueIndex(data.jioTechnique()), slot);
+        if (data.jio() < cost) {
+            player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: " + cost + " Jio."));
+            return 0;
+        }
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - cost, data.calculatedHumanMaxJio()));
-        executeAbility(player, technique, slot);
+        executeAbility(player, techniqueIndex(data.jioTechnique()), slot);
         return 1;
     }
 
     private static int abilityCost(int technique, int slot) {
-        // Hakai Satsu ability 3 costs 100; Seishin Dan ability 3 costs 50; all others cost 30.
-        if (technique == 2 && slot == 2) return 100;
-        if (technique == 1 && slot == 2) return 50;
+        if (technique == 1 && slot == 2) return 100; // Destruição total
+        if (technique == 0 && slot == 2) return 50;  // Intangibilidade espiritual
         return 30;
     }
 
     private static void executeAbility(ServerPlayer player, int technique, int slot) {
         switch (technique) {
-            case 0 -> executeKata(player, slot);
-            case 1 -> executeSeishin(player, slot);
-            default -> executeHakai(player, slot);
+            case 0 -> executeSeishinDan(player, slot);
+            case 1 -> executeSeimeiKui(player, slot);
+            default -> executeKataKyoka(player, slot);
         }
     }
 
-    private static void executeKata(ServerPlayer player, int slot) {
-        switch (slot) {
-            case 0 -> kataKyoka(player);
-            case 1 -> crushingHand(player);
-            default -> reinforcementCombo(player);
-        }
-    }
-
-    private static void executeSeishin(ServerPlayer player, int slot) {
-        switch (slot) {
-            case 0 -> seishinDan(player);
-            case 1 -> spiritualMachineGun(player);
-            default -> spiritualIntangibility(player);
-        }
-    }
-
-    private static void executeHakai(ServerPlayer player, int slot) {
-        switch (slot) {
-            case 0 -> explosivePunch(player);
-            case 1 -> flameBarrages(player);
-            default -> totalDestruction(player);
-        }
-    }
-
-    private static void kataKyoka(ServerPlayer player) {
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 240, 2, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 240, 1, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 240, 1, false, true));
-        player.sendSystemMessage(Component.literal("Kata Kyōka 体強化 ativado! Defesa, força e velocidade aumentadas."));
-    }
-
-    private static void crushingHand(ServerPlayer player) {
-        LivingEntity target = findTarget(player, 5.0D);
-        if (target == null) { player.sendSystemMessage(Component.literal("Mão esmagadora errou.")); return; }
-        target.setDeltaMovement(0, 0, 0);
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 10, false, true));
-        target.hurt(player.damageSources().playerAttack(player), 7.0F + player.getData(ModAttachments.PLAYER_DATA).strength());
-        player.sendSystemMessage(Component.literal("Mão esmagadora! O alvo foi imobilizado."));
-    }
-
-    private static void reinforcementCombo(ServerPlayer player) {
-        LivingEntity target = findTarget(player, 5.0D);
-        if (target == null) return;
-        int strength = player.getData(ModAttachments.PLAYER_DATA).strength();
-        for (int i = 0; i < 6 && target.isAlive(); i++) target.hurt(player.damageSources().playerAttack(player), 3.0F + strength * 0.5F);
-        player.sendSystemMessage(Component.literal("Combo de reforço!"));
-    }
-
-    private static void seishinDan(ServerPlayer player) {
-        LivingEntity target = findTarget(player, 24.0D);
+    private static void executeSeishinDan(ServerPlayer player, int slot) {
         int spiritual = player.getData(ModAttachments.PLAYER_DATA).spiritualDevelopment();
-        if (target != null) target.hurt(player.damageSources().magic(), 3.0F + spiritual * 1.5F);
-        player.sendSystemMessage(Component.literal("Tiro espiritual!"));
-    }
-
-    private static void spiritualMachineGun(ServerPlayer player) {
-        int spiritual = player.getData(ModAttachments.PLAYER_DATA).spiritualDevelopment();
-        int hits = 8;
-        for (int i = 0; i < hits; i++) {
+        if (slot == 0) {
             LivingEntity target = findTarget(player, 24.0D);
-            if (target == null) break;
-            target.hurt(player.damageSources().magic(), 4.0F + spiritual * 1.25F);
+            if (target != null) target.hurt(player.damageSources().magic(), 5.0F + spiritual * 1.5F);
+            player.sendSystemMessage(Component.literal("Seishin Dan — Tiro de espiritual!"));
+        } else if (slot == 1) {
+            for (int i = 0; i < 6; i++) {
+                LivingEntity target = findTarget(player, 24.0D);
+                if (target == null) break;
+                target.hurt(player.damageSources().magic(), 4.0F + spiritual * 1.2F);
+            }
+            player.sendSystemMessage(Component.literal("Seishin Dan — Metralhadora espiritual!"));
+        } else {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 5, 4, false, true));
+            player.sendSystemMessage(Component.literal("Seishin Dan — Intangibilidade espiritual!"));
         }
-        player.sendSystemMessage(Component.literal("Metralhadora espiritual!"));
     }
 
-    private static void spiritualIntangibility(ServerPlayer player) {
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 100, 4, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 100, 1, false, true));
-        player.sendSystemMessage(Component.literal("Intangibilidade espiritual ativada por 5 segundos!"));
-    }
-
-    private static void explosivePunch(ServerPlayer player) {
-        LivingEntity target = findTarget(player, 5.0D);
-        if (target == null) return;
-        target.hurt(player.damageSources().playerAttack(player), 8.0F);
-        var center = target.position();
-        for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(3.0D), e -> e != player && e.isAlive())) {
-            entity.hurt(player.damageSources().playerAttack(player), 4.0F);
-            var push = entity.position().subtract(center).normalize().scale(1.4D);
-            entity.setDeltaMovement(push.x, 0.7D, push.z);
-        }
-        target.setDeltaMovement(0, 0.9D, 0);
-        player.sendSystemMessage(Component.literal("Soco explosivo!"));
-    }
-
-    private static void flameBarrages(ServerPlayer player) {
-        LivingEntity target = findTarget(player, 5.0D);
-        if (target == null) return;
+    private static void executeSeimeiKui(ServerPlayer player, int slot) {
         int spiritual = player.getData(ModAttachments.PLAYER_DATA).spiritualDevelopment();
-        for (int i = 0; i < 8 && target.isAlive(); i++) {
-            target.hurt(player.damageSources().playerAttack(player), 3.0F + spiritual * 0.5F);
-            target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), 60));
+        LivingEntity target = findTarget(player, 5.0D);
+        if (slot == 0) {
+            if (target != null) {
+                target.hurt(player.damageSources().playerAttack(player), 8.0F + spiritual);
+                target.setDeltaMovement(target.getDeltaMovement().add(player.getLookAngle().scale(1.4D)));
+            }
+            player.sendSystemMessage(Component.literal("Hakai Satsu Tōtetsu: Seimei Kui — Soco explosivo!"));
+        } else if (slot == 1) {
+            if (target != null) {
+                for (int i = 0; i < 7; i++) target.hurt(player.damageSources().playerAttack(player), 3.5F + spiritual * 0.5F);
+                target.setRemainingFireTicks(Math.max(target.getRemainingFireTicks(), 100));
+            }
+            player.sendSystemMessage(Component.literal("Hakai Satsu Tōtetsu: Seimei Kui — Barragem de golpes da chama da luta!"));
+        } else {
+            if (target != null) target.hurt(player.damageSources().playerAttack(player), 70.0F);
+            player.sendSystemMessage(Component.literal("Hakai Satsu Tōtetsu: Seimei Kui — Destruição total!"));
         }
-        player.sendSystemMessage(Component.literal("Barragem de golpes da chama da luta!"));
     }
 
-    private static void totalDestruction(ServerPlayer player) {
-        LivingEntity target = findTarget(player, 5.0D);
-        if (target == null) return;
-        target.hurt(player.damageSources().playerAttack(player), 70.0F);
-        if (target.isAlive()) target.setHealth(0.0F);
-        player.sendSystemMessage(Component.literal("Destruição total!"));
+    private static void executeKataKyoka(ServerPlayer player, int slot) {
+        if (slot == 0) {
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20 * 12, 2, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 20 * 12, 1, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20 * 12, 1, false, true));
+            player.sendSystemMessage(Component.literal("Kata Kyōka — Reforço ativado!"));
+        } else {
+            LivingEntity target = findTarget(player, 4.0D);
+            if (target != null) {
+                if (slot == 1) {
+                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20 * 2, 10));
+                    target.hurt(player.damageSources().playerAttack(player), 6.0F);
+                    player.sendSystemMessage(Component.literal("Kata Kyōka — Mão esmagadora!"));
+                } else {
+                    for (int i = 0; i < 8; i++) target.hurt(player.damageSources().playerAttack(player), 3.0F);
+                    player.sendSystemMessage(Component.literal("Kata Kyōka — Combo de reforço!"));
+                }
+            }
+        }
     }
 
     private static int charge(CommandSourceStack source) {
@@ -199,12 +175,17 @@ public final class KenCraftJioCommand {
     }
 
     private static LivingEntity findTarget(ServerPlayer player, double range) {
-        var eye = player.getEyePosition(); var end = eye.add(player.getLookAngle().scale(range));
+        var eye = player.getEyePosition();
+        var end = eye.add(player.getLookAngle().scale(range));
         var box = player.getBoundingBox().expandTowards(player.getLookAngle().scale(range)).inflate(1.0D);
-        LivingEntity best = null; double bestDistance = range * range;
+        LivingEntity best = null;
+        double bestDistance = range * range;
         for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, box, e -> e != player && e.isAlive())) {
             var hit = entity.getBoundingBox().inflate(0.3D).clip(eye, end);
-            if (hit.isPresent()) { double distance = eye.distanceToSqr(hit.get()); if (distance < bestDistance) { bestDistance = distance; best = entity; } }
+            if (hit.isPresent()) {
+                double distance = eye.distanceToSqr(hit.get());
+                if (distance < bestDistance) { bestDistance = distance; best = entity; }
+            }
         }
         return best;
     }
