@@ -11,25 +11,26 @@ public record PlayerData(
         Race race, int jio, int maxJio, int strength, int defense, int intelligence, int speed,
         int genetics, int perception, int spiritualDevelopment, int life, int mentalXp, int physicalXp,
         int arfMissionKills, int arfClass, String rinkaClass, int jinsuikakuConsumed, int jinsuikakuRankCConsumed,
-        String kikanType, String jioTechnique
+        String kikanType, String jioTechnique, int jioAbilitySlot
 ) {
     public static final int MIN_STATUS = 1;
     public static final int MAX_STATUS = 20;
 
-    private record ProgressionData(String rinkaClass, int jinsuikakuConsumed, int jinsuikakuRankCConsumed, String kikanType, String jioTechnique) {
-        private static final ProgressionData DEFAULT = new ProgressionData("NONE", 0, 0, "NONE", "NONE");
+    private record ProgressionData(String rinkaClass, int jinsuikakuConsumed, int jinsuikakuRankCConsumed, String kikanType, String jioTechnique, int jioAbilitySlot) {
+        private static final ProgressionData DEFAULT = new ProgressionData("NONE", 0, 0, "NONE", "NONE", 0);
         private static final Codec<ProgressionData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.optionalFieldOf("rinkaClass", "NONE").forGetter(ProgressionData::rinkaClass),
                 Codec.INT.optionalFieldOf("jinsuikakuConsumed", 0).forGetter(ProgressionData::jinsuikakuConsumed),
                 Codec.INT.optionalFieldOf("jinsuikakuRankCConsumed", 0).forGetter(ProgressionData::jinsuikakuRankCConsumed),
                 Codec.STRING.optionalFieldOf("kikanType", "NONE").forGetter(ProgressionData::kikanType),
-                Codec.STRING.optionalFieldOf("jioTechnique", "NONE").forGetter(ProgressionData::jioTechnique)
+                Codec.STRING.optionalFieldOf("jioTechnique", "NONE").forGetter(ProgressionData::jioTechnique),
+                Codec.INT.optionalFieldOf("jioAbilitySlot", 0).forGetter(ProgressionData::jioAbilitySlot)
         ).apply(instance, ProgressionData::new));
     }
 
     public static final PlayerData DEFAULT = new PlayerData(Race.NONE, 0, 0,
             MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS,
-            0, 0, -1, 0, "NONE", 0, 0, "NONE", "NONE");
+            0, 0, -1, 0, "NONE", 0, 0, "NONE", "NONE", 0);
     private static final Codec<Race> RACE_CODEC = Codec.STRING.xmap(Race::valueOf, Race::name);
 
     public static final Codec<PlayerData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -48,12 +49,12 @@ public record PlayerData(
             Codec.INT.optionalFieldOf("arfMissionKills", -1).forGetter(PlayerData::arfMissionKills),
             Codec.INT.optionalFieldOf("arfClass", 0).forGetter(PlayerData::arfClass),
             ProgressionData.CODEC.optionalFieldOf("progression", ProgressionData.DEFAULT).forGetter(d ->
-                    new ProgressionData(d.rinkaClass(), d.jinsuikakuConsumed(), d.jinsuikakuRankCConsumed(), d.kikanType(), d.jioTechnique()))
+                    new ProgressionData(d.rinkaClass(), d.jinsuikakuConsumed(), d.jinsuikakuRankCConsumed(), d.kikanType(), d.jioTechnique(), d.jioAbilitySlot()))
     ).apply(instance, (race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception,
                        spiritual, life, mental, physical, mission, arfClass, progression) -> new PlayerData(
             race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception, spiritual, life,
             mental, physical, mission, arfClass, progression.rinkaClass(), progression.jinsuikakuConsumed(),
-            progression.jinsuikakuRankCConsumed(), progression.kikanType(), progression.jioTechnique())));
+            progression.jinsuikakuRankCConsumed(), progression.kikanType(), progression.jioTechnique(), progression.jioAbilitySlot())));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerData> STREAM_CODEC = ByteBufCodecs.fromCodecWithRegistries(CODEC);
     public boolean hasRace() { return race != Race.NONE; }
@@ -61,8 +62,8 @@ public record PlayerData(
     public double jioMultiplier() { return 1.0D + spentPoints(spiritualDevelopment) * 0.03D; }
     public int calculatedHumanMaxJio() { return race == Race.HUMAN ? (int)Math.round(100.0D * jioMultiplier()) : maxJio; }
 
-    public static PlayerData forRinka() { return new PlayerData(Race.RINKA, 0, 0, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE", 0, 0, "NONE", "NONE"); }
-    public static PlayerData forHuman() { return new PlayerData(Race.HUMAN, 100, 100, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE", 0, 0, "NONE", "NONE"); }
+    public static PlayerData forRinka() { return new PlayerData(Race.RINKA, 0, 0, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE", 0, 0, "NONE", "NONE", 0); }
+    public static PlayerData forHuman() { return new PlayerData(Race.HUMAN, 100, 100, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, MIN_STATUS, 0, 0, -1, 0, "NONE", 0, 0, "NONE", "NONE", 0); }
 
     public PlayerData withStatus(String attribute, int value) {
         value = Math.max(MIN_STATUS, Math.min(MAX_STATUS, value));
@@ -80,16 +81,17 @@ public record PlayerData(
     }
     private PlayerData copy(int strength, int defense, int intelligence, int speed, int genetics, int perception, int spiritual, int life) {
         return new PlayerData(race, jio, maxJio, strength, defense, intelligence, speed, genetics, perception, spiritual, life,
-                mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, jinsuikakuRankCConsumed, kikanType, jioTechnique);
+                mentalXp, physicalXp, arfMissionKills, arfClass, rinkaClass, jinsuikakuConsumed, jinsuikakuRankCConsumed, kikanType, jioTechnique, jioAbilitySlot);
     }
-    public PlayerData withXp(int mental, int physical) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,Math.max(0,mental),Math.max(0,physical),arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique); }
-    public PlayerData withJio(int current, int max) { return new PlayerData(race,Math.max(0,current),Math.max(0,max),strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique); }
-    public PlayerData withArfMissionKills(int kills) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,kills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique); }
-    public PlayerData withArfClass(int newClass) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,Math.max(0,newClass),rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique); }
-    public PlayerData withRinkaClass(String newClass) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,newClass==null?"NONE":newClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique); }
-    public PlayerData withJinsuikakuConsumed(int amount) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,Math.max(0,amount),jinsuikakuRankCConsumed,kikanType,jioTechnique); }
-    public PlayerData withJinsuikakuRankCConsumed(int amount) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,Math.max(0,amount),kikanType,jioTechnique); }
-    public PlayerData withKikanType(String type) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,type==null?"NONE":type,jioTechnique); }
-    public PlayerData withJioTechnique(String technique) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,technique==null?"NONE":technique); }
+    public PlayerData withXp(int mental, int physical) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,Math.max(0,mental),Math.max(0,physical),arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withJio(int current, int max) { return new PlayerData(race,Math.max(0,current),Math.max(0,max),strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withArfMissionKills(int kills) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,kills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withArfClass(int newClass) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,Math.max(0,newClass),rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withRinkaClass(String newClass) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,newClass==null?"NONE":newClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withJinsuikakuConsumed(int amount) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,Math.max(0,amount),jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withJinsuikakuRankCConsumed(int amount) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,Math.max(0,amount),kikanType,jioTechnique,jioAbilitySlot); }
+    public PlayerData withKikanType(String type) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,type==null?"NONE":type,jioTechnique,jioAbilitySlot); }
+    public PlayerData withJioTechnique(String technique) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,technique==null?"NONE":technique,0); }
+    public PlayerData withJioAbilitySlot(int slot) { return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,Math.max(0, Math.min(2, slot))); }
     public boolean canUseKikan() { return race == Race.RINKA && ("C".equals(rinkaClass)||"B".equals(rinkaClass)||"A".equals(rinkaClass)||"S".equals(rinkaClass)); }
 }
