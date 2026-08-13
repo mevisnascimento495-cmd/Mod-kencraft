@@ -56,8 +56,8 @@ public final class KenCraftScreen extends Screen {
 
     private void initJioButtons() {
         PlayerData d = data();
-        if (d.race() == Race.HUMAN && d.arfClass() >= 4 && "NONE".equals(d.jioTechnique())) {
-            addRenderableWidget(Button.builder(Component.literal("GIRAR TÉCNICA"), b -> command("kencraft jio random")).bounds(left + 125, top + 230, 170, 24).build());
+        if (d.race() == Race.HUMAN && d.arfClass() >= 4 && "NONE".equals(PlayerData.normalizeTechnique(d.jioTechnique()))) {
+            addRenderableWidget(Button.builder(Component.literal("GIRAR TÉCNICA JIO"), b -> command("kencraftjio roll")).bounds(left + 125, top + 230, 170, 24).build());
         }
     }
 
@@ -107,11 +107,12 @@ public final class KenCraftScreen extends Screen {
 
     private void renderJio(GuiGraphics g, PlayerData d) {
         if (d.race() != Race.HUMAN) { g.drawString(font, Component.literal("Jio é exclusivo dos humanos."), left + 24, top + 112, 0xFFFFFFFF); return; }
+        String technique = PlayerData.normalizeTechnique(d.jioTechnique());
         g.drawString(font, Component.literal("Jio: " + d.jio() + "/" + d.calculatedHumanMaxJio()), left + 24, top + 112, 0xFF7AD7FF);
-        g.drawString(font, Component.literal("Técnica: " + prettyJio(d.jioTechnique())), left + 24, top + 132, 0xFFFFFFFF);
+        g.drawString(font, Component.literal("Técnica: " + prettyJio(technique)), left + 24, top + 132, 0xFFFFFFFF);
         g.drawString(font, Component.literal("Habilidade: " + (d.jioAbilitySlot() + 1) + "/3"), left + 24, top + 152, 0xFFFFFFFF);
         g.drawString(font, Component.literal("F usa a habilidade • G troca a habilidade"), left + 24, top + 176, 0xFFB8C5D1);
-        if ("NONE".equals(d.jioTechnique())) g.drawString(font, Component.literal("Gire uma técnica uma única vez."), left + 24, top + 196, 0xFFFFAA66);
+        if ("NONE".equals(technique)) g.drawString(font, Component.literal("Gire uma técnica uma única vez."), left + 24, top + 196, 0xFFFFAA66);
     }
 
     private void renderKikan(GuiGraphics g, PlayerData d) {
@@ -133,5 +134,5 @@ public final class KenCraftScreen extends Screen {
     private PlayerData data() { return Minecraft.getInstance().player == null ? PlayerData.DEFAULT : Minecraft.getInstance().player.getData(ModAttachments.PLAYER_DATA); }
     private String raceName(Race r) { return switch (r) { case RINKA -> "Rinka"; case HUMAN -> "Humano"; default -> "Sem raça"; }; }
     private String prettyKikan(String s) { return switch (s) { case "CROCODILE_TAIL" -> "Cauda de crocodilo"; case "TENTACLE" -> "Tentáculo"; case "SCORPION_TAIL" -> "Cauda de escorpião"; default -> "Nenhuma"; }; }
-    private String prettyJio(String s) { return switch (s) { case "Seishin Dan" -> "Seishin Dan"; case "Hakai Satsu Tōtetsu: Seimei Kui" -> "Hakai Satsu Tōtetsu: Seimei Kui"; case "Kata Kyōka" -> "Kata Kyōka"; default -> "Nenhuma"; }; }
+    private String prettyJio(String s) { return switch (s) { case "Seishin dan" -> "Seishin dan"; case "Hakai satsu Totetsu: Seimei kui" -> "Hakai satsu Totetsu: Seimei kui"; case "Kata kyoka" -> "Kata kyoka"; default -> "Nenhuma"; }; }
 }
