@@ -28,23 +28,38 @@ public final class KenCraftClientEvents {
         }
         if (minecraft.screen == null && minecraft.player != null) {
             PlayerData data = minecraft.player.getData(ModAttachments.PLAYER_DATA);
+            String technique = PlayerData.normalizeTechnique(data.jioTechnique());
+
             if (KenCraftClient.KIKAN_Z.isDown() && data.race() == Race.HUMAN) {
-                if (++jioChargeTicker >= 5) { jioChargeTicker = 0; minecraft.player.connection.sendCommand("kencraft jio charge"); }
-            } else jioChargeTicker = 0;
+                if (++jioChargeTicker >= 5) {
+                    jioChargeTicker = 0;
+                    minecraft.player.connection.sendCommand("kencraftjio charge");
+                }
+            } else {
+                jioChargeTicker = 0;
+            }
+
             if (KenCraftClient.KIKAN_Z.consumeClick() && data.race() == Race.RINKA) {
-                KikanAnimationState.trigger("z"); minecraft.player.connection.sendCommand("kencraft kikan attack z");
+                KikanAnimationState.trigger("z");
+                minecraft.player.connection.sendCommand("kencraft kikan attack z");
             }
             if (KenCraftClient.KIKAN_C.consumeClick() && data.race() == Race.RINKA) {
-                KikanAnimationState.trigger("c"); minecraft.player.connection.sendCommand("kencraft kikan attack c");
+                KikanAnimationState.trigger("c");
+                minecraft.player.connection.sendCommand("kencraft kikan attack c");
             }
+
             if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN) {
-                if (!"NONE".equals(data.jioTechnique()) && !"Barreira".equals(data.jioTechnique())
-                        && !"Rajada".equals(data.jioTechnique()) && !"Reforço".equals(data.jioTechnique())) {
-                    JioAnimationState.trigger(data.jioTechnique(), data.jioAbilitySlot());
+                if (!"NONE".equals(technique)) {
+                    JioAnimationState.trigger(technique, data.jioAbilitySlot());
+                    minecraft.player.connection.sendCommand("kencraftjio use");
                 }
-                minecraft.player.connection.sendCommand("kencraft jio attack");
             }
-            if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN) minecraft.player.connection.sendCommand("kencraft jio cycle");
+
+            if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN) {
+                if (!"NONE".equals(technique)) {
+                    minecraft.player.connection.sendCommand("kencraftjio next");
+                }
+            }
         }
     }
 
@@ -68,7 +83,7 @@ public final class KenCraftClientEvents {
             int ability = JioAnimationState.ability();
             String technique = JioAnimationState.technique();
 
-            if (technique.equals("Seishin Dan")) {
+            if (technique.equalsIgnoreCase("Seishin dan")) {
                 if (ability == 0) {
                     model.rightArm.xRot -= swing * 1.05F;
                     model.leftArm.xRot -= swing * 0.20F;
@@ -81,7 +96,7 @@ public final class KenCraftClientEvents {
                     model.rightArm.xRot = -0.55F * swing;
                     model.leftArm.xRot = 0.55F * swing;
                 }
-            } else if (technique.equals("Hakai Satsu Totetsu: Seimei kui")) {
+            } else if (technique.equalsIgnoreCase("Hakai satsu Totetsu: Seimei kui")) {
                 if (ability == 0) {
                     model.rightArm.xRot -= swing * 1.45F;
                     model.body.yRot += swing * 0.20F;
@@ -95,7 +110,7 @@ public final class KenCraftClientEvents {
                     model.leftArm.xRot -= swing * 0.95F;
                     model.body.yRot -= swing * 0.25F;
                 }
-            } else if (technique.equals("Kata kyoka")) {
+            } else if (technique.equalsIgnoreCase("Kata kyoka")) {
                 if (ability == 0) {
                     model.rightArm.xRot -= swing * 0.25F;
                     model.leftArm.xRot += swing * 0.25F;
