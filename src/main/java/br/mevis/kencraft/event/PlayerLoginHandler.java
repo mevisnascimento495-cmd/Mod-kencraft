@@ -21,6 +21,15 @@ public final class PlayerLoginHandler {
         }
 
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        String normalizedTechnique = PlayerData.normalizeTechnique(data.jioTechnique());
+        if (!normalizedTechnique.equals(data.jioTechnique())) {
+            data = data.withJioTechnique("NONE");
+            player.setData(ModAttachments.PLAYER_DATA, data);
+            if (data.race().name().equals("HUMAN")) {
+                player.sendSystemMessage(Component.literal("Sua técnica Jio antiga foi removida. Abra o menu R e gire uma nova técnica."));
+            }
+        }
+
         if (data.hasRace()) {
             return;
         }
