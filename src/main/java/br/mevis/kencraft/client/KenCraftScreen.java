@@ -34,7 +34,6 @@ public final class KenCraftScreen extends Screen {
 
     @Override
     protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Intentionally opaque: no vanilla blur/shader background.
         graphics.fill(0, 0, width, height, 0xFF101318);
     }
 
@@ -48,9 +47,10 @@ public final class KenCraftScreen extends Screen {
             int value = valueOf(d, a);
             boolean mental = a.equals("intelligence") || a.equals("perception") || a.equals("spiritual");
             boolean xp = mental ? d.mentalXp() > 0 : d.physicalXp() > 0;
-            addRenderableWidget(Button.builder(Component.literal("+"), b -> addStatus(a)).bounds(left + 340, y - 3, 24, 18).build());
+            Button plus = Button.builder(Component.literal("+"), b -> addStatus(a)).bounds(left + 340, y - 3, 24, 18).build();
+            plus.active = xp && value < PlayerData.MAX_STATUS;
+            addRenderableWidget(plus);
             y += 28;
-            getRenderableWidgets().stream().skip(getRenderableWidgets().size() - 1).findFirst().ifPresent(w -> w.active = xp && value < PlayerData.MAX_STATUS);
         }
     }
 
@@ -69,7 +69,10 @@ public final class KenCraftScreen extends Screen {
     }
 
     private void addStatus(String a) { command("kencraft status add " + a); }
-    private void command(String command) { if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.connection != null) Minecraft.getInstance().player.connection.sendCommand(command); }
+    private void command(String command) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null && mc.player.connection != null) mc.player.connection.sendCommand(command);
+    }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
@@ -77,8 +80,8 @@ public final class KenCraftScreen extends Screen {
         graphics.fill(left, top, left + W, top + H, 0xFF1B222B);
         graphics.fill(left + 12, top + 12, left + W - 12, top + 40, 0xFF252D36);
         graphics.drawCenteredString(font, Component.literal("KENCRAFT"), width / 2, top + 20, 0xFFFFFFFF);
-        graphics.drawString(font, Component.literal("Raça: " + raceName(data().race())), left + 20, top + 84, 0xFF7AD7FF);
         PlayerData d = data();
+        graphics.drawString(font, Component.literal("Raça: " + raceName(d.race())), left + 20, top + 84, 0xFF7AD7FF);
         if (tab == 0) renderStatus(graphics, d);
         else if (tab == 1) renderJio(graphics, d);
         else renderKikan(graphics, d);
