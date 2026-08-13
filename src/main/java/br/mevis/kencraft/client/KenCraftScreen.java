@@ -33,7 +33,7 @@ public final class KenCraftScreen extends Screen {
     }
 
     @Override
-    protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, width, height, 0xFF101318);
     }
 
