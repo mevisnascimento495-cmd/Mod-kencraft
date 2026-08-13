@@ -30,11 +30,11 @@ public final class JioAnimationState {
 
     private static int durationFor(String technique, int ability) {
         if (technique == null) return 12;
-        if (technique.equals("Seishin Dan") && ability == 1) return 18;
-        if (technique.equals("Seishin Dan") && ability == 2) return 20;
-        if (technique.equals("Hakai Satsu Totetsu: Seimei kui") && ability == 1) return 18;
-        if (technique.equals("Hakai Satsu Totetsu: Seimei kui") && ability == 2) return 28;
-        if (technique.equals("Kata kyoka") && ability == 2) return 22;
+        if (technique.equalsIgnoreCase("Seishin dan") && ability == 1) return 18;
+        if (technique.equalsIgnoreCase("Seishin dan") && ability == 2) return 20;
+        if (technique.equalsIgnoreCase("Hakai satsu Totetsu: Seimei kui") && ability == 1) return 18;
+        if (technique.equalsIgnoreCase("Hakai satsu Totetsu: Seimei kui") && ability == 2) return 28;
+        if (technique.equalsIgnoreCase("Kata kyoka") && ability == 2) return 22;
         return 14;
     }
 }
