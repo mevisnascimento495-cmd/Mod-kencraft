@@ -10,164 +10,125 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 public final class KenCraftScreen extends Screen {
-    private static final int PANEL_WIDTH = 470;
-    private static final int PANEL_HEIGHT = 350;
-    private int panelLeft;
-    private int panelTop;
-    private int activeTab = 0;
+    private static final int W = 420;
+    private static final int H = 320;
+    private int left;
+    private int top;
+    private int tab;
 
-    public KenCraftScreen() { super(Component.translatable("screen.kencraft.title")); }
+    public KenCraftScreen() { super(Component.literal("KenCraft")); }
 
     @Override
     protected void init() {
         super.init();
-        panelLeft = (this.width - PANEL_WIDTH) / 2;
-        panelTop = (this.height - PANEL_HEIGHT) / 2;
-        addTab(Component.translatable("screen.kencraft.race"), panelLeft + 16, 0);
-        addTab(Component.translatable("screen.kencraft.jio"), panelLeft + 134, 1);
-        addTab(Component.translatable("screen.kencraft.kikan"), panelLeft + 252, 2);
-        if (activeTab == 2) initKikanTab(); else if (activeTab == 1) initJioTab(); else initStatusTab();
-        this.addRenderableWidget(Button.builder(Component.literal("Fechar"), button -> this.onClose())
-                .bounds(panelLeft + 174, panelTop + 311, 122, 24).build());
-    }
-
-    private void addTab(Component text, int x, int tab) {
-        Button button = Button.builder(text, b -> { activeTab = tab; this.rebuildWidgets(); })
-                .bounds(x, panelTop + 62, 112, 24).build();
-        button.active = activeTab != tab;
-        this.addRenderableWidget(button);
-    }
-
-    private void initStatusTab() {
-        PlayerData data = currentData();
-        if (data.race() == Race.RINKA) {
-            addStatusButton("strength", "Força", data.strength(), panelTop + 122, data.physicalXp() > 0);
-            addStatusButton("defense", "Defesa/Resistência", data.defense(), panelTop + 144, data.physicalXp() > 0);
-            addStatusButton("intelligence", "Inteligência", data.intelligence(), panelTop + 166, data.mentalXp() > 0);
-            addStatusButton("speed", "Velocidade", data.speed(), panelTop + 188, data.physicalXp() > 0);
-            addStatusButton("genetics", "Genética", data.genetics(), panelTop + 210, data.physicalXp() > 0);
-        } else if (data.race() == Race.HUMAN) {
-            addStatusButton("strength", "Força", data.strength(), panelTop + 122, data.physicalXp() > 0);
-            addStatusButton("life", "Vida", data.life(), panelTop + 144, data.physicalXp() > 0);
-            addStatusButton("perception", "Percepção", data.perception(), panelTop + 166, data.mentalXp() > 0);
-            addStatusButton("spiritual", "Desenvolvimento espiritual", data.spiritualDevelopment(), panelTop + 188, data.mentalXp() > 0);
-            addStatusButton("speed", "Velocidade", data.speed(), panelTop + 210, data.physicalXp() > 0);
-        }
-    }
-
-    private void initJioTab() {
-        PlayerData data = currentData();
-        Button random = Button.builder(Component.literal("GIRAR TÉCNICA"), b -> randomJio())
-                .bounds(panelLeft + 158, panelTop + 215, 154, 28).build();
-        random.active = data.race() == Race.HUMAN && data.arfClass() >= 4;
-        this.addRenderableWidget(random);
-    }
-
-    private void randomJio() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && minecraft.player.connection != null) {
-            minecraft.player.connection.sendCommand("kencraft jio random");
-            this.rebuildWidgets();
-        }
-    }
-
-    private void initKikanTab() {
-        PlayerData data = currentData();
-        Button random = Button.builder(Component.literal("ALEATÓRIO"), b -> randomKikan())
-                .bounds(panelLeft + 158, panelTop + 215, 154, 28).build();
-        random.active = data.canUseKikan() && data.race() == Race.RINKA;
-        this.addRenderableWidget(random);
-    }
-
-    private void randomKikan() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && minecraft.player.connection != null) {
-            minecraft.player.connection.sendCommand("kencraft kikan random");
-            this.rebuildWidgets();
-        }
-    }
-
-    private void addStatusButton(String attribute, String name, int value, int y, boolean hasXp) {
-        String text = name + ": " + value + "/" + PlayerData.MAX_STATUS + " (" + PlayerData.spentPoints(value) + " points)";
-        int textWidth = this.font.width(text);
-        int buttonX = Math.min(panelLeft + 360, panelLeft + 28 + textWidth + 8);
-        Button button = Button.builder(Component.literal("+"), b -> addStatus(attribute)).bounds(buttonX, y - 3, 28, 18).build();
-        button.active = hasXp && value < PlayerData.MAX_STATUS;
-        this.addRenderableWidget(button);
-    }
-
-    private void addStatus(String attribute) {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.player != null && minecraft.player.connection != null) {
-            minecraft.player.connection.sendCommand("kencraft status add " + attribute);
-            this.rebuildWidgets();
-        }
+        left = (width - W) / 2;
+        top = (height - H) / 2;
+        addRenderableWidget(Button.builder(Component.literal("Status"), b -> { tab = 0; rebuildWidgets(); }).bounds(left + 20, top + 52, 110, 22).build());
+        addRenderableWidget(Button.builder(Component.literal("Jio"), b -> { tab = 1; rebuildWidgets(); }).bounds(left + 135, top + 52, 110, 22).build());
+        addRenderableWidget(Button.builder(Component.literal("Kikan"), b -> { tab = 2; rebuildWidgets(); }).bounds(left + 250, top + 52, 110, 22).build());
+        if (tab == 0) initStatusButtons();
+        if (tab == 1) initJioButtons();
+        if (tab == 2) initKikanButtons();
+        addRenderableWidget(Button.builder(Component.literal("Fechar"), b -> onClose()).bounds(left + 150, top + 286, 120, 22).build());
     }
 
     @Override
+    protected void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        // Intentionally opaque: no vanilla blur/shader background.
+        graphics.fill(0, 0, width, height, 0xFF101318);
+    }
+
+    private void initStatusButtons() {
+        PlayerData d = data();
+        String[] attrs = d.race() == Race.RINKA
+                ? new String[]{"strength","defense","intelligence","speed","genetics"}
+                : new String[]{"strength","life","perception","spiritual","speed"};
+        int y = top + 112;
+        for (String a : attrs) {
+            int value = valueOf(d, a);
+            boolean mental = a.equals("intelligence") || a.equals("perception") || a.equals("spiritual");
+            boolean xp = mental ? d.mentalXp() > 0 : d.physicalXp() > 0;
+            addRenderableWidget(Button.builder(Component.literal("+"), b -> addStatus(a)).bounds(left + 340, y - 3, 24, 18).build());
+            y += 28;
+            getRenderableWidgets().stream().skip(getRenderableWidgets().size() - 1).findFirst().ifPresent(w -> w.active = xp && value < PlayerData.MAX_STATUS);
+        }
+    }
+
+    private void initJioButtons() {
+        PlayerData d = data();
+        if (d.race() == Race.HUMAN && d.arfClass() >= 4 && "NONE".equals(d.jioTechnique())) {
+            addRenderableWidget(Button.builder(Component.literal("GIRAR TÉCNICA"), b -> command("kencraft jio random")).bounds(left + 125, top + 230, 170, 24).build());
+        }
+    }
+
+    private void initKikanButtons() {
+        PlayerData d = data();
+        if (d.race() == Race.RINKA && d.canUseKikan() && "NONE".equals(d.kikanType())) {
+            addRenderableWidget(Button.builder(Component.literal("ALEATÓRIO"), b -> command("kencraft kikan random")).bounds(left + 140, top + 230, 140, 24).build());
+        }
+    }
+
+    private void addStatus(String a) { command("kencraft status add " + a); }
+    private void command(String command) { if (Minecraft.getInstance().player != null && Minecraft.getInstance().player.connection != null) Minecraft.getInstance().player.connection.sendCommand(command); }
+
+    @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        // Intentionally do not call Screen.renderBackground: on modern Minecraft this applies the menu blur.
-        // A simple translucent veil keeps the world visible without the blurred/shader effect.
-        graphics.fill(0, 0, this.width, this.height, 0x88000000);
-        graphics.fill(panelLeft, panelTop, panelLeft + PANEL_WIDTH, panelTop + PANEL_HEIGHT, 0xF0101018);
-        graphics.fill(panelLeft + 1, panelTop + 1, panelLeft + PANEL_WIDTH - 1, panelTop + 2, 0xFF7AD7FF);
-        graphics.fill(panelLeft + 1, panelTop + PANEL_HEIGHT - 2, panelLeft + PANEL_WIDTH - 1, panelTop + PANEL_HEIGHT - 1, 0xFF263746);
-        graphics.fill(panelLeft + 8, panelTop + 48, panelLeft + PANEL_WIDTH - 8, panelTop + 49, 0xFF263746);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, panelTop + 14, 0xFFFFFFFF);
-        graphics.drawCenteredString(this.font, Component.literal("Progressão KenCraft"), this.width / 2, panelTop + 31, 0xFFB8C5D1);
-        PlayerData data = currentData();
-        graphics.fill(panelLeft + 16, panelTop + 96, panelLeft + PANEL_WIDTH - 16, panelTop + 288, 0xFF172531);
-        graphics.drawString(this.font, Component.literal("Raça: " + raceName(data.race())), panelLeft + 28, panelTop + 106, 0xFF7AD7FF);
-        if (activeTab == 2) renderKikan(graphics, data); else if (activeTab == 1) renderJio(graphics, data); else renderStatus(graphics, data);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
+        graphics.fill(left, top, left + W, top + H, 0xFF1B222B);
+        graphics.fill(left + 12, top + 12, left + W - 12, top + 40, 0xFF252D36);
+        graphics.drawCenteredString(font, Component.literal("KENCRAFT"), width / 2, top + 20, 0xFFFFFFFF);
+        graphics.drawString(font, Component.literal("Raça: " + raceName(data().race())), left + 20, top + 84, 0xFF7AD7FF);
+        PlayerData d = data();
+        if (tab == 0) renderStatus(graphics, d);
+        else if (tab == 1) renderJio(graphics, d);
+        else renderKikan(graphics, d);
         super.render(graphics, mouseX, mouseY, partialTick);
     }
 
-    private void renderJio(GuiGraphics graphics, PlayerData data) {
-        if (data.race() != Race.HUMAN) {
-            graphics.drawString(this.font, Component.literal("O Jio é exclusivo dos humanos."), panelLeft + 28, panelTop + 122, 0xFFFFFFFF);
-            return;
+    private void renderStatus(GuiGraphics g, PlayerData d) {
+        String[] names = d.race() == Race.RINKA
+                ? new String[]{"Força","Defesa/Resistência","Inteligência","Velocidade","Genética"}
+                : new String[]{"Força","Vida","Percepção","Desenvolvimento espiritual","Velocidade"};
+        String[] attrs = d.race() == Race.RINKA
+                ? new String[]{"strength","defense","intelligence","speed","genetics"}
+                : new String[]{"strength","life","perception","spiritual","speed"};
+        int y = top + 112;
+        for (int i = 0; i < names.length; i++) {
+            int v = valueOf(d, attrs[i]);
+            g.drawString(font, Component.literal(names[i] + ": " + v + "/" + PlayerData.MAX_STATUS + " (" + PlayerData.spentPoints(v) + " points)"), left + 24, y, 0xFFFFFFFF);
+            y += 28;
         }
-        graphics.drawString(this.font, Component.literal("Jio: " + data.jio() + "/" + data.calculatedHumanMaxJio()), panelLeft + 28, panelTop + 122, 0xFF7AD7FF);
-        graphics.drawString(this.font, Component.literal("Técnica Jio: " + prettyJio(data.jioTechnique())), panelLeft + 28, panelTop + 142, 0xFFFFFFFF);
-        if (data.arfClass() < 4) {
-            graphics.drawString(this.font, Component.literal("Entre para a ARF para aprender a controlar Jio."), panelLeft + 28, panelTop + 166, 0xFFFFAA66);
-        } else {
-            graphics.drawString(this.font, Component.literal("Segure Z para carregar Jio."), panelLeft + 28, panelTop + 166, 0xFFB8C5D1);
-            graphics.drawString(this.font, Component.literal("Clique no botão para girar aleatoriamente sua técnica Jio."), panelLeft + 28, panelTop + 184, 0xFFB8C5D1);
-        }
+        g.drawString(font, Component.literal("XP Mental: " + d.mentalXp()), left + 24, top + 252, 0xFFB8C5D1);
+        g.drawString(font, Component.literal("XP Física: " + d.physicalXp()), left + 24, top + 268, 0xFFB8C5D1);
     }
 
-    private void renderStatus(GuiGraphics graphics, PlayerData data) {
-        if (data.race() == Race.RINKA) {
-            drawStatusLine(graphics, "Força", data.strength(), panelTop + 122); drawStatusLine(graphics, "Defesa/Resistência", data.defense(), panelTop + 144);
-            drawStatusLine(graphics, "Inteligência", data.intelligence(), panelTop + 166); drawStatusLine(graphics, "Velocidade", data.speed(), panelTop + 188); drawStatusLine(graphics, "Genética", data.genetics(), panelTop + 210);
-            graphics.drawString(this.font, Component.literal("XP Mental: " + data.mentalXp()), panelLeft + 28, panelTop + 240, 0xFFB8C5D1);
-            graphics.drawString(this.font, Component.literal("XP Física: " + data.physicalXp()), panelLeft + 28, panelTop + 255, 0xFFB8C5D1);
-            graphics.drawString(this.font, Component.literal("Jinsuikaku devoradas: " + data.jinsuikakuConsumed()), panelLeft + 28, panelTop + 272, 0xFF7AD7FF);
-        } else if (data.race() == Race.HUMAN) {
-            drawStatusLine(graphics, "Força", data.strength(), panelTop + 122); drawStatusLine(graphics, "Vida", data.life(), panelTop + 144); drawStatusLine(graphics, "Percepção", data.perception(), panelTop + 166);
-            drawStatusLine(graphics, "Desenvolvimento espiritual", data.spiritualDevelopment(), panelTop + 188); drawStatusLine(graphics, "Velocidade", data.speed(), panelTop + 210);
-            graphics.drawString(this.font, Component.literal("Jio: " + data.jio() + "/" + data.calculatedHumanMaxJio()), panelLeft + 28, panelTop + 240, 0xFF7AD7FF);
-            graphics.drawString(this.font, Component.literal("XP Mental: " + data.mentalXp() + "   XP Física: " + data.physicalXp()), panelLeft + 28, panelTop + 255, 0xFFB8C5D1);
-        } else graphics.drawString(this.font, Component.literal("Escolha Rinka ou Humano para liberar seus status."), panelLeft + 28, panelTop + 122, 0xFFFFFFFF);
+    private void renderJio(GuiGraphics g, PlayerData d) {
+        if (d.race() != Race.HUMAN) { g.drawString(font, Component.literal("Jio é exclusivo dos humanos."), left + 24, top + 112, 0xFFFFFFFF); return; }
+        g.drawString(font, Component.literal("Jio: " + d.jio() + "/" + d.calculatedHumanMaxJio()), left + 24, top + 112, 0xFF7AD7FF);
+        g.drawString(font, Component.literal("Técnica: " + prettyJio(d.jioTechnique())), left + 24, top + 132, 0xFFFFFFFF);
+        g.drawString(font, Component.literal("Habilidade: " + (d.jioAbilitySlot() + 1) + "/3"), left + 24, top + 152, 0xFFFFFFFF);
+        g.drawString(font, Component.literal("F usa a habilidade • G troca a habilidade"), left + 24, top + 176, 0xFFB8C5D1);
+        if ("NONE".equals(d.jioTechnique())) g.drawString(font, Component.literal("Gire uma técnica uma única vez."), left + 24, top + 196, 0xFFFFAA66);
     }
 
-    private void renderKikan(GuiGraphics graphics, PlayerData data) {
-        if (data.race() != Race.RINKA) { graphics.drawString(this.font, Component.literal("A Kikan é exclusiva dos Rinkas."), panelLeft + 28, panelTop + 122, 0xFFFFFFFF); return; }
-        graphics.drawString(this.font, Component.literal("Classe atual: " + data.rinkaClass()), panelLeft + 28, panelTop + 122, 0xFFFF6666);
-        graphics.drawString(this.font, Component.literal("Jinsuikaku devoradas: " + data.jinsuikakuConsumed()), panelLeft + 28, panelTop + 140, 0xFFB8C5D1);
-        if (!data.canUseKikan()) {
-            graphics.drawString(this.font, Component.literal("Você precisa ser Classe C ou superior."), panelLeft + 28, panelTop + 166, 0xFFFFAA66);
-            graphics.drawString(this.font, Component.literal("E: 1 • D: 10 • C: 20 Jinsuikaku"), panelLeft + 28, panelTop + 184, 0xFFB8C5D1); return;
-        }
-        graphics.drawString(this.font, Component.literal("Apertei no botão abaixo para girar sua Kikan animal"), panelLeft + 28, panelTop + 160, 0xFFFFFFFF);
-        graphics.drawString(this.font, Component.literal("Por exemplo, Cauda de crocodilo, tentáculo e cauda de escorpião."), panelLeft + 28, panelTop + 178, 0xFFB8C5D1);
-        graphics.drawString(this.font, Component.literal("Kikan atual: " + prettyKikan(data.kikanType())), panelLeft + 28, panelTop + 260, 0xFF7AD7FF);
+    private void renderKikan(GuiGraphics g, PlayerData d) {
+        if (d.race() != Race.RINKA) { g.drawString(font, Component.literal("Kikan é exclusiva dos Rinkas."), left + 24, top + 112, 0xFFFFFFFF); return; }
+        g.drawString(font, Component.literal("Classe: " + d.rinkaClass()), left + 24, top + 112, 0xFFFF7777);
+        g.drawString(font, Component.literal("Jinsuikaku: " + d.jinsuikakuConsumed()), left + 24, top + 132, 0xFFB8C5D1);
+        g.drawString(font, Component.literal("Kikan: " + prettyKikan(d.kikanType())), left + 24, top + 152, 0xFF7AD7FF);
+        if (!d.canUseKikan()) g.drawString(font, Component.literal("Você precisa ser Classe C ou superior."), left + 24, top + 180, 0xFFFFAA66);
     }
 
-    private PlayerData currentData() { return Minecraft.getInstance().player == null ? PlayerData.DEFAULT : Minecraft.getInstance().player.getData(ModAttachments.PLAYER_DATA); }
-    private void drawStatusLine(GuiGraphics graphics, String name, int value, int y) { String text = name + ": " + value + "/" + PlayerData.MAX_STATUS + " (" + PlayerData.spentPoints(value) + " points)"; graphics.drawString(this.font, Component.literal(text), panelLeft + 28, y, 0xFFFFFFFF); }
-    private String raceName(Race race) { return switch (race) { case RINKA -> "Rinka"; case HUMAN -> "Humano"; case NONE -> "Sem raça"; }; }
-    private String prettyKikan(String type) { return switch (type) { case "CROCODILE_TAIL" -> "Cauda de crocodilo"; case "TENTACLE" -> "Tentáculo"; case "SCORPION_TAIL" -> "Cauda de escorpião"; default -> "Nenhuma"; }; }
-    private String prettyJio(String type) { return switch (type) { case "REFORCO" -> "Reforço"; case "RAJADA" -> "Rajada"; case "BARREIRA" -> "Barreira"; default -> "Nenhuma"; }; }
+    private int valueOf(PlayerData d, String a) {
+        return switch (a) {
+            case "strength" -> d.strength(); case "defense" -> d.defense(); case "intelligence" -> d.intelligence();
+            case "speed" -> d.speed(); case "genetics" -> d.genetics(); case "perception" -> d.perception();
+            case "spiritual" -> d.spiritualDevelopment(); case "life" -> d.life(); default -> 1;
+        };
+    }
+
+    private PlayerData data() { return Minecraft.getInstance().player == null ? PlayerData.DEFAULT : Minecraft.getInstance().player.getData(ModAttachments.PLAYER_DATA); }
+    private String raceName(Race r) { return switch (r) { case RINKA -> "Rinka"; case HUMAN -> "Humano"; default -> "Sem raça"; }; }
+    private String prettyKikan(String s) { return switch (s) { case "CROCODILE_TAIL" -> "Cauda de crocodilo"; case "TENTACLE" -> "Tentáculo"; case "SCORPION_TAIL" -> "Cauda de escorpião"; default -> "Nenhuma"; }; }
+    private String prettyJio(String s) { return switch (s) { case "Seishin Dan" -> "Seishin Dan"; case "Hakai Satsu Tōtetsu: Seimei Kui" -> "Hakai Satsu Tōtetsu: Seimei Kui"; case "Kata Kyōka" -> "Kata Kyōka"; default -> "Nenhuma"; }; }
 }
