@@ -19,14 +19,14 @@ import net.neoforged.neoforge.event.level.ChunkEvent;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Natural KenCraft NPC spawning. Deliberately sparse rather than filling every loaded chunk. */
+/** Natural KenCraft NPC spawning. Rates are higher, while retaining the chunk-load system. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    private static final double RANK_C_RINKA_CHANCE = 0.018D;
-    private static final double RINKA_CHANCE = 0.08D;
+    private static final double RANK_C_RINKA_CHANCE = 0.08D;
+    private static final double RINKA_CHANCE = 0.25D;
     private static final double RISHIN_CHANCE = 0.0D;
-    private static final double ARF_CHANCE = 0.05D;
-    private static final double GENERAL_CHANCE = 0.01D;
+    private static final double ARF_CHANCE = 0.20D;
+    private static final double GENERAL_CHANCE = 0.02D;
 
     private KenCraftNpcSpawn() {}
 
