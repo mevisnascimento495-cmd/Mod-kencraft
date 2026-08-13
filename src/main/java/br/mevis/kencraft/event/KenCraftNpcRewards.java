@@ -27,15 +27,16 @@ public final class KenCraftNpcRewards {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
 
         if (victim instanceof RankCRinkaEntity) {
+            // Rank C Rinkas always drop their special organ. This makes the item
+            // available to Rinka players regardless of the final damage source.
+            player.spawnAtLocation(KenCraftItems.JINSUIKAKU_RANK_C.get());
+            player.sendSystemMessage(Component.literal("O Rinka Rank C derrotado deixou cair uma Jinsuikaku Rank C."));
+
             if (data.race() == Race.HUMAN && data.arfClass() == 4 && data.arfMissionKills() >= 0) {
                 int kills = data.arfMissionKills() + 1;
                 player.setData(ModAttachments.PLAYER_DATA, data.withXp(data.mentalXp(), data.physicalXp() + 5).withArfMissionKills(kills));
                 player.sendSystemMessage(Component.literal("Rinka Rank C derrotado: +5 XP Física. Missão ARF: " + kills + "/3."));
                 if (kills >= 3) player.sendSystemMessage(Component.literal("Missão ARF concluída: volte ao General da ARF para sua promoção."));
-            }
-            if (data.race() == Race.RINKA) {
-                player.spawnAtLocation(KenCraftItems.JINSUIKAKU_RANK_C.get());
-                player.sendSystemMessage(Component.literal("O Rinka Rank C derrotado deixou cair uma Jinsuikaku Rank C."));
             }
             return;
         }
