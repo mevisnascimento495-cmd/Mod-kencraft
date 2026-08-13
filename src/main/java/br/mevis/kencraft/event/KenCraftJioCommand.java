@@ -26,30 +26,38 @@ public final class KenCraftJioCommand {
         CommandDispatcher<CommandSourceStack> d = event.getDispatcher();
         d.register(Commands.literal("kencraft").then(Commands.literal("jio")
                 .then(Commands.literal("random").executes(c -> random(c.getSource())))
-                .then(Commands.literal("cycle").executes(c -> cycle(c.getSource())))
+                .then(Commands.literal("cycle").executes(c -> cycleAbility(c.getSource())))
                 .then(Commands.literal("attack").executes(c -> attack(c.getSource())))
                 .then(Commands.literal("charge").executes(c -> charge(c.getSource())))));
     }
 
     private static boolean eligible(PlayerData data) { return data.race() == Race.HUMAN && data.arfClass() >= 4; }
 
+    /** Spins the Jio technique once. A player cannot infinitely reroll the technique. */
     private static int random(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio.")); return 0; }
+        if (!"NONE".equals(data.jioTechnique())) {
+            player.sendSystemMessage(Component.literal("Você já possui uma técnica Jio: " + data.jioTechnique() + ". Use G para trocar de habilidade."));
+            return 0;
+        }
         String chosen = TECHNIQUES[player.getRandom().nextInt(TECHNIQUES.length)];
         player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(chosen));
-        player.sendSystemMessage(Component.literal("Técnica Jio sorteada: " + chosen));
+        player.sendSystemMessage(Component.literal("Técnica Jio obtida: " + chosen));
+        player.sendSystemMessage(Component.literal("Use G para trocar entre as habilidades desta técnica e F para usar a habilidade selecionada."));
         return 1;
     }
 
-    private static int cycle(CommandSourceStack source) {
+    /** G changes the ability inside the already selected technique, not the technique itself. */
+    private static int cycleAbility(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio.")); return 0; }
-        int next = (techniqueIndex(data.jioTechnique()) + 1) % TECHNIQUES.length;
-        player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(TECHNIQUES[next]));
-        player.sendSystemMessage(Component.literal("Técnica Jio: " + TECHNIQUES[next]));
+        if ("NONE".equals(data.jioTechnique())) { player.sendSystemMessage(Component.literal("Primeiro gire sua técnica Jio no menu R.")); return 0; }
+        int next = (data.jioAbilitySlot() + 1) % 3;
+        player.setData(ModAttachments.PLAYER_DATA, data.withJioAbilitySlot(next));
+        player.sendSystemMessage(Component.literal("Técnica: " + data.jioTechnique() + " | Habilidade " + (next + 1) + "/3 selecionada."));
         return 1;
     }
 
@@ -57,11 +65,22 @@ public final class KenCraftJioCommand {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) { player.sendSystemMessage(Component.literal("Você ainda não possui Rank ARF suficiente para usar Jio.")); return 0; }
-        if (data.jio() < 30) { player.sendSystemMessage(Component.literal("Jio insuficiente: cada técnica custa 30 Jio.")); return 0; }
-        int current = techniqueIndex(data.jioTechnique());
+        if ("NONE".equals(data.jioTechnique())) { player.sendSystemMessage(Component.literal("Você ainda não possui uma técnica Jio. Gire uma no menu R.")); return 0; }
+        if (data.jio() < 30) { player.sendSystemMessage(Component.literal("Jio insuficiente: cada habilidade custa 30 Jio.")); return 0; }
+        int slot = data.jioAbilitySlot();
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - 30, data.calculatedHumanMaxJio()));
-        switch (current) { case 0 -> kataKyoka(player); case 1 -> seishinDan(player); default -> seimeiKui(player); }
+        executeAbility(player, techniqueIndex(data.jioTechnique()), slot);
         return 1;
+    }
+
+    private static void executeAbility(ServerPlayer player, int technique, int slot) {
+        // Slot 1 is the currently implemented base ability for each technique.
+        // Slots 2 and 3 are intentionally reserved for the three ability sets the user will define next.
+        if (slot != 0) {
+            player.sendSystemMessage(Component.literal("Habilidade " + (slot + 1) + "/3 de " + TECHNIQUES[technique] + " ainda será adicionada."));
+            return;
+        }
+        switch (technique) { case 0 -> kataKyoka(player); case 1 -> seishinDan(player); default -> seimeiKui(player); }
     }
 
     private static int charge(CommandSourceStack source) {
