@@ -40,7 +40,17 @@ public record PlayerData(
             ProgressionData.CODEC.optionalFieldOf("progression",ProgressionData.DEFAULT).forGetter(d->new ProgressionData(d.rinkaClass(),d.jinsuikakuConsumed(),d.jinsuikakuRankCConsumed(),d.kikanType(),d.jioTechnique(),d.jioAbilitySlot()))
     ).apply(i,(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritual,life,mental,physical,mission,arfClass,p)->new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritual,life,mental,physical,mission,arfClass,p.rinkaClass(),p.jinsuikakuConsumed(),p.jinsuikakuRankCConsumed(),p.kikanType(),normalizeTechnique(p.jioTechnique()),p.jioAbilitySlot())));
     public static final StreamCodec<RegistryFriendlyByteBuf,PlayerData> STREAM_CODEC=ByteBufCodecs.fromCodecWithRegistries(CODEC);
-    public static String normalizeTechnique(String t){ if(t==null)return "NONE"; return switch(t){case "Barreira","Rajada","Reforço","Barreira Espiritual","Seishin Dan","Hakai Satsu Totetsu: Seimei kui","Kata kyoka"->t;default->"NONE";}; }
+
+    /** Only the three current Jio techniques are valid. Legacy choices are intentionally discarded. */
+    public static String normalizeTechnique(String t){
+        if (t == null) return "NONE";
+        return switch(t){
+            case "Seishin Dan" -> "Seishin Dan";
+            case "Hakai Satsu Totetsu: Seimei kui" -> "Hakai Satsu Totetsu: Seimei kui";
+            case "Kata kyoka" -> "Kata kyoka";
+            default -> "NONE";
+        };
+    }
     public boolean hasRace(){return race!=Race.NONE;}
     public static int spentPoints(int level){return Math.max(0,Math.min(MAX_STATUS,level)-MIN_STATUS);}
     public double jioMultiplier(){return 1.0D+spentPoints(spiritualDevelopment)*0.03D;}
