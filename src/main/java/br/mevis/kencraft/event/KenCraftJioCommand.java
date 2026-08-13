@@ -22,6 +22,7 @@ public final class KenCraftJioCommand {
     private static final String TECH_HAKAI = "Hakai Satsu Totetsu: Seimei kui";
     private static final String TECH_KATA = "Kata kyoka";
     private static final String[] TECHNIQUES = {TECH_SEISHIN, TECH_HAKAI, TECH_KATA};
+
     private KenCraftJioCommand() {}
 
     @SubscribeEvent
@@ -34,7 +35,15 @@ public final class KenCraftJioCommand {
                 .then(Commands.literal("charge").executes(c -> charge(c.getSource())))));
     }
 
-    private static boolean eligible(PlayerData data) { return data.race() == Race.HUMAN && data.arfClass() >= 4; }
+    private static boolean eligible(PlayerData data) {
+        return data.race() == Race.HUMAN && data.arfClass() >= 4;
+    }
+
+    private static boolean isLegacyTechnique(String technique) {
+        return "Barreira".equals(technique) || "Rajada".equals(technique) || "Reforço".equals(technique)
+                || "Seishin Dan".equals(technique) == false && "Hakai Satsu Totetsu: Seimei kui".equals(technique) == false
+                && "Kata kyoka".equals(technique) == false && !"NONE".equals(technique);
+    }
 
     private static int random(CommandSourceStack source) {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
@@ -43,10 +52,18 @@ public final class KenCraftJioCommand {
             player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio."));
             return 0;
         }
+
+        // Migra saves das versões antigas que tinham Barreira/Rajada/Reforço.
+        if (isLegacyTechnique(data.jioTechnique())) {
+            data = data.withJioTechnique("NONE");
+            player.setData(ModAttachments.PLAYER_DATA, data);
+        }
+
         if (!"NONE".equals(data.jioTechnique())) {
             player.sendSystemMessage(Component.literal("Você já girou sua técnica Jio e ganhou: " + data.jioTechnique()));
             return 0;
         }
+
         String chosen = TECHNIQUES[player.getRandom().nextInt(TECHNIQUES.length)];
         player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique(chosen));
         player.sendSystemMessage(Component.literal("Você girou sua técnica Jio e ganhou: " + chosen));
@@ -59,6 +76,11 @@ public final class KenCraftJioCommand {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) {
             player.sendSystemMessage(Component.literal("Você precisa ser Investigador de Quarta Classe ou superior para usar Jio."));
+            return 0;
+        }
+        if (isLegacyTechnique(data.jioTechnique())) {
+            player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique("NONE"));
+            player.sendSystemMessage(Component.literal("Sua técnica antiga foi atualizada. Abra o menu R e gire novamente."));
             return 0;
         }
         if ("NONE".equals(data.jioTechnique())) {
@@ -75,18 +97,29 @@ public final class KenCraftJioCommand {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) return 0;
+        if (isLegacyTechnique(data.jioTechnique())) {
+            player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique("NONE"));
+            player.sendSystemMessage(Component.literal("Sua técnica antiga foi atualizada. Abra o menu R e gire novamente."));
+            return 0;
+        }
         if ("NONE".equals(data.jioTechnique())) {
             player.sendSystemMessage(Component.literal("Você ainda não possui uma técnica Jio. Gire uma no menu R."));
             return 0;
         }
+        int technique = techniqueIndex(data.jioTechnique());
+        if (technique < 0) {
+            player.setData(ModAttachments.PLAYER_DATA, data.withJioTechnique("NONE"));
+            player.sendSystemMessage(Component.literal("Sua técnica antiga foi atualizada. Abra o menu R e gire novamente."));
+            return 0;
+        }
         int slot = data.jioAbilitySlot();
-        int cost = abilityCost(techniqueIndex(data.jioTechnique()), slot);
+        int cost = abilityCost(technique, slot);
         if (data.jio() < cost) {
             player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: " + cost + " Jio."));
             return 0;
         }
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - cost, data.calculatedHumanMaxJio()));
-        executeAbility(player, techniqueIndex(data.jioTechnique()), slot);
+        executeAbility(player, technique, slot);
         return 1;
     }
 
