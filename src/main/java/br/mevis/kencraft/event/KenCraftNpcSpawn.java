@@ -9,6 +9,7 @@ import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.entity.RishinEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -19,7 +20,7 @@ import net.neoforged.neoforge.event.level.ChunkEvent;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Natural KenCraft NPC spawning. Rates are higher, while retaining the chunk-load system. */
+/** Natural KenCraft NPC spawning. Rinkas are exclusive to night; ARF is exclusive to day. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
     private static final double RANK_C_RINKA_CHANCE = 0.08D;
@@ -54,6 +55,11 @@ public final class KenCraftNpcSpawn {
                 spawnRinka(level, chunkPos);
             }
             return;
+        }
+
+        // Daytime: no Rinka or Rank C Rinka may remain in newly loaded chunks.
+        for (Entity entity : level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true)) {
+            entity.discard();
         }
 
         if (roll < GENERAL_CHANCE) {
