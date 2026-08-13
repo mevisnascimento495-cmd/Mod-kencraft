@@ -52,7 +52,6 @@ public record PlayerData(
         };
     }
 
-    /** Always expose the canonical value to every caller, even when an old save still contains legacy text. */
     @Override
     public String jioTechnique() {
         return normalizeTechnique(jioTechnique);
