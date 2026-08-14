@@ -3,7 +3,7 @@ name: Build KenCraft Alpha
 on:
   workflow_dispatch:
   push:
-    branches: ["main", "rinka-skin-fix"]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -42,9 +42,7 @@ jobs:
               ("src/main/resources/assets/kencraft/textures/entity/arf.png.b64", "src/main/resources/assets/kencraft/textures/entity/arf.png"),
               ("src/main/resources/assets/kencraft/textures/entity/kikan.png.b64", "src/main/resources/assets/kencraft/textures/entity/kikan.png"),
           ]
-
           png_signature = b"\x89PNG\r\n\x1a\n"
-
           def decode(source_name: str, target_name: str, raw: str) -> None:
               raw = "".join(raw.split())
               data = base64.b64decode(raw, validate=True)
@@ -54,17 +52,18 @@ jobs:
               target.parent.mkdir(parents=True, exist_ok=True)
               target.write_bytes(data)
               print(f"OK: {target} ({len(data)} bytes)")
-
           for source_name, target_name in regular_files:
               source = Path(source_name)
               if not source.is_file():
                   raise SystemExit(f"Missing texture source: {source}")
               decode(source_name, target_name, source.read_text(encoding="utf-8"))
-
-          new_rinka = Path("src/main/resources/assets/kencraft/textures/entity/rinka_new.png.b64")
-          if not new_rinka.is_file():
-              raise SystemExit(f"Missing replacement Rinka skin: {new_rinka}")
-          decode(str(new_rinka), "src/main/resources/assets/kencraft/textures/entity/rinka.png", new_rinka.read_text(encoding="utf-8"))
+          rinka = Path("src/main/resources/assets/kencraft/textures/entity/rinka.png")
+          if not rinka.is_file():
+              raise SystemExit(f"Missing Rinka PNG: {rinka}")
+          data = rinka.read_bytes()
+          if not data.startswith(png_signature):
+              raise SystemExit("Rinka texture is not a PNG")
+          print(f"OK: {rinka} ({len(data)} bytes)")
           PY
 
       - name: Verify complete project
@@ -103,26 +102,16 @@ jobs:
           set -euo pipefail
           gradle jar --no-daemon --stacktrace
           if gradle tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then
-            echo "reobfJar task found; running it..."
             gradle reobfJar --no-daemon --stacktrace
-          else
-            echo "No reobfJar task; using normal jar output."
           fi
 
       - name: Find production JAR
         shell: bash
         run: |
           set -euo pipefail
-          echo "=== All JARs under build ==="
-          find build -type f -name '*.jar' -print | sort || true
           JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
-          if [ -z "$JAR" ]; then
-            JAR="$(find build -type f -name '*.jar' -print -quit 2>/dev/null || true)"
-          fi
-          if [ -z "$JAR" ]; then
-            echo "No JAR was produced after explicit jar/reobfJar tasks."
-            exit 1
-          fi
+          if [ -z "$JAR" ]; then JAR="$(find build -type f -name '*.jar' -print -quit 2>/dev/null || true)"; fi
+          if [ -z "$JAR" ]; then echo "No JAR was produced."; exit 1; fi
           mkdir -p dist
           cp "$JAR" dist/kencraft-${GITHUB_SHA::7}.jar
           echo "Using JAR: $JAR"
