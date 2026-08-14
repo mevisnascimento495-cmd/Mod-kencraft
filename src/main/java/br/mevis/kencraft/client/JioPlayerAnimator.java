@@ -1,6 +1,8 @@
 package br.mevis.kencraft.client;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.data.ModAttachments;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
@@ -9,11 +11,11 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
 /**
- * Dependency-free player animation controller.
+ * Third-person human Jio animator.
  *
- * Uses NeoForge's dedicated player-render event. The event exposes a Player,
- * not AbstractClientPlayer, so the animation layer deliberately works on the
- * model type without forcing a client-player cast.
+ * The authoritative attack clock lives on a synchronized player attachment.
+ * That means the local player and every tracking client render the same attack
+ * instead of depending on one client's static animation state.
  */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class JioPlayerAnimator {
@@ -21,16 +23,21 @@ public final class JioPlayerAnimator {
 
     @SubscribeEvent
     public static void onPlayerRender(RenderPlayerEvent.Pre event) {
-        if (!JioAnimationState.active()) return;
-
         Player player = event.getEntity();
         if (player == null || !player.isAlive()) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
+
+        JioAnimationData animation = player.getData(ModAttachments.JIO_ANIMATION);
+        long tick = mc.level.getGameTime();
+        if (!animation.active(tick)) return;
 
         PlayerModel<?> model = event.getRenderer().getModel();
         if (model == null) return;
 
-        apply(model, JioAnimationState.technique(), JioAnimationState.ability(),
-                JioAnimationState.progress(), JioAnimationState.impactEnvelope());
+        apply(model, animation.technique(), animation.ability(),
+                animation.progress(tick), animation.impactEnvelope(tick));
     }
 
     private static void apply(PlayerModel<?> model, String technique,
