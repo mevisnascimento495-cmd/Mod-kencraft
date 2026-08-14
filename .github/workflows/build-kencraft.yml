@@ -3,7 +3,7 @@ name: Build KenCraft Alpha
 on:
   workflow_dispatch:
   push:
-    branches: ["main"]
+    branches: ["main", "rinka-skin-fix"]
 
 permissions:
   contents: read
@@ -61,14 +61,10 @@ jobs:
                   raise SystemExit(f"Missing texture source: {source}")
               decode(source_name, target_name, source.read_text(encoding="utf-8"))
 
-          chunk_dir = Path("src/main/resources/assets/kencraft/textures/entity/rinka_chunks")
-          chunks = sorted(chunk_dir.glob("*.txt"))
-          if len(chunks) != 6:
-              raise SystemExit(f"Expected 6 verified Rinka chunks, found {len(chunks)}")
-          rinka_b64 = "".join(chunk.read_text(encoding="utf-8").strip() for chunk in chunks)
-          if len(rinka_b64) != 5728:
-              raise SystemExit(f"Rinka Base64 length mismatch: {len(rinka_b64)} (expected 5728)")
-          decode("rinka_chunks/*.txt", "src/main/resources/assets/kencraft/textures/entity/rinka.png", rinka_b64)
+          new_rinka = Path("src/main/resources/assets/kencraft/textures/entity/rinka_new.png.b64")
+          if not new_rinka.is_file():
+              raise SystemExit(f"Missing replacement Rinka skin: {new_rinka}")
+          decode(str(new_rinka), "src/main/resources/assets/kencraft/textures/entity/rinka.png", new_rinka.read_text(encoding="utf-8"))
           PY
 
       - name: Verify complete project
