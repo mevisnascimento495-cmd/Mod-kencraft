@@ -2,7 +2,8 @@ package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
@@ -36,7 +37,7 @@ public final class ChatSelectionHandler {
             return;
         }
 
-        player.sendSystemMessage(Component.literal("Digite Rinka ou Humano para escolher sua raça."));
+        send(player, "Digite Rinka ou Humano para escolher sua raça.");
     }
 
     private static void explainRinka(ServerPlayer player) {
@@ -57,7 +58,11 @@ public final class ChatSelectionHandler {
         send(player, "A evolução deles é focada no domínio e desenvolvimento do Jio.");
     }
 
+    /**
+     * Evita Component.literal(), que foi o ponto exato do crash do build 0.2.3.
+     */
     private static void send(ServerPlayer player, String text) {
-        player.sendSystemMessage(Component.literal(text));
+        MutableComponent message = MutableComponent.create(ComponentContents.EMPTY).append(text);
+        player.sendSystemMessage(message);
     }
 }
