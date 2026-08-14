@@ -48,6 +48,7 @@ public final class KenCraftEntityRenderers {
         for (PlayerSkin.Model skin : event.getSkins()) {
             if (event.getSkin(skin) instanceof PlayerRenderer playerRenderer) {
                 playerRenderer.addLayer(new KikanLayer(playerRenderer, event.getEntityModels()));
+                playerRenderer.addLayer(new JioAuraLayer(playerRenderer, event.getEntityModels()));
             }
         }
     }
