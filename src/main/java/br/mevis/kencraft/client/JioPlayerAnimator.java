@@ -3,27 +3,23 @@ package br.mevis.kencraft.client;
 import br.mevis.kencraft.KenCraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderLivingEvent;
+import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 
-/** Reliable third-person Jio animator, applied only to actual client players. */
+/** Dedicated third-person animator using NeoForge's player-specific render event. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class JioPlayerAnimator {
     private JioPlayerAnimator() {}
 
     @SubscribeEvent
-    public static void onPlayerRender(RenderLivingEvent.Pre<?, ?> event) {
+    public static void onPlayerRender(RenderPlayerEvent.Pre event) {
         if (!JioAnimationState.active()) return;
-        if (!(event.getEntity() instanceof AbstractClientPlayer player)) return;
-        if (!(event.getRenderer() instanceof PlayerRenderer renderer)) return;
-        if (!(renderer.getModel() instanceof PlayerModel<?> rawModel)) return;
+        AbstractClientPlayer player = event.getEntity();
         if (!player.isAlive()) return;
 
-        @SuppressWarnings("unchecked")
-        PlayerModel<AbstractClientPlayer> model = (PlayerModel<AbstractClientPlayer>) rawModel;
+        PlayerModel<AbstractClientPlayer> model = event.getRenderer().getModel();
         apply(model, JioAnimationState.technique(), JioAnimationState.ability(),
                 JioAnimationState.progress(), JioAnimationState.impactEnvelope());
     }
@@ -106,6 +102,7 @@ public final class JioPlayerAnimator {
                 model.body.yRot = 0.18F * impact;
                 return;
             }
+
             float combo = (float) Math.sin(p * Math.PI * 10.0F);
             float kick = (float) Math.sin(p * Math.PI * 5.0F);
             model.rightArm.xRot = -1.05F - 0.98F * combo;
