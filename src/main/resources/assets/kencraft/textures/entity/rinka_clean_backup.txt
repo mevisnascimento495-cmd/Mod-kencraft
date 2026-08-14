@@ -1,0 +1,1 @@
+Temporary marker; the runtime skins are replaced by validated PNG binaries in the texture paths used by the renderer.
