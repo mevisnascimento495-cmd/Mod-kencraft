@@ -3,22 +3,27 @@ package br.mevis.kencraft.client;
 import br.mevis.kencraft.KenCraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.PlayerRenderer;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RenderLivingEvent;
 
-/** Reliable third-person Jio animator, applied to the prepared player model. */
+/** Reliable third-person Jio animator, applied only to actual client players. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class JioPlayerAnimator {
     private JioPlayerAnimator() {}
 
     @SubscribeEvent
-    public static void onPlayerRender(RenderLivingEvent.Pre<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> event) {
+    public static void onPlayerRender(RenderLivingEvent.Pre<?, ?> event) {
         if (!JioAnimationState.active()) return;
-        AbstractClientPlayer player = event.getEntity();
+        if (!(event.getEntity() instanceof AbstractClientPlayer player)) return;
+        if (!(event.getRenderer() instanceof PlayerRenderer renderer)) return;
+        if (!(renderer.getModel() instanceof PlayerModel<?> rawModel)) return;
         if (!player.isAlive()) return;
-        PlayerModel<AbstractClientPlayer> model = event.getRenderer().getModel();
+
+        @SuppressWarnings("unchecked")
+        PlayerModel<AbstractClientPlayer> model = (PlayerModel<AbstractClientPlayer>) rawModel;
         apply(model, JioAnimationState.technique(), JioAnimationState.ability(),
                 JioAnimationState.progress(), JioAnimationState.impactEnvelope());
     }
