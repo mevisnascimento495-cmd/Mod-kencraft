@@ -9,37 +9,11 @@ import net.minecraft.client.gui.screens.Screen;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.ScreenEvent;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class JioClientOverride {
-    private static boolean fWasDown;
-    private static boolean gWasDown;
-    private static boolean zWasDown;
-
     private JioClientOverride() {}
-
-    @SubscribeEvent
-    public static void tick(ClientTickEvent.Post event) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.player.connection == null) return;
-
-        boolean f = KenCraftClient.JIO_F.isDown();
-        boolean g = KenCraftClient.JIO_G.isDown();
-        boolean z = KenCraftClient.KIKAN_Z.isDown();
-
-        if (mc.screen == null) {
-            PlayerData data = mc.player.getData(ModAttachments.PLAYER_DATA);
-            if (f && !fWasDown && data.race().name().equals("HUMAN")) mc.player.connection.sendCommand("kencraftjio use");
-            if (g && !gWasDown && data.race().name().equals("HUMAN")) mc.player.connection.sendCommand("kencraftjio next");
-            if (z && data.race().name().equals("HUMAN")) mc.player.connection.sendCommand("kencraftjio charge");
-        }
-
-        fWasDown = f;
-        gWasDown = g;
-        zWasDown = z;
-    }
 
     @SubscribeEvent
     public static void init(ScreenEvent.Init.Post event) {
