@@ -12,12 +12,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 
 /** Blue translucent skin layer used by Seishin dan ability 3. */
-@EventBusSubscriber(modid = "kencraft", bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class JioAuraLayer extends RenderLayer<AbstractClientPlayer, PlayerModel<AbstractClientPlayer>> {
     private final PlayerModel<AbstractClientPlayer> auraModel;
 
@@ -36,7 +32,7 @@ public final class JioAuraLayer extends RenderLayer<AbstractClientPlayer, Player
         if (!"Seishin dan".equalsIgnoreCase(PlayerData.normalizeTechnique(data.jioTechnique()))) return;
         if (data.jioAbilitySlot() != 2 || !JioAnimationState.active()) return;
 
-        auraModel.copyPropertiesTo(getParentModel());
+        getParentModel().copyPropertiesTo(auraModel);
         auraModel.setupAnim(player, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
 
         poseStack.pushPose();
