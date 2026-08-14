@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "br.mevis.kencraft.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "PlayerModelMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
