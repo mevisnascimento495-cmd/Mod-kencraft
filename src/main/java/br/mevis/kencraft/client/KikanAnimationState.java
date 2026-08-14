@@ -1,15 +1,17 @@
 package br.mevis.kencraft.client;
 
-/** Lightweight client-only animation state. It does not depend on Player Animator. */
+/** Dependency-free Kikan animation state with distinct Z/C attack choreography. */
 public final class KikanAnimationState {
     private static int ticks;
+    private static int duration;
     private static String key = "z";
 
     private KikanAnimationState() {}
 
     public static void trigger(String attackKey) {
-        key = attackKey;
-        ticks = 12;
+        key = attackKey == null ? "z" : attackKey.toLowerCase();
+        duration = 24;
+        ticks = duration;
     }
 
     public static void tick() {
@@ -21,10 +23,23 @@ public final class KikanAnimationState {
     }
 
     public static float progress() {
-        return ticks <= 0 ? 0.0F : 1.0F - (ticks / 12.0F);
+        return !active() || duration <= 0 ? 0.0F : 1.0F - (ticks / (float) duration);
     }
 
+    /** Z is a fast strike; C is a heavier/longer crowd-control motion. */
     public static boolean isHeavy() {
         return "c".equals(key);
+    }
+
+    public static String key() {
+        return key;
+    }
+
+    /** Peaks at the moment where the Kikan should visually meet the target. */
+    public static float impactEnvelope() {
+        float p = progress();
+        if (!active()) return 0.0F;
+        if (p < 0.52F) return p / 0.52F;
+        return Math.max(0.0F, (1.0F - p) / 0.48F);
     }
 }
