@@ -63,65 +63,101 @@ public final class KenCraftClientEvents {
     public static void onRenderPlayer(RenderPlayerEvent.Pre event) {
         if (!(event.getRenderer().getModel() instanceof PlayerModel<?> model)) return;
 
-        if (KikanAnimationState.active()) {
-            float progress = KikanAnimationState.progress();
-            float swing = (float) Math.sin(progress * Math.PI);
-            float direction = KikanAnimationState.isHeavy() ? 1.0F : 0.72F;
-            model.rightArm.xRot -= swing * 1.25F * direction;
-            model.leftArm.xRot += swing * 0.35F;
-            model.rightArm.zRot += swing * 0.22F;
-            model.body.yRot += swing * 0.18F;
+        animateHumanJio((PlayerModel<?>) model);
+    }
+
+    private static void animateHumanJio(PlayerModel<?> model) {
+        if (!JioAnimationState.active()) return;
+
+        float p = JioAnimationState.progress();
+        float t = JioAnimationState.impactEnvelope();
+        int ability = JioAnimationState.ability();
+        String technique = JioAnimationState.technique();
+
+        // Keep natural player pose as the baseline; only apply combat deltas.
+        if (technique.equalsIgnoreCase("Seishin dan")) {
+            if (ability == 0) {
+                // Basic spiritual shot: raise the arm, then drive it forward at contact.
+                float raise = easeInOut(Math.min(1.0F, p / 0.45F));
+                float recoil = p > 0.5F ? t : 0.0F;
+                model.rightArm.xRot -= 1.15F * raise;
+                model.rightArm.zRot += 0.10F * raise;
+                model.body.yRot -= 0.10F * raise;
+                model.rightArm.xRot -= 0.55F * recoil;
+                model.rightArm.zRot += 0.08F * recoil;
+            } else if (ability == 1) {
+                // Both arms stay raised while the technique continuously fires for ~4 seconds.
+                float hold = Math.min(1.0F, p / 0.20F);
+                float pulse = (float) Math.sin(p * Math.PI * 18.0F) * 0.10F;
+                model.rightArm.xRot -= 1.25F * hold + pulse;
+                model.leftArm.xRot -= 1.25F * hold - pulse;
+                model.body.yRot += pulse * 0.18F;
+            } else {
+                // Intangibility: neutral stance; aura is rendered by JioAuraLayer.
+                float calm = Math.min(1.0F, p / 0.25F);
+                model.rightArm.xRot -= 0.18F * calm;
+                model.leftArm.xRot -= 0.18F * calm;
+            }
+            return;
         }
 
-        if (JioAnimationState.active()) {
-            float progress = JioAnimationState.progress();
-            float swing = (float) Math.sin(progress * Math.PI);
-            int ability = JioAnimationState.ability();
-            String technique = JioAnimationState.technique();
-
-            if (technique.equalsIgnoreCase("Seishin dan")) {
-                if (ability == 0) {
-                    model.rightArm.xRot -= swing * 1.05F;
-                    model.leftArm.xRot -= swing * 0.20F;
-                    model.body.yRot -= swing * 0.12F;
-                } else if (ability == 1) {
-                    model.rightArm.xRot -= swing * 1.35F;
-                    model.leftArm.xRot -= swing * 0.95F;
-                    model.body.yRot += swing * 0.10F;
-                } else {
-                    model.rightArm.xRot = -0.55F * swing;
-                    model.leftArm.xRot = 0.55F * swing;
-                }
-            } else if (technique.equalsIgnoreCase("Hakai satsu Totetsu: Seimei kui")) {
-                if (ability == 0) {
-                    model.rightArm.xRot -= swing * 1.45F;
-                    model.body.yRot += swing * 0.20F;
-                } else if (ability == 1) {
-                    float rapid = (float) Math.sin(progress * Math.PI * 6.0F) * swing;
-                    model.rightArm.xRot -= rapid * 0.80F;
-                    model.leftArm.xRot += rapid * 0.80F;
-                    model.body.yRot += rapid * 0.10F;
-                } else {
-                    model.rightArm.xRot -= swing * 1.65F;
-                    model.leftArm.xRot -= swing * 0.95F;
-                    model.body.yRot -= swing * 0.25F;
-                }
-            } else if (technique.equalsIgnoreCase("Kata kyoka")) {
-                if (ability == 0) {
-                    model.rightArm.xRot -= swing * 0.25F;
-                    model.leftArm.xRot += swing * 0.25F;
-                    model.body.yRot += swing * 0.08F;
-                } else if (ability == 1) {
-                    model.rightArm.xRot -= swing * 1.55F;
-                    model.leftArm.xRot += swing * 0.25F;
-                    model.body.yRot += swing * 0.22F;
-                } else {
-                    float combo = (float) Math.sin(progress * Math.PI * 5.0F) * swing;
-                    model.rightArm.xRot -= combo * 0.95F;
-                    model.leftArm.xRot += combo * 0.95F;
-                    model.body.yRot += combo * 0.16F;
-                }
+        if (technique.equalsIgnoreCase("Hakai satsu Totetsu: Seimei kui")) {
+            if (ability == 0) {
+                // Pull back, punch, impact, then recoil.
+                float windup = 1.0F - easeIn(Math.min(1.0F, p / 0.42F));
+                float punch = Math.min(1.0F, p / 0.68F);
+                model.rightArm.xRot += 0.78F * windup;
+                model.rightArm.zRot -= 0.18F * windup;
+                model.body.yRot -= 0.14F * windup;
+                model.rightArm.xRot -= 1.65F * punch;
+                model.body.yRot += 0.24F * t;
+            } else if (ability == 1) {
+                // Seven-second barrage: alternate the arms continuously.
+                float combo = (float) Math.sin(p * Math.PI * 14.0F);
+                float accent = (float) Math.sin(p * Math.PI * 7.0F);
+                model.rightArm.xRot -= 0.95F + combo * 0.78F;
+                model.leftArm.xRot -= 0.95F - combo * 0.78F;
+                model.rightArm.zRot += combo * 0.18F;
+                model.leftArm.zRot -= combo * 0.18F;
+                model.body.yRot += accent * 0.12F;
+            } else {
+                // Destruction total: one clean, committed punch.
+                float punch = easeInOut(Math.min(1.0F, p / 0.62F));
+                model.rightArm.xRot -= 1.90F * punch;
+                model.body.yRot += 0.22F * t;
             }
+            return;
+        }
+
+        if (technique.equalsIgnoreCase("Kata kyoka")) {
+            if (ability == 0) {
+                // No animation by design.
+                return;
+            }
+            if (ability == 1) {
+                // Grab: both arms snap forward and hold the victim in place.
+                float grab = easeOut(Math.min(1.0F, p / 0.50F));
+                float hold = p >= 0.50F ? 1.0F : grab;
+                model.rightArm.xRot -= 1.45F * hold;
+                model.leftArm.xRot -= 1.45F * hold;
+                model.rightArm.yRot -= 0.18F * hold;
+                model.leftArm.yRot += 0.18F * hold;
+                model.body.yRot += 0.16F * t;
+                return;
+            }
+
+            // Reinforcement combo: alternating punches with synchronized leg/knee movement.
+            float combo = (float) Math.sin(p * Math.PI * 10.0F);
+            float kick = (float) Math.sin(p * Math.PI * 5.0F);
+            model.rightArm.xRot -= 1.05F + combo * 0.88F;
+            model.leftArm.xRot -= 1.05F - combo * 0.88F;
+            model.rightLeg.xRot += kick * 0.34F;
+            model.leftLeg.xRot -= kick * 0.34F;
+            model.body.yRot += combo * 0.12F;
         }
     }
+
+    private static float easeIn(float x) { return x * x; }
+    private static float easeOut(float x) { float y = 1.0F - x; return 1.0F - y * y; }
+    private static float easeInOut(float x) { return x < 0.5F ? 2.0F * x * x : 1.0F - (float) Math.pow(-2.0F * x + 2.0F, 2.0F) / 2.0F; }
 }
