@@ -2,8 +2,8 @@ package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
-import net.minecraft.network.chat.ComponentContents;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.ServerChatEvent;
@@ -58,11 +58,9 @@ public final class ChatSelectionHandler {
         send(player, "A evolução deles é focada no domínio e desenvolvimento do Jio.");
     }
 
-    /**
-     * Evita Component.literal(), que foi o ponto exato do crash do build 0.2.3.
-     */
+    /** Evita Component.literal() no caminho de seleção de raça. */
     private static void send(ServerPlayer player, String text) {
-        MutableComponent message = MutableComponent.create(ComponentContents.EMPTY).append(text);
+        MutableComponent message = MutableComponent.create(new PlainTextContents.LiteralContents(text));
         player.sendSystemMessage(message);
     }
 }
