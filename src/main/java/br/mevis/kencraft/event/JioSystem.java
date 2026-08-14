@@ -1,7 +1,7 @@
 package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.KenCraft;
-import br.mevis.kencraft.client.JioAnimationData;
+import br.mevis.kencraft.data.JioAnimationData;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
@@ -95,10 +95,13 @@ public final class JioSystem {
         }
 
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - cost, data.calculatedHumanMaxJio()));
-        // The animation state is attached to the server-side player and automatically synced
-        // to every tracking client, so first-, third- and second-player views use the same clock.
-        player.setData(ModAttachments.JIO_ANIMATION, new JioAnimationData(
-                technique, slot, player.level().getGameTime(), animationDuration(techniqueIndex, slot)));
+        int duration = animationDuration(techniqueIndex, slot);
+        if (duration > 0) {
+            // Server-authoritative and synchronized through the attachment so every tracking client
+            // renders the same attack on the same player.
+            player.setData(ModAttachments.JIO_ANIMATION, new JioAnimationData(
+                    technique, slot, player.level().getGameTime(), duration));
+        }
         execute(player, techniqueIndex, slot);
         return 1;
     }
@@ -126,7 +129,7 @@ public final class JioSystem {
     private static int animationDuration(int technique, int slot) {
         if (technique == 0) return switch (slot) { case 0 -> 14; case 1 -> 80; case 2 -> 100; default -> 0; };
         if (technique == 1) return switch (slot) { case 0 -> 16; case 1 -> 140; case 2 -> 14; default -> 0; };
-        if (technique == 2) return switch (slot) { case 0 -> 0; case 1 -> 28; case 2 -> 42; default -> 0; };
+        if (technique == 2) return switch (slot) { case 1 -> 28; case 2 -> 42; default -> 0; };
         return 0;
     }
 
