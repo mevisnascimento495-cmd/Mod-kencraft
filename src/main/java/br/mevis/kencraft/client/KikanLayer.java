@@ -34,7 +34,7 @@ public final class KikanLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
         }
 
         model.setType(data.kikanType());
-        model.animate(KikanAnimationState.progress(), KikanAnimationState.isHeavy());
+        model.animate(KikanAnimationState.progress(), KikanAnimationState.isHeavy(), KikanAnimationState.key());
 
         poseStack.pushPose();
         poseStack.translate(0.0D, 0.72D, 0.24D);
