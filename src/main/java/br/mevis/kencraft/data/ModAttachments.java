@@ -1,6 +1,7 @@
 package br.mevis.kencraft.data;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.client.JioAnimationData;
 import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
@@ -19,5 +20,13 @@ public final class ModAttachments {
                             .serialize(PlayerData.CODEC)
                             .sync(PlayerData.STREAM_CODEC)
                             .copyOnDeath()
+                            .build());
+
+    /** Ephemeral, server-synchronized attack state used only for rendering. */
+    public static final Supplier<AttachmentType<JioAnimationData>> JIO_ANIMATION =
+            ATTACHMENT_TYPES.register("jio_animation",
+                    () -> AttachmentType.builder(() -> JioAnimationData.DEFAULT)
+                            .serialize(JioAnimationData.CODEC)
+                            .sync(JioAnimationData.STREAM_CODEC)
                             .build());
 }
