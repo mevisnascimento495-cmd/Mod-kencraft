@@ -39,7 +39,7 @@ public final class JioAuraLayer extends RenderLayer<AbstractClientPlayer, Player
         float pulse = 0.78F + 0.18F * (float) Math.sin(JioAnimationState.progress() * Math.PI * 8.0F);
         int blue = ((int) (150.0F * pulse) << 24) | (110 << 16) | (190 << 8) | 255;
         auraModel.renderToBuffer(poseStack,
-                bufferSource.getBuffer(RenderType.entityTranslucent(player.getSkinTextureLocation())),
+                bufferSource.getBuffer(RenderType.entityTranslucent(player.getSkin().texture())),
                 packedLight, OverlayTexture.NO_OVERLAY, blue);
         poseStack.popPose();
     }
