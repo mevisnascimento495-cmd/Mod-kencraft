@@ -2,7 +2,7 @@ package br.mevis.kencraft.client;
 
 import br.mevis.kencraft.KenCraft;
 import net.minecraft.client.model.PlayerModel;
-import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -11,9 +11,9 @@ import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 /**
  * Dependency-free player animation controller.
  *
- * Uses NeoForge's dedicated player-render event, so the prepared PlayerModel is
- * available without depending on PlayerAnimator, GeckoLib, or a renderer cast.
- * Attacks are expressed as deterministic wind-up, contact/hold and recoil phases.
+ * Uses NeoForge's dedicated player-render event. The event exposes a Player,
+ * not AbstractClientPlayer, so the animation layer deliberately works on the
+ * model type without forcing a client-player cast.
  */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME, value = Dist.CLIENT)
 public final class JioPlayerAnimator {
@@ -22,17 +22,18 @@ public final class JioPlayerAnimator {
     @SubscribeEvent
     public static void onPlayerRender(RenderPlayerEvent.Pre event) {
         if (!JioAnimationState.active()) return;
-        AbstractClientPlayer player = event.getEntity();
+
+        Player player = event.getEntity();
         if (player == null || !player.isAlive()) return;
 
-        PlayerModel<AbstractClientPlayer> model = event.getRenderer().getModel();
+        PlayerModel<?> model = event.getRenderer().getModel();
         if (model == null) return;
 
         apply(model, JioAnimationState.technique(), JioAnimationState.ability(),
                 JioAnimationState.progress(), JioAnimationState.impactEnvelope());
     }
 
-    private static void apply(PlayerModel<AbstractClientPlayer> model, String technique,
+    private static void apply(PlayerModel<?> model, String technique,
                               int ability, float progress, float impact) {
         float p = clamp(progress);
         float hit = clamp(impact);
@@ -45,7 +46,7 @@ public final class JioPlayerAnimator {
         }
     }
 
-    private static void applySeishin(PlayerModel<AbstractClientPlayer> model, int ability, float p, float hit) {
+    private static void applySeishin(PlayerModel<?> model, int ability, float p, float hit) {
         switch (ability) {
             case 0 -> {
                 float windup = easeOut(segment(p, 0.00F, 0.32F));
@@ -79,7 +80,7 @@ public final class JioPlayerAnimator {
         }
     }
 
-    private static void applyHakai(PlayerModel<AbstractClientPlayer> model, int ability, float p, float hit) {
+    private static void applyHakai(PlayerModel<?> model, int ability, float p, float hit) {
         switch (ability) {
             case 0 -> {
                 float windup = 1.0F - easeIn(segment(p, 0.00F, 0.30F));
@@ -115,7 +116,7 @@ public final class JioPlayerAnimator {
         }
     }
 
-    private static void applyKata(PlayerModel<AbstractClientPlayer> model, int ability, float p, float hit) {
+    private static void applyKata(PlayerModel<?> model, int ability, float p, float hit) {
         switch (ability) {
             case 0 -> { }
             case 1 -> {
