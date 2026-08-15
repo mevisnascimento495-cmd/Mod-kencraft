@@ -1,12 +1,7 @@
 package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.KenCraft;
-import br.mevis.kencraft.entity.ArfGeneralEntity;
-import br.mevis.kencraft.entity.ArfInvestigatorEntity;
-import br.mevis.kencraft.entity.KenCraftEntities;
-import br.mevis.kencraft.entity.RankCRinkaEntity;
-import br.mevis.kencraft.entity.RinkaEntity;
-import br.mevis.kencraft.entity.RishinEntity;
+import br.mevis.kencraft.entity.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
@@ -17,169 +12,37 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkEvent;
-
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-/** Natural KenCraft NPC spawning. Rinkas are exclusive to night; ARF is exclusive to day. */
-@EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid=KenCraft.MOD_ID,bus=EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    // Chunk-load events can fire for many chunks while a player travels. Keep both
-    // the per-chunk chance and the nearby population bounded so exploration cannot
-    // continuously accumulate KenCraft NPCs.
-    private static final double RANK_C_RINKA_CHANCE = 0.03D;
-    private static final double RINKA_CHANCE = 0.07D;
-    private static final double RISHIN_CHANCE = 0.0D;
-    private static final double ARF_CHANCE = 0.08D;
-    private static final double GENERAL_CHANCE = 0.01D;
-
-    private static final int SPAWN_RADIUS_CHUNKS = 4;
-    private static final int MAX_NIGHT_RINKAS_NEARBY = 3;
-    private static final int MAX_RANK_C_RINKAS_NEARBY = 1;
-    private static final int MAX_ARF_INVESTIGATORS_NEARBY = 2;
-    private static final int MAX_ARF_GENERALS_NEARBY = 1;
-
+    private static final double RANK_C_CHANCE=0.03D, RINKA_CHANCE=0.07D, RISHIN_CHANCE=0.05D, AODAI_CHANCE=0.10D, ARF_CHANCE=0.08D, GENERAL_CHANCE=0.01D;
+    private static final int RADIUS=4, MAX_NIGHT_RINKA=3, MAX_RANK_C=1, MAX_RISHIN=2, MAX_AODAI=1, MAX_ARF=2, MAX_GENERAL=1;
     private KenCraftNpcSpawn() {}
-
-    @SubscribeEvent
-    public static void onChunkLoad(ChunkEvent.Load event) {
-        if (!(event.getLevel() instanceof ServerLevel level)) return;
-        if (!(event.getChunk() instanceof LevelChunk chunk)) return;
-        if (!level.dimensionType().natural()) return;
-        if (level.getDifficulty().getId() == 0) return;
-
-        boolean night = isNight(level);
-        ChunkPos chunkPos = chunk.getPos();
-        var nearby = nearbyBounds(level, chunkPos);
-        double roll = ThreadLocalRandom.current().nextDouble();
-
-        if (night) {
-            int nearbyRinkas = level.getEntitiesOfClass(RinkaEntity.class, nearby, e -> true).size();
-            int nearbyRankCRinkas = level.getEntitiesOfClass(RankCRinkaEntity.class, nearby, e -> true).size();
-
-            if (nearbyRankCRinkas < MAX_RANK_C_RINKAS_NEARBY
-                    && nearbyRinkas + nearbyRankCRinkas < MAX_NIGHT_RINKAS_NEARBY
-                    && roll < RANK_C_RINKA_CHANCE
-                    && level.getEntitiesOfClass(RankCRinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
-                spawnRankCRinka(level, chunkPos);
-                return;
-            }
-
-            if (roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE
-                    && level.getEntitiesOfClass(RishinEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
-                spawnRishin(level, chunkPos);
-                return;
-            }
-
-            if (nearbyRinkas + nearbyRankCRinkas < MAX_NIGHT_RINKAS_NEARBY
-                    && roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE + RINKA_CHANCE
-                    && level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
-                spawnRinka(level, chunkPos);
-            }
+    @SubscribeEvent public static void onChunkLoad(ChunkEvent.Load event){
+        if(!(event.getLevel() instanceof ServerLevel level) || !(event.getChunk() instanceof LevelChunk chunk)) return;
+        if(!level.dimensionType().natural() || level.getDifficulty().getId()==0) return;
+        ChunkPos cp=chunk.getPos(); var nearby=nearbyBounds(level,cp); double roll=ThreadLocalRandom.current().nextDouble();
+        int aodai=level.getEntitiesOfClass(AodaiEntity.class,nearby,e->true).size();
+        if(aodai<MAX_AODAI && roll<AODAI_CHANCE && local(level,cp,AodaiEntity.class).isEmpty()){spawn(level,cp,KenCraftEntities.AODAI.get());return;}
+        boolean night=isNight(level);
+        if(night){
+            int r=level.getEntitiesOfClass(RinkaEntity.class,nearby,e->true).size(); int c=level.getEntitiesOfClass(RankCRinkaEntity.class,nearby,e->true).size(); int rs=level.getEntitiesOfClass(RishinEntity.class,nearby,e->true).size();
+            if(c<MAX_RANK_C && r+c<MAX_NIGHT_RINKA && roll<RANK_C_CHANCE && local(level,cp,RankCRinkaEntity.class).isEmpty()){spawn(level,cp,KenCraftEntities.RANK_C_RINKA.get());return;}
+            if(rs<MAX_RISHIN && roll<RANK_C_CHANCE+RISHIN_CHANCE && local(level,cp,RishinEntity.class).isEmpty()){spawn(level,cp,KenCraftEntities.RISHIN.get());return;}
+            if(r+c<MAX_NIGHT_RINKA && roll<RANK_C_CHANCE+RISHIN_CHANCE+RINKA_CHANCE && local(level,cp,RinkaEntity.class).isEmpty()) spawn(level,cp,KenCraftEntities.RINKA.get());
             return;
         }
-
-        // Daytime: remove both normal and Rank C Rinkas from newly loaded chunks.
-        for (Entity entity : level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true)) {
-            entity.discard();
-        }
-        for (Entity entity : level.getEntitiesOfClass(RankCRinkaEntity.class, chunkBounds(level, chunkPos), e -> true)) {
-            entity.discard();
-        }
-
-        int nearbyInvestigators = level.getEntitiesOfClass(ArfInvestigatorEntity.class, nearby, e -> true).size();
-        int nearbyGenerals = level.getEntitiesOfClass(ArfGeneralEntity.class, nearby, e -> true).size();
-
-        if (nearbyGenerals < MAX_ARF_GENERALS_NEARBY
-                && roll < GENERAL_CHANCE) {
-            spawnGeneral(level, chunkPos);
-            return;
-        }
-
-        if (nearbyInvestigators < MAX_ARF_INVESTIGATORS_NEARBY
-                && roll < GENERAL_CHANCE + ARF_CHANCE
-                && level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
-            spawnInvestigator(level, chunkPos);
-        }
+        for(Entity e:local(level,cp,RinkaEntity.class)) e.discard(); for(Entity e:local(level,cp,RankCRinkaEntity.class)) e.discard();
+        int ai=level.getEntitiesOfClass(ArfInvestigatorEntity.class,nearby,e->true).size(), g=level.getEntitiesOfClass(ArfGeneralEntity.class,nearby,e->true).size();
+        if(g<MAX_GENERAL && roll<GENERAL_CHANCE){spawn(level,cp,KenCraftEntities.ARF_GENERAL.get());return;}
+        if(ai<MAX_ARF && roll<GENERAL_CHANCE+ARF_CHANCE && local(level,cp,ArfInvestigatorEntity.class).isEmpty()) spawn(level,cp,KenCraftEntities.ARF_INVESTIGATOR.get());
     }
-
-    private static void spawnRankCRinka(ServerLevel level, ChunkPos chunkPos) {
-        BlockPos pos = findSpawnPosition(level, chunkPos);
-        if (pos == null) return;
-        RankCRinkaEntity entity = KenCraftEntities.RANK_C_RINKA.get().create(level);
-        if (entity == null) return;
-        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-        level.addFreshEntity(entity);
-    }
-
-    private static void spawnRinka(ServerLevel level, ChunkPos chunkPos) {
-        BlockPos pos = findSpawnPosition(level, chunkPos);
-        if (pos == null) return;
-        RinkaEntity entity = KenCraftEntities.RINKA.get().create(level);
-        if (entity == null) return;
-        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-        level.addFreshEntity(entity);
-    }
-
-    private static void spawnRishin(ServerLevel level, ChunkPos chunkPos) {
-        BlockPos pos = findSpawnPosition(level, chunkPos);
-        if (pos == null) return;
-        RishinEntity entity = KenCraftEntities.RISHIN.get().create(level);
-        if (entity == null) return;
-        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-        level.addFreshEntity(entity);
-    }
-
-    private static void spawnInvestigator(ServerLevel level, ChunkPos chunkPos) {
-        BlockPos pos = findSpawnPosition(level, chunkPos);
-        if (pos == null) return;
-        ArfInvestigatorEntity entity = KenCraftEntities.ARF_INVESTIGATOR.get().create(level);
-        if (entity == null) return;
-        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-        level.addFreshEntity(entity);
-    }
-
-    private static void spawnGeneral(ServerLevel level, ChunkPos chunkPos) {
-        if (!level.getEntitiesOfClass(ArfGeneralEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) return;
-        BlockPos pos = findSpawnPosition(level, chunkPos);
-        if (pos == null) return;
-        ArfGeneralEntity entity = KenCraftEntities.ARF_GENERAL.get().create(level);
-        if (entity == null) return;
-        entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360.0F, 0.0F);
-        entity.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
-        level.addFreshEntity(entity);
-    }
-
-    private static boolean isNight(ServerLevel level) {
-        long time = level.getDayTime() % 24000L;
-        return time >= 13000L && time < 23000L;
-    }
-
-    private static net.minecraft.world.phys.AABB chunkBounds(ServerLevel level, ChunkPos pos) {
-        return new net.minecraft.world.phys.AABB(pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ(),
-                pos.getMaxBlockX() + 1, level.getMaxBuildHeight(), pos.getMaxBlockZ() + 1);
-    }
-
-    private static net.minecraft.world.phys.AABB nearbyBounds(ServerLevel level, ChunkPos center) {
-        int minX = (center.x - SPAWN_RADIUS_CHUNKS) << 4;
-        int minZ = (center.z - SPAWN_RADIUS_CHUNKS) << 4;
-        int maxX = ((center.x + SPAWN_RADIUS_CHUNKS + 1) << 4);
-        int maxZ = ((center.z + SPAWN_RADIUS_CHUNKS + 1) << 4);
-        return new net.minecraft.world.phys.AABB(minX, level.getMinBuildHeight(), minZ,
-                maxX, level.getMaxBuildHeight(), maxZ);
-    }
-
-    private static BlockPos findSpawnPosition(ServerLevel level, ChunkPos chunkPos) {
-        for (int attempt = 0; attempt < 8; attempt++) {
-            int x = chunkPos.getMinBlockX() + ThreadLocalRandom.current().nextInt(16);
-            int z = chunkPos.getMinBlockZ() + ThreadLocalRandom.current().nextInt(16);
-            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-            BlockPos pos = new BlockPos(x, y, z);
-            if (level.getBlockState(pos.below()).isSolid() && level.getBlockState(pos).isAir()) return pos;
-        }
-        return null;
-    }
+    private static boolean isNight(ServerLevel l){long t=l.getDayTime()%24000L;return t>=13000L&&t<23000L;}
+    private static <T extends Entity> List<T> local(ServerLevel l,ChunkPos cp,Class<T> c){return l.getEntitiesOfClass(c,chunkBounds(l,cp),e->true);}
+    private static void spawn(ServerLevel l,ChunkPos cp,net.minecraft.world.entity.EntityType<?> type){BlockPos p=find(l,cp);if(p==null)return;Entity e=type.create(l);if(e==null)return;e.moveTo(p,ThreadLocalRandom.current().nextFloat()*360F,0);if(e instanceof net.minecraft.world.entity.Mob m)m.finalizeSpawn(l,l.getCurrentDifficultyAt(p),MobSpawnType.NATURAL,null);l.addFreshEntity(e);}
+    private static net.minecraft.world.phys.AABB chunkBounds(ServerLevel l,ChunkPos p){return new net.minecraft.world.phys.AABB(p.getMinBlockX(),l.getMinBuildHeight(),p.getMinBlockZ(),p.getMaxBlockX()+1,l.getMaxBuildHeight(),p.getMaxBlockZ()+1);}
+    private static net.minecraft.world.phys.AABB nearbyBounds(ServerLevel l,ChunkPos c){int x=(c.x-RADIUS)<<4,z=(c.z-RADIUS)<<4,X=((c.x+RADIUS+1)<<4),Z=((c.z+RADIUS+1)<<4);return new net.minecraft.world.phys.AABB(x,l.getMinBuildHeight(),z,X,l.getMaxBuildHeight(),Z);}
+    private static BlockPos find(ServerLevel l,ChunkPos cp){for(int i=0;i<8;i++){int x=cp.getMinBlockX()+ThreadLocalRandom.current().nextInt(16),z=cp.getMinBlockZ()+ThreadLocalRandom.current().nextInt(16),y=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z);BlockPos p=new BlockPos(x,y,z);if(l.getBlockState(p.below()).isSolid()&&l.getBlockState(p).isAir())return p;}return null;}
 }
