@@ -1,6 +1,6 @@
 package br.mevis.kencraft.client;
 
-/** Dependency-free Kikan animation state with distinct Z/C attack choreography. */
+/** Dependency-free Kikan animation state with attack-specific timing. */
 public final class KikanAnimationState {
     private static int ticks;
     private static int duration;
@@ -9,37 +9,23 @@ public final class KikanAnimationState {
     private KikanAnimationState() {}
 
     public static void trigger(String attackKey) {
-        key = attackKey == null ? "z" : attackKey.toLowerCase();
-        duration = 24;
+        key = attackKey == null ? "z" : attackKey.toLowerCase(java.util.Locale.ROOT);
+        duration = "c".equals(key) ? 32 : 20;
         ticks = duration;
     }
 
-    public static void tick() {
-        if (ticks > 0) ticks--;
-    }
+    public static void tick() { if (ticks > 0) ticks--; }
+    public static boolean active() { return ticks > 0 && duration > 0; }
+    public static float progress() { return !active() ? 0.0F : 1.0F - (ticks / (float)duration); }
+    public static boolean isHeavy() { return "c".equals(key); }
+    public static String key() { return key; }
 
-    public static boolean active() {
-        return ticks > 0;
-    }
-
-    public static float progress() {
-        return !active() || duration <= 0 ? 0.0F : 1.0F - (ticks / (float) duration);
-    }
-
-    /** Z is a fast strike; C is a heavier/longer crowd-control motion. */
-    public static boolean isHeavy() {
-        return "c".equals(key);
-    }
-
-    public static String key() {
-        return key;
-    }
-
-    /** Peaks at the moment where the Kikan should visually meet the target. */
+    /** Peaks at the visible contact moment without changing the existing Kikan model choreography. */
     public static float impactEnvelope() {
-        float p = progress();
         if (!active()) return 0.0F;
-        if (p < 0.52F) return p / 0.52F;
-        return Math.max(0.0F, (1.0F - p) / 0.48F);
+        float p = progress();
+        float center = isHeavy() ? 0.54F : 0.50F;
+        float halfWidth = isHeavy() ? 0.24F : 0.26F;
+        return Math.max(0.0F, 1.0F - Math.abs(p - center) / halfWidth);
     }
 }
