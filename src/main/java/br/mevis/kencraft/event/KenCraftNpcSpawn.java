@@ -23,11 +23,20 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Natural KenCraft NPC spawning. Rinkas are exclusive to night; ARF is exclusive to day. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    private static final double RANK_C_RINKA_CHANCE = 0.08D;
-    private static final double RINKA_CHANCE = 0.25D;
+    // Chunk-load events can fire for many chunks while a player travels. Keep both
+    // the per-chunk chance and the nearby population bounded so exploration cannot
+    // continuously accumulate KenCraft NPCs.
+    private static final double RANK_C_RINKA_CHANCE = 0.03D;
+    private static final double RINKA_CHANCE = 0.07D;
     private static final double RISHIN_CHANCE = 0.0D;
-    private static final double ARF_CHANCE = 0.20D;
-    private static final double GENERAL_CHANCE = 0.02D;
+    private static final double ARF_CHANCE = 0.08D;
+    private static final double GENERAL_CHANCE = 0.01D;
+
+    private static final int SPAWN_RADIUS_CHUNKS = 4;
+    private static final int MAX_NIGHT_RINKAS_NEARBY = 3;
+    private static final int MAX_RANK_C_RINKAS_NEARBY = 1;
+    private static final int MAX_ARF_INVESTIGATORS_NEARBY = 2;
+    private static final int MAX_ARF_GENERALS_NEARBY = 1;
 
     private KenCraftNpcSpawn() {}
 
@@ -40,33 +49,55 @@ public final class KenCraftNpcSpawn {
 
         boolean night = isNight(level);
         ChunkPos chunkPos = chunk.getPos();
+        var nearby = nearbyBounds(level, chunkPos);
         double roll = ThreadLocalRandom.current().nextDouble();
 
         if (night) {
-            if (roll < RANK_C_RINKA_CHANCE && level.getEntitiesOfClass(RankCRinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+            int nearbyRinkas = level.getEntitiesOfClass(RinkaEntity.class, nearby, e -> true).size();
+            int nearbyRankCRinkas = level.getEntitiesOfClass(RankCRinkaEntity.class, nearby, e -> true).size();
+
+            if (nearbyRankCRinkas < MAX_RANK_C_RINKAS_NEARBY
+                    && nearbyRinkas + nearbyRankCRinkas < MAX_NIGHT_RINKAS_NEARBY
+                    && roll < RANK_C_RINKA_CHANCE
+                    && level.getEntitiesOfClass(RankCRinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
                 spawnRankCRinka(level, chunkPos);
                 return;
             }
-            if (roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE && level.getEntitiesOfClass(RishinEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+
+            if (roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE
+                    && level.getEntitiesOfClass(RishinEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
                 spawnRishin(level, chunkPos);
                 return;
             }
-            if (roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE + RINKA_CHANCE && level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+
+            if (nearbyRinkas + nearbyRankCRinkas < MAX_NIGHT_RINKAS_NEARBY
+                    && roll < RANK_C_RINKA_CHANCE + RISHIN_CHANCE + RINKA_CHANCE
+                    && level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
                 spawnRinka(level, chunkPos);
             }
             return;
         }
 
-        // Daytime: no Rinka or Rank C Rinka may remain in newly loaded chunks.
+        // Daytime: remove both normal and Rank C Rinkas from newly loaded chunks.
         for (Entity entity : level.getEntitiesOfClass(RinkaEntity.class, chunkBounds(level, chunkPos), e -> true)) {
             entity.discard();
         }
+        for (Entity entity : level.getEntitiesOfClass(RankCRinkaEntity.class, chunkBounds(level, chunkPos), e -> true)) {
+            entity.discard();
+        }
 
-        if (roll < GENERAL_CHANCE) {
+        int nearbyInvestigators = level.getEntitiesOfClass(ArfInvestigatorEntity.class, nearby, e -> true).size();
+        int nearbyGenerals = level.getEntitiesOfClass(ArfGeneralEntity.class, nearby, e -> true).size();
+
+        if (nearbyGenerals < MAX_ARF_GENERALS_NEARBY
+                && roll < GENERAL_CHANCE) {
             spawnGeneral(level, chunkPos);
             return;
         }
-        if (roll < GENERAL_CHANCE + ARF_CHANCE && level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
+
+        if (nearbyInvestigators < MAX_ARF_INVESTIGATORS_NEARBY
+                && roll < GENERAL_CHANCE + ARF_CHANCE
+                && level.getEntitiesOfClass(ArfInvestigatorEntity.class, chunkBounds(level, chunkPos), e -> true).isEmpty()) {
             spawnInvestigator(level, chunkPos);
         }
     }
@@ -130,6 +161,15 @@ public final class KenCraftNpcSpawn {
     private static net.minecraft.world.phys.AABB chunkBounds(ServerLevel level, ChunkPos pos) {
         return new net.minecraft.world.phys.AABB(pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ(),
                 pos.getMaxBlockX() + 1, level.getMaxBuildHeight(), pos.getMaxBlockZ() + 1);
+    }
+
+    private static net.minecraft.world.phys.AABB nearbyBounds(ServerLevel level, ChunkPos center) {
+        int minX = (center.x - SPAWN_RADIUS_CHUNKS) << 4;
+        int minZ = (center.z - SPAWN_RADIUS_CHUNKS) << 4;
+        int maxX = ((center.x + SPAWN_RADIUS_CHUNKS + 1) << 4);
+        int maxZ = ((center.z + SPAWN_RADIUS_CHUNKS + 1) << 4);
+        return new net.minecraft.world.phys.AABB(minX, level.getMinBuildHeight(), minZ,
+                maxX, level.getMaxBuildHeight(), maxZ);
     }
 
     private static BlockPos findSpawnPosition(ServerLevel level, ChunkPos chunkPos) {

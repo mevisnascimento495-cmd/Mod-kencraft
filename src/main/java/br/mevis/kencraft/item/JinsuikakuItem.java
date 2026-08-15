@@ -34,7 +34,7 @@ public class JinsuikakuItem extends Item {
             if (data.race() == Race.RINKA) {
                 int consumed = data.jinsuikakuConsumed() + 1;
                 String oldClass = data.rinkaClass();
-                String newClass = classForConsumed(consumed);
+                String newClass = classForConsumed(consumed, oldClass);
                 player.setData(ModAttachments.PLAYER_DATA,
                         data.withJinsuikakuConsumed(consumed).withRinkaClass(newClass));
 
@@ -50,6 +50,19 @@ public class JinsuikakuItem extends Item {
         return super.finishUsingItem(stack, level, entity);
     }
 
+    /**
+     * Normal Jinsuikaku can progress E -> D -> C, but it must never lower
+     * a Rinka that has already reached B or A through Rank C Jinsuikaku.
+     */
+    public static String classForConsumed(int consumed, String currentClass) {
+        if ("A".equals(currentClass) || "B".equals(currentClass)) return currentClass;
+        if (consumed >= 20) return "C";
+        if (consumed >= 10) return "D";
+        if (consumed >= 1) return "E";
+        return "NONE";
+    }
+
+    /** Backwards-compatible helper for callers that do not have current class data. */
     public static String classForConsumed(int consumed) {
         if (consumed >= 20) return "C";
         if (consumed >= 10) return "D";
