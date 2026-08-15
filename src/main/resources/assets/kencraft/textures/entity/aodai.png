@@ -1,0 +1,59 @@
+package br.mevis.kencraft.event;
+
+import br.mevis.kencraft.data.ModAttachments;
+import br.mevis.kencraft.data.PlayerData;
+import br.mevis.kencraft.data.Race;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+
+/** Server-authoritative persistence and validation for the Aodai -> Kikakogou quest. */
+public final class KikakogouProgress {
+    private static final String MISSION = "kencraft_kikakogou_mission";
+    private static final String DEFEATED = "kencraft_kikakogou_aodai_defeated";
+    private static final String UNLOCKED = "kencraft_kikakogou_unlocked";
+
+    private KikakogouProgress() {}
+
+    public static boolean isMissionStarted(ServerPlayer player) {
+        return player.getPersistentData().getBoolean(MISSION);
+    }
+
+    public static boolean isAodaiDefeated(ServerPlayer player) {
+        return player.getPersistentData().getBoolean(DEFEATED);
+    }
+
+    public static boolean isUnlocked(ServerPlayer player) {
+        return player.getPersistentData().getBoolean(UNLOCKED);
+    }
+
+    public static void startMission(ServerPlayer player) {
+        player.getPersistentData().putBoolean(MISSION, true);
+    }
+
+    public static void markAodaiDefeated(ServerPlayer player) {
+        if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.RINKA) return;
+        if (!isMissionStarted(player)) return;
+        player.getPersistentData().putBoolean(DEFEATED, true);
+        tryUnlock(player, true);
+    }
+
+    public static boolean tryUnlock(ServerPlayer player) {
+        return tryUnlock(player, false);
+    }
+
+    private static boolean tryUnlock(ServerPlayer player, boolean announce) {
+        if (isUnlocked(player)) return true;
+        if (!isMissionStarted(player) || !isAodaiDefeated(player)) return false;
+
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.race() != Race.RINKA) return false;
+        if (data.jinsuikakuConsumed() < 50 || data.jinsuikakuRankCConsumed() < 30) return false;
+
+        player.getPersistentData().putBoolean(UNLOCKED, true);
+        if (announce) {
+            player.sendSystemMessage(Component.literal(
+                    "Parabéns! Você completou a missão de Aodai e desbloqueou a Kikakogou. Use X para usar a Kikakogou."));
+        }
+        return true;
+    }
+}

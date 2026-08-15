@@ -1,0 +1,55 @@
+package br.mevis.kencraft.event;
+
+import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.data.ModAttachments;
+import br.mevis.kencraft.data.PlayerData;
+import br.mevis.kencraft.data.Race;
+import com.mojang.brigadier.CommandDispatcher;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
+
+/** Command backing the X key for the future Kikakogou ability system. */
+@EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
+public final class KikakogouCommand {
+    private KikakogouCommand() {}
+
+    @SubscribeEvent
+    public static void register(RegisterCommandsEvent event) {
+        CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+        dispatcher.register(Commands.literal("kencraft_kikakogou")
+                .then(Commands.literal("use").executes(context -> use(context.getSource()))));
+    }
+
+    private static int use(CommandSourceStack source) {
+        if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.race() != Race.RINKA) {
+            source.sendFailure(Component.literal("A Kikakogou só pode ser usada por um Rinka."));
+            return 0;
+        }
+
+        if (!KikakogouProgress.isUnlocked(player) && KikakogouProgress.tryUnlock(player)) {
+            player.sendSystemMessage(Component.literal("Kikakogou desbloqueada! Use X novamente para usar sua habilidade."));
+        }
+
+        if (!KikakogouProgress.isUnlocked(player)) {
+            int normal = data.jinsuikakuConsumed();
+            int rankC = data.jinsuikakuRankCConsumed();
+            String status = !KikakogouProgress.isMissionStarted(player)
+                    ? "Fale com Aodai para iniciar a missão."
+                    : "Progresso: " + normal + "/50 Jinsuikaku, " + rankC + "/30 Rank C, Aodai derrotado: "
+                    + KikakogouProgress.isAodaiDefeated(player);
+            source.sendFailure(Component.literal(status));
+            return 0;
+        }
+
+        // The concrete Kikakogou skill has intentionally not been invented yet.
+        player.sendSystemMessage(Component.literal("Kikakogou pronta. A habilidade vinculada à tecla X será adicionada na próxima etapa."));
+        return 1;
+    }
+}
