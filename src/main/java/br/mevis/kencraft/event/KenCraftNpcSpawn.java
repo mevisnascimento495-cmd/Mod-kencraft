@@ -19,16 +19,18 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    private static final double RANK_C_CHANCE = 0.03D;
-    private static final double RINKA_CHANCE = 0.07D;
-    private static final double RISHIN_CHANCE = 0.05D;
-    private static final double AODAI_CHANCE = 0.05D;
+    // Slight global increase: KenCraft entities should be noticeably present,
+    // but not dense enough to recreate the exploration lag problem.
+    private static final double RANK_C_CHANCE = 0.04D;
+    private static final double RINKA_CHANCE = 0.09D;
+    private static final double RISHIN_CHANCE = 0.06D;
+    private static final double AODAI_CHANCE = 0.06D;
     private static final double ARF_CHANCE = 0.12D;
-    private static final double GENERAL_CHANCE = 0.025D;
+    private static final double GENERAL_CHANCE = 0.03D;
 
-    private static final int MAX_NIGHT_RINKA = 3;
-    private static final int MAX_RANK_C = 1;
-    private static final int MAX_RISHIN = 2;
+    private static final int MAX_NIGHT_RINKA = 4;
+    private static final int MAX_RANK_C = 2;
+    private static final int MAX_RISHIN = 3;
     private static final int MAX_AODAI = 1;
     private static final int MAX_ARF = 3;
     private static final int MAX_GENERAL = 1;
