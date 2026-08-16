@@ -35,8 +35,8 @@ public final class KenCraftNpcSpawn {
     private static final int MAX_GENERAL = 1;
 
     private static final int CHECK_INTERVAL_TICKS = 40;
-    private static final int MAX_PLAYERS_PER_CYCLE = 1;
-    private static final double PLAYER_CHECK_RADIUS = 128.0D;
+    private static final double ENTITY_CHECK_RADIUS = 64.0D;
+    private static final double ENTITY_CHECK_VERTICAL = 32.0D;
 
     private static volatile boolean structureLocateInProgress;
     private static int cycleCursor;
@@ -65,12 +65,9 @@ public final class KenCraftNpcSpawn {
         ChunkPos cp = player.chunkPosition();
         double roll = ThreadLocalRandom.current().nextDouble();
 
-        // Only one player is processed per cycle and only the selected roll
-        // performs an entity search. This keeps exploration work bounded.
         if (roll < AODAI_CHANCE) {
-            AABB nearby = nearbyBounds(level, cp);
-            int aodai = level.getEntitiesOfClass(AodaiEntity.class, nearby, e -> true).size();
-            if (aodai < MAX_AODAI && local(level, cp, AodaiEntity.class).isEmpty()) {
+            AABB nearby = nearbyBounds(player);
+            if (count(level, nearby, AodaiEntity.class) < MAX_AODAI) {
                 spawn(level, cp, KenCraftEntities.AODAI.get());
                 return;
             }
@@ -78,50 +75,45 @@ public final class KenCraftNpcSpawn {
 
         if (isNight(level)) {
             if (roll < RANK_C_CHANCE) {
-                AABB nearby = nearbyBounds(level, cp);
-                int r = level.getEntitiesOfClass(RinkaEntity.class, nearby, e -> true).size();
-                int c = level.getEntitiesOfClass(RankCRinkaEntity.class, nearby, e -> true).size();
-                if (c < MAX_RANK_C && r + c < MAX_NIGHT_RINKA && local(level, cp, RankCRinkaEntity.class).isEmpty()) {
+                AABB nearby = nearbyBounds(player);
+                int r = count(level, nearby, RinkaEntity.class);
+                int c = count(level, nearby, RankCRinkaEntity.class);
+                if (c < MAX_RANK_C && r + c < MAX_NIGHT_RINKA) {
                     spawn(level, cp, KenCraftEntities.RANK_C_RINKA.get());
                     return;
                 }
             }
 
             if (roll < RANK_C_CHANCE + RISHIN_CHANCE) {
-                AABB nearby = nearbyBounds(level, cp);
-                int rs = level.getEntitiesOfClass(RishinEntity.class, nearby, e -> true).size();
-                if (rs < MAX_RISHIN && local(level, cp, RishinEntity.class).isEmpty()) {
+                AABB nearby = nearbyBounds(player);
+                if (count(level, nearby, RishinEntity.class) < MAX_RISHIN) {
                     spawn(level, cp, KenCraftEntities.RISHIN.get());
                     return;
                 }
             }
 
             if (roll < RANK_C_CHANCE + RISHIN_CHANCE + RINKA_CHANCE) {
-                AABB nearby = nearbyBounds(level, cp);
-                int r = level.getEntitiesOfClass(RinkaEntity.class, nearby, e -> true).size();
-                int c = level.getEntitiesOfClass(RankCRinkaEntity.class, nearby, e -> true).size();
-                if (r + c < MAX_NIGHT_RINKA && local(level, cp, RinkaEntity.class).isEmpty()) {
+                AABB nearby = nearbyBounds(player);
+                int r = count(level, nearby, RinkaEntity.class);
+                int c = count(level, nearby, RankCRinkaEntity.class);
+                if (r + c < MAX_NIGHT_RINKA) {
                     spawn(level, cp, KenCraftEntities.RINKA.get());
                 }
             }
             return;
         }
 
-        // Rinkas are no longer scanned/discarded on every chunk load during the day.
-        // Existing entities are left untouched; new Rinkas simply do not spawn in daylight.
         if (roll < GENERAL_CHANCE) {
-            AABB nearby = nearbyBounds(level, cp);
-            int g = level.getEntitiesOfClass(ArfGeneralEntity.class, nearby, e -> true).size();
-            if (g < MAX_GENERAL) {
+            AABB nearby = nearbyBounds(player);
+            if (count(level, nearby, ArfGeneralEntity.class) < MAX_GENERAL) {
                 spawn(level, cp, KenCraftEntities.ARF_GENERAL.get());
                 return;
             }
         }
 
         if (roll < GENERAL_CHANCE + ARF_CHANCE) {
-            AABB nearby = nearbyBounds(level, cp);
-            int ai = level.getEntitiesOfClass(ArfInvestigatorEntity.class, nearby, e -> true).size();
-            if (ai < MAX_ARF && local(level, cp, ArfInvestigatorEntity.class).isEmpty()) {
+            AABB nearby = nearbyBounds(player);
+            if (count(level, nearby, ArfInvestigatorEntity.class) < MAX_ARF) {
                 spawn(level, cp, KenCraftEntities.ARF_INVESTIGATOR.get());
             }
         }
@@ -132,8 +124,18 @@ public final class KenCraftNpcSpawn {
         return time >= 13000L && time < 23000L;
     }
 
-    private static <T extends Entity> List<T> local(ServerLevel level, ChunkPos cp, Class<T> type) {
-        return level.getEntitiesOfClass(type, chunkBounds(level, cp), e -> true);
+    private static <T extends Entity> int count(ServerLevel level, AABB bounds, Class<T> type) {
+        return level.getEntitiesOfClass(type, bounds, e -> true).size();
+    }
+
+    private static AABB nearbyBounds(ServerPlayer player) {
+        double x = player.getX();
+        double y = player.getY();
+        double z = player.getZ();
+        return new AABB(
+                x - ENTITY_CHECK_RADIUS, y - ENTITY_CHECK_VERTICAL, z - ENTITY_CHECK_RADIUS,
+                x + ENTITY_CHECK_RADIUS, y + ENTITY_CHECK_VERTICAL, z + ENTITY_CHECK_RADIUS
+        );
     }
 
     private static void spawn(ServerLevel level, ChunkPos cp, net.minecraft.world.entity.EntityType<?> type) {
@@ -150,23 +152,8 @@ public final class KenCraftNpcSpawn {
         level.addFreshEntity(entity);
     }
 
-    private static AABB chunkBounds(ServerLevel level, ChunkPos pos) {
-        return new AABB(
-                pos.getMinBlockX(), level.getMinBuildHeight(), pos.getMinBlockZ(),
-                pos.getMaxBlockX() + 1, level.getMaxBuildHeight(), pos.getMaxBlockZ() + 1
-        );
-    }
-
-    private static AABB nearbyBounds(ServerLevel level, ChunkPos center) {
-        int x = (center.x - RADIUS) << 4;
-        int z = (center.z - RADIUS) << 4;
-        int maxX = (center.x + RADIUS + 1) << 4;
-        int maxZ = (center.z + RADIUS + 1) << 4;
-        return new AABB(x, level.getMinBuildHeight(), z, maxX, level.getMaxBuildHeight(), maxZ);
-    }
-
     private static BlockPos find(ServerLevel level, ChunkPos chunk) {
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 4; i++) {
             int x = chunk.getMinBlockX() + ThreadLocalRandom.current().nextInt(16);
             int z = chunk.getMinBlockZ() + ThreadLocalRandom.current().nextInt(16);
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);

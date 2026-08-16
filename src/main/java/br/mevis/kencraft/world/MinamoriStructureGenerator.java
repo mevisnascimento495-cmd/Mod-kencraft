@@ -1,24 +1,36 @@
 package br.mevis.kencraft.world;
 
+import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.entity.KenCraftEntities;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.level.ChunkEvent;
-import net.minecraft.server.level.ServerLevel;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
-@EventBusSubscriber
+import java.util.ArrayDeque;
+import java.util.Deque;
+
+@EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class MinamoriStructureGenerator {
     private static final int CHANCE_DENOMINATOR = 96;
     private static final int WIDTH = 25;
     private static final int DEPTH = 15;
     private static final int HEIGHT = 8;
+    private static final int MAX_PENDING = 8;
+    private static final int GENERATION_INTERVAL_TICKS = 20;
+
+    private static final Deque<PendingGeneration> PENDING = new ArrayDeque<>();
+    private static int generationCooldown;
 
     public static int CHANCE_DENOMINATOR() { return CHANCE_DENOMINATOR; }
 
@@ -30,7 +42,40 @@ public final class MinamoriStructureGenerator {
         ChunkAccess chunk = event.getChunk();
         long hash = hashForChunk(level.getSeed(), chunk.getPos().x, chunk.getPos().z);
         if (Math.floorMod(hash, CHANCE_DENOMINATOR) != 0) return;
-        level.getServer().execute(() -> generateAt(level, chunk.getPos().getMiddleBlockX(), chunk.getPos().getMiddleBlockZ()));
+
+        PendingGeneration candidate = new PendingGeneration(level, chunk.getPos().getMiddleBlockX(), chunk.getPos().getMiddleBlockZ());
+        if (!PENDING.contains(candidate) && PENDING.size() < MAX_PENDING) PENDING.addLast(candidate);
+    }
+
+    @SubscribeEvent
+    public static void onServerTick(ServerTickEvent.Post event) {
+        if (generationCooldown > 0) {
+            generationCooldown--;
+            return;
+        }
+        if (PENDING.isEmpty()) return;
+        if (event.getServer().getTickCount() % GENERATION_INTERVAL_TICKS != 0) return;
+
+        PendingGeneration candidate = PENDING.pollFirst();
+        if (candidate == null || candidate.level().getServer() != event.getServer()) return;
+
+        // Do not compete with vanilla chunk generation while the player is sprinting.
+        for (ServerPlayer player : candidate.level().players()) {
+            if (player.isSprinting() && player.distanceToSqr(candidate.centerX() + 0.5D, player.getY(), candidate.centerZ() + 0.5D) < 192.0D * 192.0D) {
+                PENDING.addLast(candidate);
+                return;
+            }
+        }
+
+        // The cafe spans several chunks. Never force-load missing chunks here.
+        // Wait until vanilla has already loaded the complete footprint.
+        if (!footprintLoaded(candidate.level(), candidate.centerX(), candidate.centerZ())) {
+            PENDING.addLast(candidate);
+            return;
+        }
+
+        generateAt(candidate.level(), candidate.centerX(), candidate.centerZ());
+        generationCooldown = GENERATION_INTERVAL_TICKS;
     }
 
     public static long hashForChunk(long seed, int chunkX, int chunkZ) {
@@ -38,16 +83,29 @@ public final class MinamoriStructureGenerator {
     }
 
     public static boolean generateAt(ServerLevel level, int centerX, int centerZ) {
+        if (!footprintLoaded(level, centerX, centerZ)) return false;
         return placeMinamori(level, centerX, centerZ);
+    }
+
+    private static boolean footprintLoaded(ServerLevel level, int centerX, int centerZ) {
+        int minChunkX = Math.floorDiv(centerX - 12, 16);
+        int maxChunkX = Math.floorDiv(centerX + 12, 16);
+        int minChunkZ = Math.floorDiv(centerZ - 7, 16);
+        int maxChunkZ = Math.floorDiv(centerZ + 7, 16);
+
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                LevelChunk chunk = level.getChunkSource().getChunkNow(cx, cz);
+                if (chunk == null) return false;
+            }
+        }
+        return true;
     }
 
     private static boolean placeMinamori(ServerLevel level, int centerX, int centerZ) {
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
         if (groundY < level.getMinBuildHeight() + 3 || groundY > level.getMaxBuildHeight() - HEIGHT - 2) return false;
 
-        // The lodestone at the exact center is the permanent generation marker.
-        // This makes natural generation and the locate command idempotent and
-        // prevents duplicate cafes/NPCs when both paths touch the same chunk.
         if (level.getBlockState(new BlockPos(centerX, groundY, centerZ)).is(Blocks.LODESTONE)) return true;
 
         if (!validGround(level, centerX, groundY, centerZ)) return false;
@@ -171,4 +229,6 @@ public final class MinamoriStructureGenerator {
     private static long mix(long value) {
         value ^= value >>> 33; value *= 0xff51afd7ed558ccdL; value ^= value >>> 33; value *= 0xc4ceb9fe1a85ec53L; value ^= value >>> 33; return value;
     }
+
+    private record PendingGeneration(ServerLevel level, int centerX, int centerZ) {}
 }
