@@ -19,34 +19,62 @@ public final class AodaiSnakeModel extends HierarchicalModel<AodaiEntity> {
             ResourceLocation.fromNamespaceAndPath("kencraft", "aodai_snake"), "main");
 
     private final ModelPart root;
-    private final ModelPart body;
+    private final ModelPart segment0;
+    private final ModelPart segment1;
+    private final ModelPart segment2;
+    private final ModelPart segment3;
+    private final ModelPart segment4;
     private final ModelPart head;
 
     public AodaiSnakeModel(ModelPart root) {
         super(RenderType::entityCutoutNoCull);
         this.root = root;
-        this.body = root.getChild("body");
+        this.segment0 = root.getChild("segment0");
+        this.segment1 = root.getChild("segment1");
+        this.segment2 = root.getChild("segment2");
+        this.segment3 = root.getChild("segment3");
+        this.segment4 = root.getChild("segment4");
         this.head = root.getChild("head");
     }
 
     public static LayerDefinition createBodyLayer() {
         MeshDefinition mesh = new MeshDefinition();
         PartDefinition root = mesh.getRoot();
-        root.addOrReplaceChild("body",
-                CubeListBuilder.create().texOffs(0, 0).addBox(-1F, -1F, -4F, 2F, 2F, 8F),
+
+        root.addOrReplaceChild("segment0",
+                CubeListBuilder.create().texOffs(0, 0).addBox(-1.5F, -1.5F, 0F, 3F, 3F, 5F),
                 PartPose.offset(0F, 0F, 0F));
+        root.addOrReplaceChild("segment1",
+                CubeListBuilder.create().texOffs(0, 0).addBox(-1.6F, -1.6F, 0F, 3.2F, 3.2F, 5F),
+                PartPose.offset(0F, 0F, 4.5F));
+        root.addOrReplaceChild("segment2",
+                CubeListBuilder.create().texOffs(0, 0).addBox(-1.7F, -1.7F, 0F, 3.4F, 3.4F, 5F),
+                PartPose.offset(0F, 0F, 9F));
+        root.addOrReplaceChild("segment3",
+                CubeListBuilder.create().texOffs(0, 0).addBox(-1.7F, -1.7F, 0F, 3.4F, 3.4F, 5F),
+                PartPose.offset(0F, 0F, 13.5F));
+        root.addOrReplaceChild("segment4",
+                CubeListBuilder.create().texOffs(0, 0).addBox(-1.5F, -1.5F, 0F, 3F, 3F, 4.5F),
+                PartPose.offset(0F, 0F, 18F));
+
         root.addOrReplaceChild("head",
-                CubeListBuilder.create().texOffs(0, 10).addBox(-1.5F, -1.5F, -3F, 3F, 3F, 3F),
-                PartPose.offset(0F, 0F, -4F));
+                CubeListBuilder.create().texOffs(0, 10).addBox(-2.5F, -2F, 0F, 5F, 4F, 6F),
+                PartPose.offset(0F, 0F, 21.5F));
+
         return LayerDefinition.create(mesh, 32, 32);
     }
 
     @Override
     public void setupAnim(AodaiEntity entity, float limbSwing, float limbSwingAmount,
                           float ageInTicks, float netHeadYaw, float headPitch) {
-        body.yRot = (float) Math.sin(ageInTicks * 0.35F) * 0.35F;
-        head.yRot = body.yRot;
-        head.xRot = (float) Math.sin(ageInTicks * 0.28F) * 0.12F;
+        float wave = ageInTicks * 0.22F;
+        segment0.yRot = (float) Math.sin(wave) * 0.20F;
+        segment1.yRot = (float) Math.sin(wave + 0.65F) * 0.24F;
+        segment2.yRot = (float) Math.sin(wave + 1.30F) * 0.28F;
+        segment3.yRot = (float) Math.sin(wave + 1.95F) * 0.30F;
+        segment4.yRot = (float) Math.sin(wave + 2.60F) * 0.32F;
+        head.yRot = segment4.yRot;
+        head.xRot = (float) Math.sin(ageInTicks * 0.16F) * 0.10F;
     }
 
     @Override

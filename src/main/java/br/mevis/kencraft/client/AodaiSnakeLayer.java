@@ -26,13 +26,14 @@ public final class AodaiSnakeLayer extends RenderLayer<AodaiEntity, net.minecraf
     public void render(PoseStack poseStack, MultiBufferSource buffers, int light, AodaiEntity entity,
                        float limbSwing, float limbSwingAmount, float partialTick, float ageInTicks,
                        float netHeadYaw, float headPitch) {
-        if (!entity.isSnakeActive()) {
-            return;
-        }
+        if (!entity.isSnakeActive()) return;
+
         poseStack.pushPose();
-        poseStack.translate(0.0D, 0.15D, 0.28D);
-        poseStack.scale(0.9F, 0.9F, 0.9F);
+        // Start at Aodai's back and make the serpent clearly visible over the shoulders.
+        poseStack.translate(0.0D, 0.05D, 0.32D);
+        poseStack.scale(1.15F, 1.15F, 1.15F);
         model.setupAnim(entity, limbSwing, limbSwingAmount, ageInTicks, netHeadYaw, headPitch);
+
         VertexConsumer vertexConsumer = buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
         model.renderToBuffer(poseStack, vertexConsumer, light,
                 net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, 1);
