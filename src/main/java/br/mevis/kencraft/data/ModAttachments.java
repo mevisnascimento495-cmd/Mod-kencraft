@@ -21,12 +21,11 @@ public final class ModAttachments {
                             .copyOnDeath()
                             .build());
 
-    /** Persistent progress for the KenCraft story campaign. */
+    /** Persistent progress for the KenCraft story campaign. Server-side data; no client sync is required. */
     public static final Supplier<AttachmentType<StoryProgress>> STORY_PROGRESS =
             ATTACHMENT_TYPES.register("story_progress",
                     () -> AttachmentType.builder(() -> StoryProgress.DEFAULT)
                             .serialize(StoryProgress.CODEC)
-                            .sync(StoryProgress.STREAM_CODEC)
                             .copyOnDeath()
                             .build());
 
