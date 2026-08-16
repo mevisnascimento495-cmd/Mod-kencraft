@@ -25,7 +25,7 @@ public final class KenCraftClient {
         event.register(OPEN_MENU); event.register(KIKAN_Z); event.register(KIKAN_C); event.register(JIO_F); event.register(JIO_G);
     }
     @SubscribeEvent public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        event.registerEntityRenderer(KenCraftEntities.SHIN_HOMARE.get(), HomareRenderer::new);
-        event.registerEntityRenderer(KenCraftEntities.KAORI_HOMARE.get(), HomareRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.SHIN_HOMARE.get(), ShinHomareRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.KAORI_HOMARE.get(), KaoriHomareRenderer::new);
     }
 }
