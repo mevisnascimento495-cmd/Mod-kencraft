@@ -26,7 +26,7 @@ import net.minecraft.world.level.Level;
 public final class AodaiEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> SNAKE_ACTIVE =
             SynchedEntityData.defineId(AodaiEntity.class, EntityDataSerializers.BOOLEAN);
-    private static final String DIALOGUE = "Ora ora, parece que um fracote veio me perguntando como desbloquear o kikakogou, bem pelo que me disseram, o kikakogou é liberado após o Rinka devorar 50 jinsuikaku normal e 30 Rank C, Dep disse o Rinka terá que derrotar alguém forte como eu hahaha, mas acho que você não conseguiria me derrotar, não é? hahaha patético";
+    private static final String DIALOGUE = "Ora, ora! Parece que um fracote veio me perguntar como desbloquear a Kikakogou. Bem, pelo que me disseram, a Kikakogou é liberada depois que o Rinka devorar 50 Jinsuikaku normais e 30 Jinsuikaku Rank C. Depois disso, o Rinka terá que derrotar alguém forte como eu... Hahaha! Mas acho que você não conseguiria me derrotar, não é? Hahaha! Patético.";
 
     public AodaiEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); setPersistenceRequired(); }
 
