@@ -1,6 +1,7 @@
 package br.mevis.kencraft.entity;
 
 import br.mevis.kencraft.data.ModAttachments;
+import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
 import br.mevis.kencraft.event.KikakogouProgress;
 import net.minecraft.network.chat.Component;
@@ -61,8 +62,13 @@ public final class AodaiEntity extends PathfinderMob {
     @Override protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         if (level().isClientSide) return InteractionResult.SUCCESS;
-        if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.RINKA) {
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.race() != Race.RINKA) {
             player.sendSystemMessage(Component.literal("Aodai apenas ensina sobre a Kikakogou para um Rinka."));
+            return InteractionResult.CONSUME;
+        }
+        if (!"A".equalsIgnoreCase(data.rinkaClass())) {
+            player.sendSystemMessage(Component.literal("Aodai: volte quando alcançar o Rank A. Só então poderei ensinar sobre a Kikakogou."));
             return InteractionResult.CONSUME;
         }
         ServerPlayer serverPlayer = (ServerPlayer) player;

@@ -23,15 +23,14 @@ public final class KenCraftNpcSpawn {
     private static final double RINKA_CHANCE = 0.07D;
     private static final double RISHIN_CHANCE = 0.05D;
     private static final double AODAI_CHANCE = 0.05D;
-    private static final double ARF_CHANCE = 0.08D;
-    private static final double GENERAL_CHANCE = 0.01D;
+    private static final double ARF_CHANCE = 0.12D;
+    private static final double GENERAL_CHANCE = 0.025D;
 
-    private static final int RADIUS = 4;
     private static final int MAX_NIGHT_RINKA = 3;
     private static final int MAX_RANK_C = 1;
     private static final int MAX_RISHIN = 2;
     private static final int MAX_AODAI = 1;
-    private static final int MAX_ARF = 2;
+    private static final int MAX_ARF = 3;
     private static final int MAX_GENERAL = 1;
 
     private static final int CHECK_INTERVAL_TICKS = 40;
