@@ -33,7 +33,6 @@ public class KenCraft {
         KenCraftItems.ITEMS.register(modEventBus);
         NeoForge.EVENT_BUS.register(PlayerLoginHandler.class);
         NeoForge.EVENT_BUS.register(ChatSelectionHandler.class);
-        NeoForge.EVENT_BUS.register(MinamoriStructureGenerator.class);
         NeoForge.EVENT_BUS.register(GameEvents.class);
     }
     @EventBusSubscriber(modid=MOD_ID,bus=EventBusSubscriber.Bus.MOD)
