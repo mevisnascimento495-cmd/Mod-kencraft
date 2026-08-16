@@ -4,6 +4,7 @@ import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.entity.*;
 import br.mevis.kencraft.event.ChatSelectionHandler;
 import br.mevis.kencraft.event.PlayerLoginHandler;
+import br.mevis.kencraft.event.KenCraftNpcSpawn;
 import br.mevis.kencraft.item.KenCraftItems;
 import br.mevis.kencraft.world.MinamoriStructureGenerator;
 import com.mojang.brigadier.Command;
@@ -70,6 +71,9 @@ public class KenCraft {
     }
 
     public static final class GameEvents {
+        private static final int MAX_SEARCH_RADIUS_CHUNKS = 64;
+        private static final int MAX_CANDIDATE_CHUNKS_TO_LOAD = 16;
+
         @SubscribeEvent
         public static void registerCommands(RegisterCommandsEvent event) {
             event.getDispatcher().register(
@@ -85,24 +89,43 @@ public class KenCraft {
             ServerLevel level = player.serverLevel();
             int centerChunkX = player.chunkPosition().x;
             int centerChunkZ = player.chunkPosition().z;
-            int maxRadius = 64;
+            int candidatesLoaded = 0;
 
-            for (int radius = 0; radius <= maxRadius; radius++) {
-                for (int dx = -radius; dx <= radius; dx++) {
-                    int[] zs = radius == 0 ? new int[]{0} : new int[]{-radius, radius};
-                    for (int dz : zs) {
-                        if (tryMinamoriChunk(level, centerChunkX + dx, centerChunkZ + dz, player)) return Command.SINGLE_SUCCESS;
+            KenCraftNpcSpawn.setStructureLocateInProgress(true);
+            try {
+                for (int radius = 0; radius <= MAX_SEARCH_RADIUS_CHUNKS; radius++) {
+                    for (int dx = -radius; dx <= radius; dx++) {
+                        int[] zs = radius == 0 ? new int[]{0} : new int[]{-radius, radius};
+                        for (int dz : zs) {
+                            if (tryMinamoriChunk(level, centerChunkX + dx, centerChunkZ + dz, player)) return Command.SINGLE_SUCCESS;
+                            if (MinamoriStructureGenerator.hashForChunk(level.getSeed(), centerChunkX + dx, centerChunkZ + dz) % MinamoriStructureGenerator.CHANCE_DENOMINATOR() == 0) {
+                                candidatesLoaded++;
+                                if (candidatesLoaded >= MAX_CANDIDATE_CHUNKS_TO_LOAD) {
+                                    player.sendSystemMessage(Component.literal("§eNenhuma Minamori adequada foi encontrada nos primeiros candidatos próximos. Tente o comando novamente em outra área."));
+                                    return 0;
+                                }
+                            }
+                        }
+                    }
+                    for (int dz = -radius + 1; dz <= radius - 1; dz++) {
+                        int[] xs = {-radius, radius};
+                        for (int dx : xs) {
+                            if (tryMinamoriChunk(level, centerChunkX + dx, centerChunkZ + dz, player)) return Command.SINGLE_SUCCESS;
+                            if (MinamoriStructureGenerator.hashForChunk(level.getSeed(), centerChunkX + dx, centerChunkZ + dz) % MinamoriStructureGenerator.CHANCE_DENOMINATOR() == 0) {
+                                candidatesLoaded++;
+                                if (candidatesLoaded >= MAX_CANDIDATE_CHUNKS_TO_LOAD) {
+                                    player.sendSystemMessage(Component.literal("§eNenhuma Minamori adequada foi encontrada nos primeiros candidatos próximos. Tente o comando novamente em outra área."));
+                                    return 0;
+                                }
+                            }
+                        }
                     }
                 }
-                for (int dz = -radius + 1; dz <= radius - 1; dz++) {
-                    int[] xs = {-radius, radius};
-                    for (int dx : xs) {
-                        if (tryMinamoriChunk(level, centerChunkX + dx, centerChunkZ + dz, player)) return Command.SINGLE_SUCCESS;
-                    }
-                }
+            } finally {
+                KenCraftNpcSpawn.setStructureLocateInProgress(false);
             }
 
-            player.sendSystemMessage(Component.literal("§cNão foi possível encontrar um terreno válido para a Minamori num raio de 1024 blocos."));
+            player.sendSystemMessage(Component.literal("§cNão foi possível encontrar uma Minamori num raio de 1024 blocos."));
             return 0;
         }
 

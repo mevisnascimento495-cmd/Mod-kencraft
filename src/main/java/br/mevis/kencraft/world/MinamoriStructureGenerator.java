@@ -44,6 +44,12 @@ public final class MinamoriStructureGenerator {
     private static boolean placeMinamori(ServerLevel level, int centerX, int centerZ) {
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
         if (groundY < level.getMinBuildHeight() + 3 || groundY > level.getMaxBuildHeight() - HEIGHT - 2) return false;
+
+        // The lodestone at the exact center is the permanent generation marker.
+        // This makes natural generation and the locate command idempotent and
+        // prevents duplicate cafes/NPCs when both paths touch the same chunk.
+        if (level.getBlockState(new BlockPos(centerX, groundY, centerZ)).is(Blocks.LODESTONE)) return true;
+
         if (!validGround(level, centerX, groundY, centerZ)) return false;
         for (int x = -12; x <= 12; x += 12) for (int z = -7; z <= 7; z += 7) {
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX + x, centerZ + z) - 1;
@@ -62,7 +68,6 @@ public final class MinamoriStructureGenerator {
     }
 
     private static void buildCafe(ServerLevel level, BlockPos o) {
-        // Foundation and floor.
         for (int x = 0; x < WIDTH; x++) for (int z = 0; z < DEPTH; z++)
             set(level, o.offset(x, 0, z), (x == 0 || x == WIDTH - 1 || z == 0 || z == DEPTH - 1) ? Blocks.SMOOTH_STONE : Blocks.SPRUCE_PLANKS);
         set(level, o.offset(12, -1, 6), Blocks.LODESTONE);
@@ -70,7 +75,6 @@ public final class MinamoriStructureGenerator {
             if ((x + z) % 5 == 0) set(level, o.offset(x, 1, z), Blocks.BROWN_CARPET);
         }
 
-        // Warm cream exterior with dark-wood framing.
         for (int y = 1; y <= 5; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 set(level, o.offset(x, y, 0), Blocks.WHITE_CONCRETE);
@@ -86,15 +90,12 @@ public final class MinamoriStructureGenerator {
         for (int x = 4; x <= 20; x += 4) set(level, o.offset(x, 5, 0), Blocks.DARK_OAK_PLANKS);
         for (int x = 11; x <= 13; x++) for (int y = 1; y <= 3; y++) set(level, o.offset(x, y, 0), Blocks.AIR);
 
-        // Roof/awning.
         for (int x = -1; x <= WIDTH; x++) for (int z = -1; z <= DEPTH; z++) set(level, o.offset(x, 6, z), Blocks.DARK_OAK_SLAB);
         for (int x = 0; x < WIDTH; x++) set(level, o.offset(x, 7, 0), Blocks.DARK_OAK_PLANKS);
         for (int x = 3; x <= 21; x += 2) set(level, o.offset(x, 6, -1), Blocks.WHITE_CARPET);
 
-        // Minamori sign on the front.
         drawMinamori(level, o.offset(3, 1, -1));
 
-        // Main counter and coffee/work area.
         for (int x = 4; x <= 10; x++) set(level, o.offset(x, 2, 3), Blocks.DARK_OAK_PLANKS);
         for (int x = 4; x <= 10; x++) set(level, o.offset(x, 3, 3), Blocks.SPRUCE_SLAB);
         set(level, o.offset(5, 4, 3), Blocks.SMOKER);
@@ -103,7 +104,6 @@ public final class MinamoriStructureGenerator {
         set(level, o.offset(8, 4, 3), Blocks.COMPOSTER);
         for (int x : new int[]{4, 6, 8, 10}) set(level, o.offset(x, 5, 2), Blocks.BARREL);
 
-        // Back shelves and a small kitchen/storage zone.
         for (int z = 4; z <= 10; z += 2) {
             set(level, o.offset(21, 3, z), Blocks.BARREL);
             set(level, o.offset(21, 4, z), Blocks.SPRUCE_TRAPDOOR);
@@ -112,7 +112,6 @@ public final class MinamoriStructureGenerator {
         for (int y = 2; y <= 4; y++) set(level, o.offset(22, y, 11), Blocks.DARK_OAK_LOG);
         for (int y = 1; y <= 3; y++) set(level, o.offset(22, y, 10), Blocks.AIR);
 
-        // Dining tables, booths and chairs.
         table(level, o, 6, 9);
         table(level, o, 15, 9);
         table(level, o, 6, 12);
@@ -121,7 +120,6 @@ public final class MinamoriStructureGenerator {
         booth(level, o, 14, 12);
         booth(level, o, 18, 12);
 
-        // Warm hanging lamps.
         for (int x : new int[]{6, 12, 18}) {
             set(level, o.offset(x, 5, 6), Blocks.CHAIN);
             set(level, o.offset(x, 4, 6), Blocks.LANTERN);

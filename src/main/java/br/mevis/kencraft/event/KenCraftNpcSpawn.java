@@ -17,10 +17,15 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @EventBusSubscriber(modid=KenCraft.MOD_ID,bus=EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    private static final double RANK_C_CHANCE=0.03D, RINKA_CHANCE=0.07D, RISHIN_CHANCE=0.05D, AODAI_CHANCE=0.10D, ARF_CHANCE=0.08D, GENERAL_CHANCE=0.01D;
+    private static final double RANK_C_CHANCE=0.03D, RINKA_CHANCE=0.07D, RISHIN_CHANCE=0.05D, AODAI_CHANCE=0.05D, ARF_CHANCE=0.08D, GENERAL_CHANCE=0.01D;
     private static final int RADIUS=4, MAX_NIGHT_RINKA=3, MAX_RANK_C=1, MAX_RISHIN=2, MAX_AODAI=1, MAX_ARF=2, MAX_GENERAL=1;
+    private static volatile boolean structureLocateInProgress;
     private KenCraftNpcSpawn() {}
+
+    public static void setStructureLocateInProgress(boolean active) { structureLocateInProgress = active; }
+
     @SubscribeEvent public static void onChunkLoad(ChunkEvent.Load event){
+        if (structureLocateInProgress) return;
         if(!(event.getLevel() instanceof ServerLevel level) || !(event.getChunk() instanceof LevelChunk chunk)) return;
         if(!level.dimensionType().natural() || level.getDifficulty().getId()==0) return;
         ChunkPos cp=chunk.getPos(); var nearby=nearbyBounds(level,cp); double roll=ThreadLocalRandom.current().nextDouble();
