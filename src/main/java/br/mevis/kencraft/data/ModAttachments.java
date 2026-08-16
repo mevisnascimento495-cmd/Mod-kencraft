@@ -21,6 +21,15 @@ public final class ModAttachments {
                             .copyOnDeath()
                             .build());
 
+    /** Persistent progress for the KenCraft story campaign. */
+    public static final Supplier<AttachmentType<StoryProgress>> STORY_PROGRESS =
+            ATTACHMENT_TYPES.register("story_progress",
+                    () -> AttachmentType.builder(() -> StoryProgress.DEFAULT)
+                            .serialize(StoryProgress.CODEC)
+                            .sync(StoryProgress.STREAM_CODEC)
+                            .copyOnDeath()
+                            .build());
+
     /** Ephemeral, server-synchronized attack state used by the player animation layer. */
     public static final Supplier<AttachmentType<JioAnimationData>> JIO_ANIMATION =
             ATTACHMENT_TYPES.register("jio_animation",
