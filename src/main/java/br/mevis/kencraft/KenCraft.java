@@ -35,11 +35,17 @@ public class KenCraft {
             event.put(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralEntity.createAttributes().build());
         }
         @SubscribeEvent public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
-            if (event.getTabKey()==CreativeModeTabs.INGREDIENTS) { event.accept(KenCraftItems.JINSUIKAKU.get()); event.accept(KenCraftItems.JINSUIKAKU_RANK_C.get()); }
-            if (event.getTabKey()==CreativeModeTabs.SPAWN_EGGS) {
-                event.accept(KenCraftItems.RINKA_SPAWN_EGG.get()); event.accept(KenCraftItems.RANK_C_RINKA_SPAWN_EGG.get());
-                event.accept(KenCraftItems.RISHIN_SPAWN_EGG.get()); event.accept(KenCraftItems.AODAI_SPAWN_EGG.get());
-                event.accept(KenCraftItems.ARF_INVESTIGATOR_SPAWN_EGG.get()); event.accept(KenCraftItems.ARF_GENERAL_SPAWN_EGG.get());
+            if (CreativeModeTabs.INGREDIENTS.equals(event.getTabKey())) {
+                event.accept(KenCraftItems.JINSUIKAKU.get());
+                event.accept(KenCraftItems.JINSUIKAKU_RANK_C.get());
+            }
+            if (CreativeModeTabs.SPAWN_EGGS.equals(event.getTabKey())) {
+                event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());
+                event.accept(KenCraftItems.RANK_C_RINKA_SPAWN_EGG.get());
+                event.accept(KenCraftItems.RISHIN_SPAWN_EGG.get());
+                event.accept(KenCraftItems.AODAI_SPAWN_EGG.get());
+                event.accept(KenCraftItems.ARF_INVESTIGATOR_SPAWN_EGG.get());
+                event.accept(KenCraftItems.ARF_GENERAL_SPAWN_EGG.get());
             }
         }
     }
