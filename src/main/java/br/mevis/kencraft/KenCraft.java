@@ -14,34 +14,30 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.common.Mod;
 
 @Mod(KenCraft.MOD_ID)
 public class KenCraft {
     public static final String MOD_ID = "kencraft";
-
     public KenCraft(IEventBus modEventBus) {
         ModAttachments.ATTACHMENT_TYPES.register(modEventBus);
         KenCraftEntities.ENTITY_TYPES.register(modEventBus);
         KenCraftItems.ARMOR_MATERIALS.register(modEventBus);
         KenCraftItems.ITEMS.register(modEventBus);
-
         NeoForge.EVENT_BUS.register(PlayerLoginHandler.class);
         NeoForge.EVENT_BUS.register(ChatSelectionHandler.class);
         NeoForge.EVENT_BUS.register(MinamoriStructureGenerator.class);
         NeoForge.EVENT_BUS.register(GameEvents.class);
     }
-
-    @EventBusSubscriber(modid = MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid=MOD_ID,bus=EventBusSubscriber.Bus.MOD)
     public static final class ModEvents {
-        @SubscribeEvent
-        public static void createAttributes(EntityAttributeCreationEvent event) {
+        @SubscribeEvent public static void createAttributes(EntityAttributeCreationEvent event) {
             event.put(KenCraftEntities.RINKA.get(), RinkaEntity.createAttributes().build());
             event.put(KenCraftEntities.RANK_C_RINKA.get(), RankCRinkaEntity.createAttributes().build());
             event.put(KenCraftEntities.RISHIN.get(), RishinEntity.createAttributes().build());
@@ -51,14 +47,11 @@ public class KenCraft {
             event.put(KenCraftEntities.SHIN_HOMARE.get(), KenCraftEntities.HomareEntity.createAttributes().build());
             event.put(KenCraftEntities.KAORI_HOMARE.get(), KenCraftEntities.HomareEntity.createAttributes().build());
         }
-
-        @SubscribeEvent
-        public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
+        @SubscribeEvent public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event) {
             if (CreativeModeTabs.INGREDIENTS.equals(event.getTabKey())) {
                 event.accept(KenCraftItems.JINSUIKAKU.get());
                 event.accept(KenCraftItems.JINSUIKAKU_RANK_C.get());
             }
-
             if (CreativeModeTabs.SPAWN_EGGS.equals(event.getTabKey())) {
                 event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());
                 event.accept(KenCraftItems.RANK_C_RINKA_SPAWN_EGG.get());
@@ -69,7 +62,6 @@ public class KenCraft {
                 event.accept(KenCraftItems.SHIN_HOMARE_SPAWN_EGG.get());
                 event.accept(KenCraftItems.KAORI_HOMARE_SPAWN_EGG.get());
             }
-
             if (CreativeModeTabs.COMBAT.equals(event.getTabKey())) {
                 event.accept(KenCraftItems.ARF_UNIFORM_CHESTPLATE.get());
                 event.accept(KenCraftItems.ARF_UNIFORM_LEGGINGS.get());
@@ -93,66 +85,44 @@ public class KenCraft {
             ServerLevel level = player.serverLevel();
             int centerChunkX = player.chunkPosition().x;
             int centerChunkZ = player.chunkPosition().z;
+            int maxRadius = 64;
 
-            // Search nearby candidate chunks. If this world has not generated a
-            // Minamori yet, create the nearest valid candidate so the command is
-            // always useful for testing the structure.
-            for (int radius = 0; radius <= 32; radius++) {
+            for (int radius = 0; radius <= maxRadius; radius++) {
                 for (int dx = -radius; dx <= radius; dx++) {
                     int[] zs = radius == 0 ? new int[]{0} : new int[]{-radius, radius};
                     for (int dz : zs) {
-                        if (tryLocateOrCreate(level, centerChunkX + dx, centerChunkZ + dz, player)) {
-                            return Command.SINGLE_SUCCESS;
-                        }
+                        if (tryMinamoriChunk(level, centerChunkX + dx, centerChunkZ + dz, player)) return Command.SINGLE_SUCCESS;
                     }
                 }
-
                 for (int dz = -radius + 1; dz <= radius - 1; dz++) {
                     int[] xs = {-radius, radius};
                     for (int dx : xs) {
-                        if (tryLocateOrCreate(level, centerChunkX + dx, centerChunkZ + dz, player)) {
-                            return Command.SINGLE_SUCCESS;
-                        }
+                        if (tryMinamoriChunk(level, centerChunkX + dx, centerChunkZ + dz, player)) return Command.SINGLE_SUCCESS;
                     }
                 }
             }
 
-            player.sendSystemMessage(Component.literal(
-                "§cNão foi possível encontrar um local válido para a estrutura Minamori em um raio de 512 blocos."
-            ));
+            player.sendSystemMessage(Component.literal("§cNão foi possível encontrar um terreno válido para a Minamori num raio de 1024 blocos."));
             return 0;
         }
 
-        private static boolean tryLocateOrCreate(
-                ServerLevel level, int chunkX, int chunkZ, ServerPlayer player) {
+        private static boolean tryMinamoriChunk(ServerLevel level, int chunkX, int chunkZ, ServerPlayer player) {
+            long hash = MinamoriStructureGenerator.hashForChunk(level.getSeed(), chunkX, chunkZ);
+            if (Math.floorMod(hash, MinamoriStructureGenerator.CHANCE_DENOMINATOR()) != 0) return false;
 
-            if (!MinamoriStructureGenerator.isCandidateChunk(level, chunkX, chunkZ)) {
-                return false;
-            }
-
-            if (!MinamoriStructureGenerator.ensureAtChunk(level, chunkX, chunkZ)) {
-                return false;
-            }
-
+            level.getChunk(chunkX, chunkZ);
             int centerX = chunkX * 16 + 8;
             int centerZ = chunkZ * 16 + 8;
-            int groundY = level.getHeight(
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                centerX, centerZ
-            ) - 1;
+            int groundY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
+            BlockPos marker = new BlockPos(centerX, groundY, centerZ);
 
-            player.teleportTo(
-                level,
-                centerX + 0.5D,
-                groundY + 2.0D,
-                centerZ + 0.5D,
-                player.getYRot(),
-                player.getXRot()
-            );
+            if (!level.getBlockState(marker).is(net.minecraft.world.level.block.Blocks.LODESTONE)) {
+                if (!MinamoriStructureGenerator.generateAt(level, centerX, centerZ)) return false;
+                groundY = level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
+            }
 
-            player.sendSystemMessage(Component.literal(
-                "§aMinamori localizada. Você foi teleportado para a cafeteria."
-            ));
+            player.teleportTo(level, centerX + 0.5D, groundY + 3.0D, centerZ + 0.5D, player.getYRot(), player.getXRot());
+            player.sendSystemMessage(Component.literal("§aTeletransportado para a estrutura Minamori."));
             return true;
         }
     }
