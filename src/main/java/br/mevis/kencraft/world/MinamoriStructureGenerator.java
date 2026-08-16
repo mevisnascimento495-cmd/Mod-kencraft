@@ -52,6 +52,8 @@ public final class MinamoriStructureGenerator {
 
     private static void buildCafe(ServerLevel level, BlockPos o) {
         for (int x = 0; x < WIDTH; x++) for (int z = 0; z < DEPTH; z++) set(level, o.offset(x, 0, z), (x == 0 || x == WIDTH - 1 || z == 0 || z == DEPTH - 1) ? Blocks.SMOOTH_STONE : Blocks.SPRUCE_PLANKS);
+        // Hidden locator marker: the command searches this block at the structure's exact center.
+        set(level, o.offset(12, -1, 6), Blocks.LODESTONE);
         for (int y = 1; y <= 5; y++) {
             for (int x = 0; x < WIDTH; x++) { set(level, o.offset(x, y, 0), Blocks.WHITE_CONCRETE); set(level, o.offset(x, y, DEPTH - 1), Blocks.WHITE_CONCRETE); }
             for (int z = 0; z < DEPTH; z++) { set(level, o.offset(0, y, z), Blocks.WHITE_CONCRETE); set(level, o.offset(WIDTH - 1, y, z), Blocks.WHITE_CONCRETE); }
