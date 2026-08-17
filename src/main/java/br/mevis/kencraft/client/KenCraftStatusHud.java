@@ -3,6 +3,8 @@ package br.mevis.kencraft.client;
 import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
+import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.data.StoryProgress;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -23,15 +25,17 @@ public final class KenCraftStatusHud {
         }
 
         PlayerData data = minecraft.player.getData(ModAttachments.PLAYER_DATA);
+        StoryProgress story = minecraft.player.getData(ModAttachments.STORY_PROGRESS);
+        int statusLimit = story.stage() >= 2 ? PlayerData.MAX_STATUS : 20;
         GuiGraphics graphics = event.getGuiGraphics();
 
         int x = 8;
         int y = 8;
         int width = 188;
         int lineHeight = 12;
-        int statusCount = data.race() == br.mevis.kencraft.data.Race.RINKA ? 5 : 5;
-        boolean noRace = data.race() == br.mevis.kencraft.data.Race.NONE;
-        int height = noRace ? 58 : 32 + (statusCount * lineHeight) + (data.race() == br.mevis.kencraft.data.Race.HUMAN ? lineHeight : 0);
+        int statusCount = data.race() == Race.RINKA ? 5 : 5;
+        boolean noRace = data.race() == Race.NONE;
+        int height = noRace ? 58 : 32 + (statusCount * lineHeight) + (data.race() == Race.HUMAN ? lineHeight : 0);
 
         graphics.fill(x, y, x + width, y + height, 0xB0101018);
         graphics.fill(x, y, x + width, y + 2, 0xFF7AD7FF);
@@ -56,27 +60,27 @@ public final class KenCraftStatusHud {
 
         int currentY = y + 32;
 
-        if (data.race() == br.mevis.kencraft.data.Race.RINKA) {
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Força", data.strength());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Defesa/Resistência", data.defense());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Inteligência", data.intelligence());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Velocidade", data.speed());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Genética", data.genetics());
+        if (data.race() == Race.RINKA) {
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Força", data.strength(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Defesa/Resistência", data.defense(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Inteligência", data.intelligence(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Velocidade", data.speed(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Genética", data.genetics(), statusLimit);
             graphics.drawString(minecraft.font, Component.literal("Vida: " + health + "/" + maxHealth), x + 7, currentY + 1, 0xFFFFFFFF);
         } else {
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Força", data.strength());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Percepção", data.perception());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Desenvolvimento espiritual", data.spiritualDevelopment());
-            currentY = drawStatus(graphics, minecraft, x, currentY, "Velocidade", data.speed());
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Força", data.strength(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Percepção", data.perception(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Desenvolvimento espiritual", data.spiritualDevelopment(), statusLimit);
+            currentY = drawStatus(graphics, minecraft, x, currentY, "Velocidade", data.speed(), statusLimit);
             graphics.drawString(minecraft.font, Component.literal("Vida: " + health + "/" + maxHealth), x + 7, currentY + 1, 0xFFFFFFFF);
             graphics.drawString(minecraft.font, Component.literal("Jio: " + data.jio() + "/" + data.calculatedHumanMaxJio()), x + 7, currentY + 14, 0xFF7AD7FF);
             graphics.drawString(minecraft.font, Component.literal("XP Mental: " + data.mentalXp() + "  XP Física: " + data.physicalXp()), x + 7, currentY + 27, 0xFFB8C5D1);
         }
     }
 
-    private static int drawStatus(GuiGraphics graphics, Minecraft minecraft, int x, int y, String name, int value) {
+    private static int drawStatus(GuiGraphics graphics, Minecraft minecraft, int x, int y, String name, int value, int statusLimit) {
         graphics.drawString(minecraft.font,
-                Component.literal(name + ": " + value + "/" + PlayerData.MAX_STATUS + " (" + PlayerData.spentPoints(value) + " points)"),
+                Component.literal(name + ": " + value + "/" + statusLimit + " (" + PlayerData.spentPoints(value) + " points)"),
                 x + 7,
                 y,
                 0xFFFFFFFF);

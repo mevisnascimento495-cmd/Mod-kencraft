@@ -21,11 +21,12 @@ public final class ModAttachments {
                             .copyOnDeath()
                             .build());
 
-    /** Persistent progress for the KenCraft story campaign. Server-side data; no client sync is required. */
+    /** Persistent progress for the KenCraft story campaign. Synced so the client HUD can show the unlocked limit break. */
     public static final Supplier<AttachmentType<StoryProgress>> STORY_PROGRESS =
             ATTACHMENT_TYPES.register("story_progress",
                     () -> AttachmentType.builder(() -> StoryProgress.DEFAULT)
                             .serialize(StoryProgress.CODEC)
+                            .sync(StoryProgress.STREAM_CODEC)
                             .copyOnDeath()
                             .build());
 

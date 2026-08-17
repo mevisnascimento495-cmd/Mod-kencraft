@@ -4,6 +4,7 @@ import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.data.StoryProgress;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
@@ -54,12 +55,13 @@ public final class KenCraftStatusCommand {
 
         int xp = mental ? data.mentalXp() : data.physicalXp();
         int current = getStatus(data, key);
+        int maxStatus = getStatusLimit(player);
         if (xp <= 0) {
             source.sendFailure(Component.literal("Você não possui XP suficiente para esse status."));
             return 0;
         }
-        if (current >= PlayerData.MAX_STATUS) {
-            source.sendFailure(Component.literal("Esse status já está no máximo (20)."));
+        if (current >= maxStatus) {
+            source.sendFailure(Component.literal("Esse status já está no máximo (" + maxStatus + ")."));
             return 0;
         }
 
@@ -68,8 +70,13 @@ public final class KenCraftStatusCommand {
                 physical ? data.physicalXp() - 1 : data.physicalXp());
         player.setData(ModAttachments.PLAYER_DATA, updated);
 
-        source.sendSuccess(() -> Component.literal("KenCraft: " + displayName(key) + " agora está em " + (current + 1) + "/20."), true);
+        source.sendSuccess(() -> Component.literal("KenCraft: " + displayName(key) + " agora está em " + (current + 1) + "/" + maxStatus + "."), true);
         return 1;
+    }
+
+    public static int getStatusLimit(ServerPlayer player) {
+        StoryProgress progress = player.getData(ModAttachments.STORY_PROGRESS);
+        return progress.stage() >= 2 ? PlayerData.MAX_STATUS : 20;
     }
 
     private static String normalize(String value) {

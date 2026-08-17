@@ -14,7 +14,7 @@ public record PlayerData(
         String kikanType, String jioTechnique, int jioAbilitySlot
 ) {
     public static final int MIN_STATUS = 1;
-    public static final int MAX_STATUS = 20;
+    public static final int MAX_STATUS = 40;
     private record ProgressionData(String rinkaClass,int jinsuikakuConsumed,int jinsuikakuRankCConsumed,String kikanType,String jioTechnique,int jioAbilitySlot){
         private static final ProgressionData DEFAULT=new ProgressionData("NONE",0,0,"NONE","NONE",0);
         private static final Codec<ProgressionData> CODEC=RecordCodecBuilder.create(i->i.group(
