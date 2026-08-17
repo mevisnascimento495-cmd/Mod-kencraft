@@ -9,6 +9,7 @@ import br.mevis.kencraft.entity.RankCRinkaEntity;
 import br.mevis.kencraft.entity.RinkaEntity;
 import br.mevis.kencraft.entity.RishinEntity;
 import br.mevis.kencraft.item.KenCraftItems;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
@@ -24,7 +25,28 @@ public final class KenCraftNpcRewards {
     public static void onLivingDeath(LivingDeathEvent event) {
         LivingEntity victim = event.getEntity();
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
+
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+
+        // Every KenCraft entity awards KenCraft XP when killed.
+        // Rinkas use Physical XP; all other KenCraft entities use Mental XP.
+        String namespace = BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType()).getNamespace();
+        if (KenCraft.MOD_ID.equals(namespace)) {
+            boolean physical = victim instanceof RinkaEntity || victim instanceof RankCRinkaEntity;
+            int mentalXp = data.mentalXp();
+            int physicalXp = data.physicalXp();
+
+            if (physical) {
+                physicalXp += 5;
+                player.sendSystemMessage(Component.literal(victim.getName().getString() + " derrotado: +5 XP Física."));
+            } else {
+                mentalXp += 5;
+                player.sendSystemMessage(Component.literal(victim.getName().getString() + " derrotado: +5 XP Mental."));
+            }
+
+            data = data.withXp(mentalXp, physicalXp);
+            player.setData(ModAttachments.PLAYER_DATA, data);
+        }
 
         if (victim instanceof RankCRinkaEntity) {
             // Rank C Rinkas always drop their special organ. This makes the item
@@ -34,20 +56,17 @@ public final class KenCraftNpcRewards {
 
             if (data.race() == Race.HUMAN && data.arfClass() == 4 && data.arfMissionKills() >= 0) {
                 int kills = data.arfMissionKills() + 1;
-                player.setData(ModAttachments.PLAYER_DATA, data.withXp(data.mentalXp(), data.physicalXp() + 5).withArfMissionKills(kills));
-                player.sendSystemMessage(Component.literal("Rinka Rank C derrotado: +5 XP Física. Missão ARF: " + kills + "/3."));
+                player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(kills));
+                player.sendSystemMessage(Component.literal("Missão ARF: " + kills + "/3."));
                 if (kills >= 3) player.sendSystemMessage(Component.literal("Missão ARF concluída: volte ao General da ARF para sua promoção."));
             }
             return;
         }
 
-        if (victim instanceof RishinEntity) return;
-
         if (victim instanceof RinkaEntity) {
             int nextKills = data.arfMissionKills();
             if (data.race() == Race.HUMAN && data.arfClass() == 0 && data.arfMissionKills() >= 0 && data.arfMissionKills() < 5) nextKills++;
-            player.setData(ModAttachments.PLAYER_DATA, data.withXp(data.mentalXp(), data.physicalXp() + 5).withArfMissionKills(nextKills));
-            player.sendSystemMessage(Component.literal("Rinka derrotado: +5 XP Física."));
+            player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(nextKills));
             if (data.race() == Race.HUMAN && data.arfClass() == 0 && nextKills < 5)
                 player.sendSystemMessage(Component.literal("Missão ARF: Rinkas derrotados " + nextKills + "/5."));
             else if (data.race() == Race.HUMAN && data.arfClass() == 0 && nextKills == 5)
@@ -56,9 +75,7 @@ public final class KenCraftNpcRewards {
                 player.spawnAtLocation(KenCraftItems.JINSUIKAKU.get());
                 player.sendSystemMessage(Component.literal("O Rinka derrotado deixou cair uma Jinsuikaku."));
             }
-        } else if (victim instanceof ArfInvestigatorEntity) {
-            player.setData(ModAttachments.PLAYER_DATA, data.withXp(data.mentalXp() + 5, data.physicalXp()));
-            player.sendSystemMessage(Component.literal("Investigador da ARF derrotado: +5 XP Mental."));
+            return;
         }
     }
 }
