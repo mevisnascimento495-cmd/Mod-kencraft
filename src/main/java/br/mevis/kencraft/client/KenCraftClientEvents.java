@@ -4,7 +4,6 @@ import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
-import br.mevis.kencraft.event.KikakogouSystem;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -22,7 +21,7 @@ public final class KenCraftClientEvents {
         JioAnimationState.tick();
         if (minecraft.screen == null && KenCraftClient.OPEN_MENU.consumeClick()) { minecraft.setScreen(new KenCraftScreenV2()); return; }
         if (minecraft.player == null) return;
-        boolean active = KikakogouSystem.isActiveClient(minecraft.player);
+        boolean active = minecraft.player.getData(ModAttachments.KIKAKOGOU_STATE).active();
         if (active && minecraft.screen != null) minecraft.setScreen(null);
         if (minecraft.screen == null) {
             PlayerData data = minecraft.player.getData(ModAttachments.PLAYER_DATA);
