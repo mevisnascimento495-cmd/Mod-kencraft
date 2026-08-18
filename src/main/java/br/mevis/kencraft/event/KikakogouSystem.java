@@ -138,7 +138,7 @@ public final class KikakogouSystem {
         for (LivingEntity target : targets) {
             for (int i = 0; i < 5; i++) target.hurt(player.damageSources().playerAttack(player), damage);
         }
-        player.level().sendParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 1.0D, player.getZ(), 12, 0.6D, 0.7D, 0.6D, 0.05D);
+        player.serverLevel().sendParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 1.0D, player.getZ(), 12, 0.6D, 0.7D, 0.6D, 0.05D);
         return 1;
     }
 
@@ -163,7 +163,7 @@ public final class KikakogouSystem {
         target.addEffect(new MobEffectInstance(MobEffects.POISON, 300, 1));
         target.setDeltaMovement(target.getDeltaMovement().x, 0.45D, target.getDeltaMovement().z);
         target.hurtMarked = true;
-        player.level().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.4D, 0.5D, 0.4D, 0.05D);
+        player.serverLevel().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.4D, 0.5D, 0.4D, 0.05D);
         return 1;
     }
 
@@ -188,7 +188,7 @@ public final class KikakogouSystem {
             target.setDeltaMovement(away.x, 0.25D, away.z);
             target.hurtMarked = true;
         }
-        player.level().sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(), player.getY() + 1.0D, player.getZ(), 3, 1.2D, 0.6D, 1.2D, 0.1D);
+        player.serverLevel().sendParticles(ParticleTypes.SWEEP_ATTACK, player.getX(), player.getY() + 1.0D, player.getZ(), 3, 1.2D, 0.6D, 1.2D, 0.1D);
         return 1;
     }
 
@@ -259,7 +259,7 @@ public final class KikakogouSystem {
         for (LivingEntity target : player.level().getEntitiesOfClass(LivingEntity.class, area, entity -> entity != player && entity.isAlive())) {
             target.hurt(player.damageSources().playerAttack(player), 8.0F);
         }
-        player.level().sendParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 1, 0, 0, 0, 0);
+        player.serverLevel().sendParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 1, 0, 0, 0, 0);
     }
 
     @SubscribeEvent
