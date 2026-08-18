@@ -209,7 +209,7 @@ public final class KikakogouSystem {
     private static void resolveCrocodileSlam(ServerPlayer player) {
         player.getPersistentData().putBoolean(SLAM_ARMED, false);
         AABB area = player.getBoundingBox().inflate(4.0D, 1.0D, 4.0D);
-        for (LivingEntity target : player.level().getEntitiesOfClass(LivingEntity.class, area, target -> target != player && target.isAlive()) ) target.hurt(player.damageSources().playerAttack(player), 8.0F);
+        for (LivingEntity target : player.level().getEntitiesOfClass(LivingEntity.class, area, target -> target != player && target.isAlive())) target.hurt(player.damageSources().playerAttack(player), 8.0F);
         player.level().sendParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 1, 0, 0, 0, 0);
     }
 
@@ -266,7 +266,6 @@ public final class KikakogouSystem {
     }
 
     public static boolean isActive(ServerPlayer player) { return player.getData(ModAttachments.KIKAKOGOU_STATE).active(); }
-    public static boolean isActiveClient(net.minecraft.client.player.LocalPlayer player) { return player.getData(ModAttachments.KIKAKOGOU_STATE).active(); }
     public static String normalizeForm(String kikanType) {
         String t = kikanType == null ? "" : kikanType.trim().toLowerCase(Locale.ROOT);
         if (t.contains("crocod")) return "crocodile";
