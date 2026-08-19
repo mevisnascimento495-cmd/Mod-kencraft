@@ -48,17 +48,12 @@ public final class KikakogouSystem {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-        dispatcher.register(
-                Commands.literal("kencraft")
-                        .then(Commands.literal("kikakogou")
-                                .then(Commands.literal("toggle")
-                                        .executes(context -> toggle(context.getSource())))
-                                .then(Commands.literal("ability")
-                                        .then(Commands.argument("slot", StringArgumentType.word())
-                                                .executes(context -> ability(
-                                                        context.getSource(),
-                                                        StringArgumentType.getString(context, "slot"))))))
-        );
+        dispatcher.register(Commands.literal("kencraft")
+                .then(Commands.literal("kikakogou")
+                        .then(Commands.literal("toggle").executes(context -> toggle(context.getSource())))
+                        .then(Commands.literal("ability")
+                                .then(Commands.argument("slot", StringArgumentType.word())
+                                        .executes(context -> ability(context.getSource(), StringArgumentType.getString(context, "slot")))))));
     }
 
     private static int toggle(CommandSourceStack source) {
@@ -68,7 +63,6 @@ public final class KikakogouSystem {
             deactivate(player, true);
             return 1;
         }
-
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (data.race() != Race.RINKA) {
             player.sendSystemMessage(Component.literal("A Kikakogou só pode ser usada por Rinkas."));
@@ -86,13 +80,11 @@ public final class KikakogouSystem {
             player.sendSystemMessage(Component.literal("Kikakogou em recarga: " + ((state.cooldownTicks() + 19) / 20) + "s."));
             return 0;
         }
-
         String form = normalizeForm(data.kikanType());
         if ("NONE".equals(form)) {
             player.sendSystemMessage(Component.literal("Sua Kikan atual não possui um Kikakogou implementado."));
             return 0;
         }
-
         player.getPersistentData().putInt(ARMOR_AMOUNT, player.getArmorValue());
         player.setData(ModAttachments.KIKAKOGOU_STATE, new KikakogouState(form, true, DURATION_TICKS, 0));
         applyTransformationAttributes(player, form);
@@ -106,23 +98,16 @@ public final class KikakogouSystem {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         KikakogouState state = player.getData(ModAttachments.KIKAKOGOU_STATE);
         if (!state.active()) return 0;
-
         String form = normalizeForm(state.type());
-        switch (form) {
-            case "crocodile":
-                if ("z".equalsIgnoreCase(slot)) return crocodileBarragem(player);
-                if ("c".equalsIgnoreCase(slot)) return crocodileSuperJump(player);
-                break;
-            case "scorpion":
-                if ("z".equalsIgnoreCase(slot)) return scorpionSting(player);
-                if ("c".equalsIgnoreCase(slot)) return scorpionHallucination(player);
-                break;
-            case "tentacle":
-                if ("z".equalsIgnoreCase(slot)) return tentacleWhip(player);
-                if ("c".equalsIgnoreCase(slot)) return tentacleGrab(player);
-                break;
-            default:
-                break;
+        if ("crocodile".equals(form)) {
+            if ("z".equalsIgnoreCase(slot)) return crocodileBarragem(player);
+            if ("c".equalsIgnoreCase(slot)) return crocodileSuperJump(player);
+        } else if ("scorpion".equals(form)) {
+            if ("z".equalsIgnoreCase(slot)) return scorpionSting(player);
+            if ("c".equalsIgnoreCase(slot)) return scorpionHallucination(player);
+        } else if ("tentacle".equals(form)) {
+            if ("z".equalsIgnoreCase(slot)) return tentacleWhip(player);
+            if ("c".equalsIgnoreCase(slot)) return tentacleGrab(player);
         }
         return 0;
     }
@@ -135,9 +120,7 @@ public final class KikakogouSystem {
         List<LivingEntity> targets = player.level().getEntitiesOfClass(LivingEntity.class, area, target -> target != player && target.isAlive());
         if (targets.isEmpty()) return 0;
         float damage = 4.0F + Math.max(0, player.getData(ModAttachments.PLAYER_DATA).strength() - 1) * 0.35F;
-        for (LivingEntity target : targets) {
-            for (int i = 0; i < 5; i++) target.hurt(player.damageSources().playerAttack(player), damage);
-        }
+        for (LivingEntity target : targets) for (int i = 0; i < 5; i++) target.hurt(player.damageSources().playerAttack(player), damage);
         player.serverLevel().sendParticles(ParticleTypes.CRIT, player.getX(), player.getY() + 1.0D, player.getZ(), 12, 0.6D, 0.7D, 0.6D, 0.05D);
         return 1;
     }
@@ -235,30 +218,23 @@ public final class KikakogouSystem {
                 player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 25, 0));
             }
         }
-
         if (state.active()) {
             if (player.tickCount % 5 == 0) applyTransformationAttributes(player, state.type());
-            if ("crocodile".equals(state.type()) && player.getPersistentData().getBoolean(SLAM_ARMED)
-                    && player.onGround() && player.getDeltaMovement().y <= 0.05D) {
-                resolveCrocodileSlam(player);
-            }
+            if ("crocodile".equals(state.type()) && player.getPersistentData().getBoolean(SLAM_ARMED) && player.onGround() && player.getDeltaMovement().y <= 0.05D) resolveCrocodileSlam(player);
             if (player.tickCount % 20 == 0) {
                 int remaining = state.remainingTicks() - 20;
                 if (remaining <= 0) deactivate(player, false);
                 else player.setData(ModAttachments.KIKAKOGOU_STATE, new KikakogouState(state.type(), true, remaining, 0));
             }
         } else if (state.cooldownTicks() > 0 && player.tickCount % 20 == 0) {
-            player.setData(ModAttachments.KIKAKOGOU_STATE,
-                    new KikakogouState(state.type(), false, 0, Math.max(0, state.cooldownTicks() - 20)));
+            player.setData(ModAttachments.KIKAKOGOU_STATE, new KikakogouState(state.type(), false, 0, Math.max(0, state.cooldownTicks() - 20)));
         }
     }
 
     private static void resolveCrocodileSlam(ServerPlayer player) {
         player.getPersistentData().putBoolean(SLAM_ARMED, false);
         AABB area = player.getBoundingBox().inflate(4.0D, 1.0D, 4.0D);
-        for (LivingEntity target : player.level().getEntitiesOfClass(LivingEntity.class, area, entity -> entity != player && entity.isAlive())) {
-            target.hurt(player.damageSources().playerAttack(player), 8.0F);
-        }
+        for (LivingEntity target : player.level().getEntitiesOfClass(LivingEntity.class, area, entity -> entity != player && entity.isAlive())) target.hurt(player.damageSources().playerAttack(player), 8.0F);
         player.serverLevel().sendParticles(ParticleTypes.EXPLOSION, player.getX(), player.getY(), player.getZ(), 1, 0, 0, 0, 0);
     }
 
@@ -286,16 +262,10 @@ public final class KikakogouSystem {
             double amount = player.getPersistentData().getInt(ARMOR_AMOUNT);
             armor.addOrUpdateTransientModifier(new AttributeModifier(ARMOR_LOCK_ID, -amount, AttributeModifier.Operation.ADD_VALUE));
         }
-
         var scale = player.getAttribute(Attributes.SCALE);
-        if (scale != null && "crocodile".equals(form) && !scale.hasModifier(SCALE_ID)) {
-            scale.addOrUpdateTransientModifier(new AttributeModifier(SCALE_ID, 0.25D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-        }
-
+        if (scale != null && "crocodile".equals(form) && !scale.hasModifier(SCALE_ID)) scale.addOrUpdateTransientModifier(new AttributeModifier(SCALE_ID, 0.25D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
         var speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
-        if (speed != null && "crocodile".equals(form) && !speed.hasModifier(CROCODILE_SLOW_ID)) {
-            speed.addOrUpdateTransientModifier(new AttributeModifier(CROCODILE_SLOW_ID, -0.25D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
-        }
+        if (speed != null && "crocodile".equals(form) && !speed.hasModifier(CROCODILE_SLOW_ID)) speed.addOrUpdateTransientModifier(new AttributeModifier(CROCODILE_SLOW_ID, -0.25D, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
     }
 
     private static void removeTransformationAttributes(ServerPlayer player) {
@@ -323,17 +293,15 @@ public final class KikakogouSystem {
     public static String normalizeForm(String kikanType) {
         String type = kikanType == null ? "" : kikanType.trim().toLowerCase(Locale.ROOT);
         if (type.contains("crocod")) return "crocodile";
-        if (type.contains("escorp")) return "scorpion";
+        if (type.contains("escorp") || type.contains("scorpion")) return "scorpion";
         if (type.contains("tent")) return "tentacle";
         return "NONE";
     }
 
     private static String displayForm(String form) {
-        switch (form) {
-            case "crocodile": return "Homem-Crocodilo";
-            case "scorpion": return "Escorpião";
-            case "tentacle": return "Kikan Tentáculo";
-            default: return form;
-        }
+        if ("crocodile".equals(form)) return "Homem-Crocodilo";
+        if ("scorpion".equals(form)) return "Escorpião";
+        if ("tentacle".equals(form)) return "Kikan Tentáculo";
+        return form;
     }
 }
