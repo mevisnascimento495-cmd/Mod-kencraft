@@ -69,7 +69,8 @@ public final class JioSystem {
         if (NONE.equals(technique)) { player.sendSystemMessage(Component.literal("Você ainda não possui uma técnica Jio. Gire uma no menu R.")); return 0; }
         int techniqueIndex = indexOf(technique), slot = data.jioAbilitySlot(), cost = cost(techniqueIndex, slot);
         if (data.jio() < cost) { player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: " + cost + " Jio.")); return 0; }
-        player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - cost, data.calculatedHumanMaxJio()));
+        int max = ClanSystem.maxJio(player, data);
+        player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - cost, max));
         int duration = animationDuration(techniqueIndex, slot);
         if (duration > 0) player.setData(ModAttachments.JIO_ANIMATION, new JioAnimationData(technique, slot, player.level().getGameTime(), duration));
         if (techniqueIndex == 0 && slot == 2) {
@@ -86,7 +87,7 @@ public final class JioSystem {
         if (!(source.getEntity() instanceof ServerPlayer player)) return 0;
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (!eligible(data)) return 0;
-        int max = data.calculatedHumanMaxJio();
+        int max = ClanSystem.maxJio(player, data);
         if (data.jio() < max) player.setData(ModAttachments.PLAYER_DATA, data.withJio(Math.min(max, data.jio() + 2), max));
         return 1;
     }

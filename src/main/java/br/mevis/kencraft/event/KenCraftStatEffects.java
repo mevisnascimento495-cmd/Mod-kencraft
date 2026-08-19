@@ -40,12 +40,13 @@ public final class KenCraftStatEffects {
     public static void onDamage(LivingDamageEvent.Pre event) {
         if (event.getEntity() instanceof ServerPlayer victim) {
             PlayerData data = victim.getData(ModAttachments.PLAYER_DATA);
-            float reduction = Math.min(0.60F, Math.max(0F, (data.defense() - 1) * 0.025F));
+            float reduction = Math.min(0.60F, Math.max(0F, (data.defense() - 1) * 0.025F * (float)ClanSystem.defenseMultiplier(victim)));
             event.getContainer().setNewDamage(event.getNewDamage() * (1.0F - reduction));
         }
         if (event.getSource().getEntity() instanceof ServerPlayer attacker) {
             PlayerData data = attacker.getData(ModAttachments.PLAYER_DATA);
             float bonus = Math.max(0F, (data.strength() - 1) * 0.40F);
+            bonus *= (float)ClanSystem.strengthMultiplier(attacker);
             event.getContainer().setNewDamage(event.getNewDamage() + bonus);
         }
     }

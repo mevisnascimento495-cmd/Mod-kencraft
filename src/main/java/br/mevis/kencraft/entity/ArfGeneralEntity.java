@@ -1,8 +1,10 @@
 package br.mevis.kencraft.entity;
 
+import br.mevis.kencraft.data.ClanData;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.event.ClanSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -41,66 +43,38 @@ public class ArfGeneralEntity extends PathfinderMob {
 
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         if (player.level().isClientSide) return InteractionResult.SUCCESS;
+
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HUMAN) {
-            player.sendSystemMessage(Component.literal("O General da ARF só recruta humanos."));
+        boolean authorized = data.race() == Race.HUMAN && data.arfClass() > 0;
+        ClanData clan = player.getData(ModAttachments.CLAN_DATA);
+
+        if (!authorized) {
+            player.sendSystemMessage(Component.literal("General Akio Ginshō: Você não pertence à ARF. Saia daqui antes que eu considere você uma ameaça."));
+            this.setTarget(player);
             return InteractionResult.CONSUME;
         }
 
-        if (data.arfClass() == 0) {
-            if (data.arfMissionKills() < 0) {
-                player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(0));
-                player.sendSystemMessage(Component.literal("Olá jogador(a), vejo que vc quer se tornar parte da ARF e aprender a controlar Jio, você precisa matar 5 Rinkas, depois disso volte até mim vou te tornar um investigador de quarta classe"));
-                return InteractionResult.CONSUME;
-            }
-            if (data.arfMissionKills() >= 5) {
-                player.setData(ModAttachments.PLAYER_DATA, data.withArfClass(4).withArfMissionKills(0));
-                player.sendSystemMessage(Component.literal("Você eliminou 5 Rinkas. Você entrou para a ARF como Investigador de Quarta Classe!"));
-                player.sendSystemMessage(Component.literal("Próxima missão: elimine 3 Rinkas Rank C e volte ao General."));
-                return InteractionResult.CONSUME;
-            }
-            player.sendSystemMessage(Component.literal("Missão de recrutamento: Rinkas derrotados " + data.arfMissionKills() + "/5."));
+        if (clan.hasClan()) {
+            player.sendSystemMessage(Component.literal("General Akio Ginshō: Seu clã já foi revelado. Você pertence ao clã " + ClanSystem.displayName(clan.clan()) + "."));
             return InteractionResult.CONSUME;
         }
 
-        int required = requiredRankCRinkas(data.arfClass());
-        if (data.arfClass() > 1 && data.arfMissionKills() >= required) {
-            int newRank = data.arfClass() - 1;
-            player.setData(ModAttachments.PLAYER_DATA, data.withArfClass(newRank).withArfMissionKills(0));
-            player.sendSystemMessage(Component.literal("Parabéns! Você foi promovido para Investigador de " + rankName(newRank) + "."));
-            if (newRank > 1) {
-                player.sendSystemMessage(Component.literal("Próxima missão: elimine " + requiredRankCRinkas(newRank) + " Rinkas Rank C e volte ao General."));
-            } else {
-                player.sendSystemMessage(Component.literal("Você alcançou o Rank 1 da ARF. Novas missões especiais serão desbloqueadas em breve."));
-            }
+        if (clan.rolling()) {
+            player.sendSystemMessage(Component.literal("General Akio Ginshō: Aguarde. A técnica ainda está revelando seu clã..."));
             return InteractionResult.CONSUME;
         }
 
-        if (data.arfClass() > 1) {
-            player.sendSystemMessage(Component.literal("Missão ARF: Rinkas Rank C derrotados " + Math.max(0, data.arfMissionKills()) + "/" + required + "."));
-        } else {
-            player.sendSystemMessage(Component.literal("Você já alcançou o Rank 1 da ARF."));
+        if (!clan.readyToRoll()) {
+            player.setData(ModAttachments.CLAN_DATA, clan.prepare());
+            player.sendSystemMessage(Component.literal("General Akio Ginshō: Olá jogador, vejo que você nasceu em um clã, só não sabe qual é, certo? Vou usar minha técnica para revelar seu clã, seu clã apareça na sua mente, se prepare."));
+            player.sendSystemMessage(Component.literal("Clique novamente no General para revelar seu clã."));
+            return InteractionResult.CONSUME;
         }
+
+        player.setData(ModAttachments.CLAN_DATA, clan.startRoll());
+        player.sendSystemMessage(Component.literal("General Akio Ginshō: A revelação começou..."));
         return InteractionResult.CONSUME;
-    }
-
-    private static int requiredRankCRinkas(int arfClass) {
-        return switch (arfClass) {
-            case 4 -> 3;
-            case 3 -> 6;
-            case 2 -> 10;
-            default -> 0;
-        };
-    }
-
-    private static String rankName(int rank) {
-        return switch (rank) {
-            case 4 -> "Quarta Classe";
-            case 3 -> "Terceira Classe";
-            case 2 -> "Segunda Classe";
-            case 1 -> "Primeira Classe (Rank 1)";
-            default -> "Sem Rank";
-        };
     }
 }

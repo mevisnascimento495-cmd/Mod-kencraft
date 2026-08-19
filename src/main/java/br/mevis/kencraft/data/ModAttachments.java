@@ -13,4 +13,5 @@ public final class ModAttachments {
     public static final Supplier<AttachmentType<StoryProgress>> STORY_PROGRESS = ATTACHMENT_TYPES.register("story_progress", () -> AttachmentType.builder(() -> StoryProgress.DEFAULT).serialize(StoryProgress.CODEC).sync(StoryProgress.STREAM_CODEC).copyOnDeath().build());
     public static final Supplier<AttachmentType<JioAnimationData>> JIO_ANIMATION = ATTACHMENT_TYPES.register("jio_animation", () -> AttachmentType.builder(() -> JioAnimationData.DEFAULT).serialize(JioAnimationData.CODEC).sync(JioAnimationData.STREAM_CODEC).build());
     public static final Supplier<AttachmentType<KikakogouState>> KIKAKOGOU_STATE = ATTACHMENT_TYPES.register("kikakogou_state", () -> AttachmentType.builder(() -> KikakogouState.DEFAULT).serialize(KikakogouState.CODEC).sync(KikakogouState.STREAM_CODEC).copyOnDeath().build());
+    public static final Supplier<AttachmentType<ClanData>> CLAN_DATA = ATTACHMENT_TYPES.register("clan_data", () -> AttachmentType.builder(() -> ClanData.DEFAULT).serialize(ClanData.CODEC).sync(ClanData.STREAM_CODEC).copyOnDeath().build());
 }
