@@ -1,5 +1,6 @@
 package br.mevis.kencraft.client;
 
+import br.mevis.kencraft.data.KikakogouState;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
@@ -33,6 +34,8 @@ public final class KikanLayer extends RenderLayer<AbstractClientPlayer, PlayerMo
             return;
         }
 
+        KikakogouState kikakogou = player.getData(ModAttachments.KIKAKOGOU_STATE);
+        model.setKikakogouActive(kikakogou.active());
         model.setType(data.kikanType());
         model.animate(KikanAnimationState.progress(), KikanAnimationState.isHeavy(), KikanAnimationState.key());
 
