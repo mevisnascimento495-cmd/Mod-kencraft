@@ -3,7 +3,7 @@ name: Build KenCraft Alpha
 on:
   workflow_dispatch:
   push:
-    branches: ["main", "java-skins-fix"]
+    branches: ["main", "java-skins-fix", "dev/arf-clan-test"]
 
 permissions:
   contents: read
@@ -31,7 +31,6 @@ jobs:
           python3 - <<'PY'
           import base64
           from pathlib import Path
-
           files = [
             ("src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku.png"),
             ("src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png"),
@@ -40,8 +39,7 @@ jobs:
           sig = b"\x89PNG\r\n\x1a\n"
           for src, dst in files:
             data = base64.b64decode("".join(Path(src).read_text(encoding="utf-8").split()), validate=True)
-            if not data.startswith(sig):
-                raise SystemExit(f"Invalid PNG payload: {src}")
+            if not data.startswith(sig): raise SystemExit(f"Invalid PNG payload: {src}")
             Path(dst).write_bytes(data)
           PY
       - name: Verify skin PNGs
@@ -49,19 +47,12 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import struct
-          paths = [
-            Path("src/main/resources/assets/kencraft/textures/entity/rinka.png"),
-            Path("src/main/resources/assets/kencraft/textures/entity/arf.png"),
-            Path("src/main/resources/assets/kencraft/textures/entity/shin_homare.png"),
-            Path("src/main/resources/assets/kencraft/textures/entity/kaori_homare.png"),
-          ]
+          paths = [Path("src/main/resources/assets/kencraft/textures/entity/rinka.png"), Path("src/main/resources/assets/kencraft/textures/entity/arf.png"), Path("src/main/resources/assets/kencraft/textures/entity/shin_homare.png"), Path("src/main/resources/assets/kencraft/textures/entity/kaori_homare.png")]
           for path in paths:
             data = path.read_bytes()
-            if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
-                raise SystemExit(f"Invalid PNG: {path}")
+            if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR": raise SystemExit(f"Invalid PNG: {path}")
             w, h = struct.unpack(">II", data[16:24])
-            if (w, h) != (64, 64):
-                raise SystemExit(f"Skin must be 64x64: {path} -> {w}x{h}")
+            if (w, h) != (64, 64): raise SystemExit(f"Skin must be 64x64: {path} -> {w}x{h}")
           PY
       - name: Verify complete project
         run: |
