@@ -97,7 +97,7 @@ public final class KenCraftNpcCommand {
             source.sendFailure(Component.literal("Você precisa ser humano e ter entrado na ARF para aprender a controlar Jio."));
             return 0;
         }
-        int max = data.calculatedHumanMaxJio();
+        int max = ClanSystem.maxJio(player, data);
         int next = Math.min(max, data.jio() + 2);
         if (next == data.jio()) return 0;
         player.setData(ModAttachments.PLAYER_DATA, data.withJio(next, max));
