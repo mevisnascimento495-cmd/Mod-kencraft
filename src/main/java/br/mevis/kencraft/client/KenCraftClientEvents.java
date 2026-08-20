@@ -34,12 +34,14 @@ public final class KenCraftClientEvents {
                 if (++jioChargeTicker >= 5) { jioChargeTicker = 0; minecraft.player.connection.sendCommand("kencraftjio charge"); }
             } else { jioChargeTicker = 0; }
             if (KenCraftClient.KIKAN_Z.consumeClick() && data.race() == Race.RINKA) {
+                KikanAnimationState.trigger("z");
                 if (active) minecraft.player.connection.sendCommand("kencraft kikakogou ability z");
-                else { KikanAnimationState.trigger("z"); minecraft.player.connection.sendCommand("kencraft kikan attack z"); }
+                else minecraft.player.connection.sendCommand("kencraft kikan attack z");
             }
             if (KenCraftClient.KIKAN_C.consumeClick() && data.race() == Race.RINKA) {
+                KikanAnimationState.trigger("c");
                 if (active) minecraft.player.connection.sendCommand("kencraft kikakogou ability c");
-                else { KikanAnimationState.trigger("c"); minecraft.player.connection.sendCommand("kencraft kikan attack c"); }
+                else minecraft.player.connection.sendCommand("kencraft kikan attack c");
             }
             if (KenCraftClient.JIO_F.consumeClick() && data.race() == Race.HUMAN && !"NONE".equals(technique)) { JioAnimationState.trigger(technique, data.jioAbilitySlot()); minecraft.player.connection.sendCommand("kencraftjio use"); }
             if (KenCraftClient.JIO_G.consumeClick() && data.race() == Race.HUMAN && !"NONE".equals(technique)) minecraft.player.connection.sendCommand("kencraftjio next");

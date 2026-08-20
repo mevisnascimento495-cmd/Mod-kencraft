@@ -34,6 +34,7 @@ public final class KikakogouSystem {
     private static final int DURATION_TICKS = 120 * 20;
     private static final int COOLDOWN_TICKS = 150 * 20;
     private static final int HALLUCINATION_TICKS = 10 * 20;
+    private static final int SCORPION_STING_CONTACT_TICKS = 10;
     private static final ResourceLocation SCALE_ID = ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "kikakogou_crocodile_scale");
     private static final ResourceLocation ARMOR_LOCK_ID = ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "kikakogou_armor_lock");
     private static final ResourceLocation CROCODILE_SLOW_ID = ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "kikakogou_crocodile_slow");
@@ -41,6 +42,9 @@ public final class KikakogouSystem {
     private static final String LAST_Z = "kencraft_kikakogou_last_z";
     private static final String LAST_C = "kencraft_kikakogou_last_c";
     private static final String HALLUCINATION = "kencraft_kikakogou_hallucination";
+    private static final String HALLUCINATION_TARGET_ID = "kencraft_kikakogou_hallucination_target";
+    private static final String SCORPION_STING_TICKS = "kencraft_kikakogou_scorpion_sting_ticks";
+    private static final String SCORPION_STING_TARGET_ID = "kencraft_kikakogou_scorpion_sting_target";
     private static final String ARMOR_AMOUNT = "kencraft_kikakogou_armor_amount";
 
     private KikakogouSystem() {}
@@ -90,6 +94,9 @@ public final class KikakogouSystem {
         applyTransformationAttributes(player, form);
         player.getPersistentData().putBoolean(SLAM_ARMED, false);
         player.getPersistentData().putInt(HALLUCINATION, 0);
+        player.getPersistentData().putInt(HALLUCINATION_TARGET_ID, -1);
+        player.getPersistentData().putInt(SCORPION_STING_TICKS, 0);
+        player.getPersistentData().putInt(SCORPION_STING_TARGET_ID, -1);
         player.sendSystemMessage(Component.literal("Kikakogou ativado: " + displayForm(form) + ". Duração: 120s."));
         return 1;
     }
@@ -138,22 +145,42 @@ public final class KikakogouSystem {
     private static int scorpionSting(ServerPlayer player) {
         long now = player.tickCount;
         if (now - player.getPersistentData().getLong(LAST_Z) < 20) return 0;
-        player.getPersistentData().putLong(LAST_Z, now);
+
         LivingEntity target = nearestTarget(player, 4.5D);
         if (target == null) return 0;
+
+        player.getPersistentData().putLong(LAST_Z, now);
+        player.getPersistentData().putInt(SCORPION_STING_TARGET_ID, target.getId());
+        player.getPersistentData().putInt(SCORPION_STING_TICKS, SCORPION_STING_CONTACT_TICKS);
+        return 1;
+    }
+
+    private static void resolveScorpionSting(ServerPlayer player) {
+        int targetId = player.getPersistentData().getInt(SCORPION_STING_TARGET_ID);
+        player.getPersistentData().putInt(SCORPION_STING_TARGET_ID, -1);
+        LivingEntity target = findLivingEntity(player, targetId);
+        if (target == null || !target.isAlive() || player.distanceToSqr(target) > 6.0D * 6.0D) return;
+
         float damage = 5.0F + Math.max(0, player.getData(ModAttachments.PLAYER_DATA).strength() - 1) * 0.30F;
         target.hurt(player.damageSources().playerAttack(player), damage);
         target.addEffect(new MobEffectInstance(MobEffects.POISON, 300, 1));
         target.setDeltaMovement(target.getDeltaMovement().x, 0.45D, target.getDeltaMovement().z);
         target.hurtMarked = true;
-        player.serverLevel().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 10, 0.4D, 0.5D, 0.4D, 0.05D);
-        return 1;
+        player.serverLevel().sendParticles(ParticleTypes.CRIT, target.getX(), target.getY() + 1.0D, target.getZ(), 14, 0.35D, 0.45D, 0.35D, 0.05D);
     }
 
     private static int scorpionHallucination(ServerPlayer player) {
         if (player.getPersistentData().getInt(HALLUCINATION) > 0) return 0;
+
+        LivingEntity target = nearestTarget(player, 10.0D);
+        if (target == null) {
+            player.sendSystemMessage(Component.literal("Alucinações: nenhum inimigo próximo."));
+            return 0;
+        }
+
         player.getPersistentData().putInt(HALLUCINATION, HALLUCINATION_TICKS);
-        player.sendSystemMessage(Component.literal("Alucinações ativadas por 10s."));
+        player.getPersistentData().putInt(HALLUCINATION_TARGET_ID, target.getId());
+        player.sendSystemMessage(Component.literal("Alucinações aplicadas ao alvo mais próximo por 10s."));
         return 1;
     }
 
@@ -204,20 +231,43 @@ public final class KikakogouSystem {
         return nearest;
     }
 
+    private static LivingEntity findLivingEntity(ServerPlayer player, int entityId) {
+        if (entityId < 0) return null;
+        var entity = player.serverLevel().getEntity(entityId);
+        return entity instanceof LivingEntity living ? living : null;
+    }
+
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player) || player.level().isClientSide()) return;
-        KikakogouState state = player.getData(ModAttachments.KIKAKOGOU_STATE);
+
         int hallucination = player.getPersistentData().getInt(HALLUCINATION);
         if (hallucination > 0) {
             player.getPersistentData().putInt(HALLUCINATION, hallucination - 1);
-            player.setDeltaMovement(Vec3.ZERO);
-            player.hurtMarked = true;
-            if (player.tickCount % 10 == 0) {
-                player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 25, 0));
-                player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 25, 0));
+            LivingEntity target = findLivingEntity(player, player.getPersistentData().getInt(HALLUCINATION_TARGET_ID));
+            if (target != null && target.isAlive()) {
+                target.setDeltaMovement(Vec3.ZERO);
+                target.hurtMarked = true;
+                if (player.tickCount % 10 == 0) {
+                    target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 25, 0));
+                    target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 25, 0));
+                }
+            } else {
+                player.getPersistentData().putInt(HALLUCINATION, 0);
+                player.getPersistentData().putInt(HALLUCINATION_TARGET_ID, -1);
             }
+        } else {
+            player.getPersistentData().putInt(HALLUCINATION_TARGET_ID, -1);
         }
+
+        int stingTicks = player.getPersistentData().getInt(SCORPION_STING_TICKS);
+        if (stingTicks > 0) {
+            stingTicks--;
+            player.getPersistentData().putInt(SCORPION_STING_TICKS, stingTicks);
+            if (stingTicks == 0) resolveScorpionSting(player);
+        }
+
+        KikakogouState state = player.getData(ModAttachments.KIKAKOGOU_STATE);
         if (state.active()) {
             if (player.tickCount % 5 == 0) applyTransformationAttributes(player, state.type());
             if ("crocodile".equals(state.type()) && player.getPersistentData().getBoolean(SLAM_ARMED) && player.onGround() && player.getDeltaMovement().y <= 0.05D) resolveCrocodileSlam(player);
@@ -277,6 +327,9 @@ public final class KikakogouSystem {
         if (speed != null) speed.removeModifier(CROCODILE_SLOW_ID);
         player.getPersistentData().putBoolean(SLAM_ARMED, false);
         player.getPersistentData().putInt(HALLUCINATION, 0);
+        player.getPersistentData().putInt(HALLUCINATION_TARGET_ID, -1);
+        player.getPersistentData().putInt(SCORPION_STING_TICKS, 0);
+        player.getPersistentData().putInt(SCORPION_STING_TARGET_ID, -1);
     }
 
     private static void deactivate(ServerPlayer player, boolean manual) {
