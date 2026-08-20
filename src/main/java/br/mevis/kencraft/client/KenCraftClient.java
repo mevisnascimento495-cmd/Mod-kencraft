@@ -27,6 +27,7 @@ public final class KenCraftClient {
     @SubscribeEvent public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(KenCraftEntities.SHIN_HOMARE.get(), ShinHomareRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.KAORI_HOMARE.get(), KaoriHomareRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.AKIO_GINSHO.get(), AkioGinshoRenderer::new);
     }
