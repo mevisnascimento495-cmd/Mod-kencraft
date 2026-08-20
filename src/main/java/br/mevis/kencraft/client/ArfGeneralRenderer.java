@@ -7,8 +7,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/** Renderer for unnamed/natural ARF generals. Akio has a separate renderer and texture. */
 public class ArfGeneralRenderer extends HumanoidMobRenderer<ArfGeneralEntity, HumanoidModel<ArfGeneralEntity>> {
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("kencraft", "textures/entity/akio_ginsho.png");
+    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath("kencraft", "textures/entity/arf.png");
 
     public ArfGeneralRenderer(EntityRendererProvider.Context context) {
         super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), 0.5F);

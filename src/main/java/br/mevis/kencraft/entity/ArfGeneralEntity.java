@@ -1,10 +1,8 @@
 package br.mevis.kencraft.entity;
 
-import br.mevis.kencraft.data.ClanData;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
-import br.mevis.kencraft.event.ClanSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -21,6 +19,7 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
+/** Generic ARF general. Special named generals (such as Akio Ginsho) use their own entity type. */
 public class ArfGeneralEntity extends PathfinderMob {
     public ArfGeneralEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -28,8 +27,12 @@ public class ArfGeneralEntity extends PathfinderMob {
     }
 
     public static AttributeSupplier.Builder createAttributes() {
-        return Mob.createMobAttributes().add(Attributes.MAX_HEALTH, 40.0D).add(Attributes.MOVEMENT_SPEED, 0.22D)
-                .add(Attributes.FOLLOW_RANGE, 24.0D).add(Attributes.ARMOR, 6.0D).add(Attributes.ATTACK_DAMAGE, 6.0D);
+        return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 40.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.22D)
+                .add(Attributes.FOLLOW_RANGE, 24.0D)
+                .add(Attributes.ARMOR, 6.0D)
+                .add(Attributes.ATTACK_DAMAGE, 6.0D);
     }
 
     @Override
@@ -47,14 +50,12 @@ public class ArfGeneralEntity extends PathfinderMob {
         if (player.level().isClientSide) return InteractionResult.SUCCESS;
 
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-
         if (data.race() != Race.HUMAN) {
-            player.sendSystemMessage(Component.literal("General Akio Ginshō: Você não pertence à ARF. Saia daqui antes que eu considere você uma ameaça."));
+            player.sendSystemMessage(Component.literal("General ARF: Você não pertence à ARF. Saia daqui antes que eu considere você uma ameaça."));
             this.setTarget(player);
             return InteractionResult.CONSUME;
         }
 
-        // Existing ARF recruitment remains unchanged.
         if (data.arfClass() == 0) {
             if (data.arfMissionKills() < 0) {
                 player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(0));
@@ -71,7 +72,6 @@ public class ArfGeneralEntity extends PathfinderMob {
             return InteractionResult.CONSUME;
         }
 
-        // Keep rank promotion available when its existing objective is already complete.
         int required = requiredRankCRinkas(data.arfClass());
         if (data.arfClass() > 1 && data.arfMissionKills() >= required) {
             int newRank = data.arfClass() - 1;
@@ -85,24 +85,7 @@ public class ArfGeneralEntity extends PathfinderMob {
             return InteractionResult.CONSUME;
         }
 
-        ClanData clan = player.getData(ModAttachments.CLAN_DATA);
-        if (clan.hasClan()) {
-            player.sendSystemMessage(Component.literal("General Akio Ginshō: Seu clã já foi revelado. Você pertence ao clã " + ClanSystem.displayName(clan.clan()) + "."));
-            return InteractionResult.CONSUME;
-        }
-        if (clan.rolling()) {
-            player.sendSystemMessage(Component.literal("General Akio Ginshō: Aguarde. A técnica ainda está revelando seu clã..."));
-            return InteractionResult.CONSUME;
-        }
-        if (!clan.readyToRoll()) {
-            player.setData(ModAttachments.CLAN_DATA, clan.prepare());
-            player.sendSystemMessage(Component.literal("Olá jogador, vejo que você nasceu em um clã, só não sabe qual é, certo? Vou usar minha técnica para revelar seu clã, seu clã apareça na sua mente, se prepare"));
-            player.sendSystemMessage(Component.literal("Clique novamente no General para revelar seu clã."));
-            return InteractionResult.CONSUME;
-        }
-
-        player.setData(ModAttachments.CLAN_DATA, clan.startRoll());
-        player.sendSystemMessage(Component.literal("General Akio Ginshō: A revelação começou..."));
+        player.sendSystemMessage(Component.literal("General ARF: Você já está na ARF. Continue suas missões."));
         return InteractionResult.CONSUME;
     }
 

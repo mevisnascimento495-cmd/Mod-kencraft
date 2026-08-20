@@ -44,6 +44,7 @@ public class KenCraft {
             event.put(KenCraftEntities.AODAI.get(), AodaiEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralEntity.createAttributes().build());
+            event.put(KenCraftEntities.AKIO_GINSHO.get(), ArfGeneralEntity.createAttributes().build());
             event.put(KenCraftEntities.SHIN_HOMARE.get(), KenCraftEntities.HomareEntity.createAttributes().build());
             event.put(KenCraftEntities.KAORI_HOMARE.get(), KenCraftEntities.HomareEntity.createAttributes().build());
         }

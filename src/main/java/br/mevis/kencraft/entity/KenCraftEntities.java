@@ -17,8 +17,8 @@ import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.registries.DeferredRegister;
 
 public final class KenCraftEntities {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(net.minecraft.core.registries.Registries.ENTITY_TYPE, KenCraft.MOD_ID);
@@ -28,6 +28,7 @@ public final class KenCraftEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<AodaiEntity>> AODAI = ENTITY_TYPES.register("aodai", () -> EntityType.Builder.of(AodaiEntity::new, MobCategory.CREATURE).sized(0.6F,1.95F).build("kencraft:aodai"));
     public static final DeferredHolder<EntityType<?>, EntityType<ArfInvestigatorEntity>> ARF_INVESTIGATOR = ENTITY_TYPES.register("arf_investigator", () -> EntityType.Builder.of(ArfInvestigatorEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:arf_investigator"));
     public static final DeferredHolder<EntityType<?>, EntityType<ArfGeneralEntity>> ARF_GENERAL = ENTITY_TYPES.register("arf_general", () -> EntityType.Builder.of(ArfGeneralEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:arf_general"));
+    public static final DeferredHolder<EntityType<?>, EntityType<AkioGinshoEntity>> AKIO_GINSHO = ENTITY_TYPES.register("akio_ginsho", () -> EntityType.Builder.of(AkioGinshoEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:akio_ginsho"));
     public static final DeferredHolder<EntityType<?>, EntityType<HomareEntity>> SHIN_HOMARE = ENTITY_TYPES.register("shin_homare", () -> EntityType.Builder.of(HomareEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:shin_homare"));
     public static final DeferredHolder<EntityType<?>, EntityType<HomareEntity>> KAORI_HOMARE = ENTITY_TYPES.register("kaori_homare", () -> EntityType.Builder.of(HomareEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:kaori_homare"));
 
@@ -96,12 +97,7 @@ public final class KenCraftEntities {
                 if (race == Race.RINKA) {
                     player.sendSystemMessage(Component.literal("Shin: Olá jogador(a) você deve ser o novo cliente, Você já conheceu a Kaori, então, oque você achou dela? Acho que você deve ter gostado dela, Senti seu cheiro de longe, você é Rinka, não precisa esconder, Você já conheceu o aodai? Vejo que sim, ele é bem orgulhoso, desculpa se ele te ofendeu, Os investigadores estão por toda parte, então recomendo você se preparar com uma Kikan."));
                 } else if (race == Race.HUMAN) {
-                    boolean isArf = player.getData(ModAttachments.PLAYER_DATA).arfClass() > 0;
-                    if (isArf) {
-                        player.sendSystemMessage(Component.literal("Shin: Olá jogador(a) você deve ser o novo cliente, vejo que você já conheceu a Kaori, mas eu tenho uma coisa pra te dizer, SE VOCÊ FOR DA ARF E ME FAZER ALGUM MAL PRA MIM OU PRA MINHA FILHA... EU TE MATAREI!"));
-                    } else {
-                        player.sendSystemMessage(Component.literal("Shin: Olá jogador(a) você deve ser o novo cliente, vejo que você já conheceu a Kaori, mas eu tenho uma coisa pra te dizer, SE VOCÊ FOR DA ARF E ME FAZER ALGUM MAL PRA MIM OU PRA MINHA FILHA... EU TE MATAREI!"));
-                    }
+                    player.sendSystemMessage(Component.literal("Shin: Olá jogador(a) você deve ser o novo cliente, vejo que você já conheceu a Kaori, mas eu tenho uma coisa pra te dizer, SE VOCÊ FOR DA ARF E ME FAZER ALGUM MAL PRA MIM OU PRA MINHA FILHA... EU TE MATAREI!"));
                 } else {
                     player.sendSystemMessage(Component.literal("Shin: Escolha sua raça antes de continuar a história."));
                     return InteractionResult.CONSUME;
