@@ -12,6 +12,9 @@ public class AkioGinshoRenderer extends HumanoidMobRenderer<AkioGinshoEntity, Hu
 
     public AkioGinshoRenderer(EntityRendererProvider.Context context) {
         super(context, new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)), 0.5F);
+        // The supplied Akio texture does not contain the separate outer hat layer.
+        // Hide the HumanoidModel hat part so it cannot sample the wrong/black UV area.
+        this.model.hat.visible = false;
     }
 
     @Override
