@@ -19,8 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcSpawn {
-    // Slight global increase: KenCraft entities should be noticeably present,
-    // but not dense enough to recreate the exploration lag problem.
+    private static final double ONOKI_CHANCE = 0.002D;
     private static final double RANK_C_CHANCE = 0.04D;
     private static final double RINKA_CHANCE = 0.09D;
     private static final double RISHIN_CHANCE = 0.06D;
@@ -28,6 +27,7 @@ public final class KenCraftNpcSpawn {
     private static final double ARF_CHANCE = 0.12D;
     private static final double GENERAL_CHANCE = 0.03D;
 
+    private static final int MAX_ONOKI = 1;
     private static final int MAX_NIGHT_RINKA = 4;
     private static final int MAX_RANK_C = 2;
     private static final int MAX_RISHIN = 3;
@@ -65,6 +65,14 @@ public final class KenCraftNpcSpawn {
 
         ChunkPos cp = player.chunkPosition();
         double roll = ThreadLocalRandom.current().nextDouble();
+
+        if (roll < ONOKI_CHANCE) {
+            AABB nearby = nearbyBounds(player);
+            if (count(level, nearby, OnokiEntity.class) < MAX_ONOKI) {
+                spawn(level, cp, KenCraftEntities.ONOKI.get());
+                return;
+            }
+        }
 
         if (roll < AODAI_CHANCE) {
             AABB nearby = nearbyBounds(player);
@@ -133,19 +141,15 @@ public final class KenCraftNpcSpawn {
         double x = player.getX();
         double y = player.getY();
         double z = player.getZ();
-        return new AABB(
-                x - ENTITY_CHECK_RADIUS, y - ENTITY_CHECK_VERTICAL, z - ENTITY_CHECK_RADIUS,
-                x + ENTITY_CHECK_RADIUS, y + ENTITY_CHECK_VERTICAL, z + ENTITY_CHECK_RADIUS
-        );
+        return new AABB(x - ENTITY_CHECK_RADIUS, y - ENTITY_CHECK_VERTICAL, z - ENTITY_CHECK_RADIUS,
+                x + ENTITY_CHECK_RADIUS, y + ENTITY_CHECK_VERTICAL, z + ENTITY_CHECK_RADIUS);
     }
 
     private static void spawn(ServerLevel level, ChunkPos cp, net.minecraft.world.entity.EntityType<?> type) {
         BlockPos pos = find(level, cp);
         if (pos == null) return;
-
         Entity entity = type.create(level);
         if (entity == null) return;
-
         entity.moveTo(pos, ThreadLocalRandom.current().nextFloat() * 360F, 0.0F);
         if (entity instanceof net.minecraft.world.entity.Mob mob) {
             mob.finalizeSpawn(level, level.getCurrentDifficultyAt(pos), MobSpawnType.NATURAL, null);
