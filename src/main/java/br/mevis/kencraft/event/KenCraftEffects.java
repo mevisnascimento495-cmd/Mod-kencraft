@@ -15,7 +15,7 @@ public final class KenCraftEffects {
     public static final DeferredHolder<MobEffect, MobEffect> SUFOCO =
             EFFECTS.register("sufoco", () -> new MobEffect(MobEffectCategory.HARMFUL, 0x3B8EDB) {
                 @Override
-                public boolean isDurationEffectTick(int duration, int amplifier) {
+                public boolean shouldApplyEffectTickThisTick(int duration, int amplifier) {
                     return duration > 0 && duration % 20 == 0;
                 }
 
