@@ -21,12 +21,14 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KenCraftNpcCommand {
@@ -125,7 +127,7 @@ public final class KenCraftNpcCommand {
             source.sendFailure(Component.literal("A Kikan só pode ser girada por um Rinka Classe C ou superior."));
             return 0;
         }
-        String[] choices = {"CROCODILE_TAIL", "TENTACLE", "SCORPION_TAIL"};
+        String[] choices = {"CROCODILE_TAIL", "TENTACLE", "SCORPION_TAIL", "BUTTERFLY_TENTACLE", "LIZARD_CROCODILE_TAIL"};
         String chosen = choices[player.getRandom().nextInt(choices.length)];
         player.setData(ModAttachments.PLAYER_DATA, data.withKikanType(chosen));
         source.sendSuccess(() -> Component.literal("Sua Kikan foi definida como: " + prettyKikan(chosen)), false);
@@ -139,14 +141,33 @@ public final class KenCraftNpcCommand {
             source.sendFailure(Component.literal("Você precisa ser Classe C+ e girar uma Kikan primeiro."));
             return 0;
         }
-        String attackKey = key.toLowerCase();
+        String attackKey = key.toLowerCase(Locale.ROOT);
         if (!attackKey.equals("z") && !attackKey.equals("c")) return 0;
+
+        if ("BUTTERFLY_TENTACLE".equals(data.kikanType())) {
+            if (!"z".equals(attackKey)) return butterflySlowPoison(player);
+            LivingEntity target = nearestTarget(player, 8.0D);
+            if (target == null) return 0;
+            KikanSpecialSystem.startButterflyHallucination(player, target);
+            player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            return 1;
+        }
+
+        if ("LIZARD_CROCODILE_TAIL".equals(data.kikanType())) {
+            if ("z".equals(attackKey)) return lizardExplosion(player);
+            LivingEntity target = nearestTarget(player, 4.5D);
+            if (target == null) return 0;
+            target.hurt(player.damageSources().playerAttack(player), 14.0F + Math.max(0, data.strength() - 1) * 0.5F);
+            target.addEffect(new net.minecraft.world.effect.MobEffectInstance(KenCraftEffects.QUEBRA_DE_MEMBROS, 30 * 20, 0, false, true));
+            player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+            return 1;
+        }
 
         List<LivingEntity> targets = player.serverLevel().getEntitiesOfClass(
                 LivingEntity.class, player.getBoundingBox().inflate(4.0D), entity -> entity != player && entity.isAlive());
         LivingEntity target = targets.stream().min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);
         if (target == null) {
-            player.sendSystemMessage(Component.literal("Kikan " + attackKey.toUpperCase() + ": nenhum alvo próximo."));
+            player.sendSystemMessage(Component.literal("Kikan " + attackKey.toUpperCase(Locale.ROOT) + ": nenhum alvo próximo."));
             return 0;
         }
 
@@ -162,11 +183,49 @@ public final class KenCraftNpcCommand {
         return 1;
     }
 
+    private static int butterflySlowPoison(ServerPlayer player) {
+        LivingEntity target = nearestTarget(player, 8.0D);
+        if (target == null) return 0;
+        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN, 30 * 20, 1));
+        target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 30 * 20, 0));
+        target.hurt(player.damageSources().playerAttack(player), 5.0F + Math.max(0, player.getData(ModAttachments.PLAYER_DATA).strength() - 1) * 0.25F);
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        return 1;
+    }
+
+    private static int lizardExplosion(ServerPlayer player) {
+        ServerLevel level = player.serverLevel();
+        double radius = 4.0D;
+        level.explode(player, player.getX(), player.getY(), player.getZ(), 2.5F, false, net.minecraft.world.level.Level.ExplosionInteraction.NONE);
+        List<LivingEntity> targets = level.getEntitiesOfClass(
+                LivingEntity.class, player.getBoundingBox().inflate(radius),
+                entity -> entity != player && entity.isAlive());
+        for (LivingEntity target : targets) {
+            target.hurt(player.damageSources().playerAttack(player), 8.0F);
+            Vec3 away = target.position().subtract(player.position());
+            Vec3 horizontal = new Vec3(away.x, 0.0D, away.z);
+            if (horizontal.lengthSqr() > 0.0001D) horizontal = horizontal.normalize().scale(0.45D);
+            target.setDeltaMovement(horizontal.x, 1.05D, horizontal.z);
+            target.hurtMarked = true;
+        }
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+        return 1;
+    }
+
+    private static LivingEntity nearestTarget(ServerPlayer player, double radius) {
+        return player.serverLevel().getEntitiesOfClass(
+                LivingEntity.class, player.getBoundingBox().inflate(radius),
+                entity -> entity != player && entity.isAlive())
+                .stream().min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);
+    }
+
     private static String prettyKikan(String type) {
         return switch (type) {
             case "CROCODILE_TAIL" -> "Cauda de crocodilo";
             case "TENTACLE" -> "Tentáculo";
             case "SCORPION_TAIL" -> "Cauda de escorpião";
+            case "BUTTERFLY_TENTACLE" -> "Borboleta";
+            case "LIZARD_CROCODILE_TAIL" -> "Lagarto";
             default -> "Nenhuma";
         };
     }
