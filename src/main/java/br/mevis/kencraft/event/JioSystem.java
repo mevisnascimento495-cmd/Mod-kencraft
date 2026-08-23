@@ -8,7 +8,7 @@ import br.mevis.kencraft.data.Race;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.core.BlockHitResult;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -176,7 +176,7 @@ public final class JioSystem {
                 LivingEntity target = findNearestLivingTarget(player, 30.0D);
                 if (target != null) {
                     ServerLevel level = player.serverLevel();
-                    level.explode(player, target.getX(), target.getY(), target.getZ(), 2.0F, false, ServerLevel.ExplosionInteraction.NONE);
+                    level.explode(player, target.getX(), target.getY(), target.getZ(), 2.0F, false, net.minecraft.world.level.Level.ExplosionInteraction.NONE);
                     target.kill();
                 }
             }
