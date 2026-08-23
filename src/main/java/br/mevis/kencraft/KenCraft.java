@@ -5,6 +5,7 @@ import br.mevis.kencraft.entity.*;
 import br.mevis.kencraft.event.ChatSelectionHandler;
 import br.mevis.kencraft.event.PlayerLoginHandler;
 import br.mevis.kencraft.event.KenCraftNpcSpawn;
+import br.mevis.kencraft.event.KenCraftEffects;
 import br.mevis.kencraft.item.KenCraftItems;
 import br.mevis.kencraft.world.MinamoriStructureGenerator;
 import com.mojang.brigadier.Command;
@@ -31,6 +32,7 @@ public class KenCraft {
         KenCraftEntities.ENTITY_TYPES.register(modEventBus);
         KenCraftItems.ARMOR_MATERIALS.register(modEventBus);
         KenCraftItems.ITEMS.register(modEventBus);
+        KenCraftEffects.EFFECTS.register(modEventBus);
         NeoForge.EVENT_BUS.register(PlayerLoginHandler.class);
         NeoForge.EVENT_BUS.register(ChatSelectionHandler.class);
         NeoForge.EVENT_BUS.register(GameEvents.class);
