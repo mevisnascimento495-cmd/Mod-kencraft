@@ -58,10 +58,11 @@ public final class OnokiMissionSystem {
             say(player, "Onoki: Você deve estar se perguntando: o que vou te dar? Simples. Te darei uma evolução.");
             say(player, "Onoki: Você sendo Rinka ou humano pode se tornar um Híbrido. Agora, um humano ou Rinka pode se tornar Jashin.");
             say(player, "Onoki: Jashin mantém o Jio, mas perde a Kikan e, posteriormente, o Kikakogou.");
+            say(player, "Onoki: Também posso vender reset de Kikan por 10 XP físico e reset de Técnica Jio por 10 XP mental, mesmo que você continue com sua raça atual.");
             say(player, "Onoki: Então... o que você gostaria de se tornar? Um Jashin ou um Híbrido?");
             say(player, "Onoki: Os dois caminhos serão muito difíceis. Você tem três opções: sair daqui sendo uma dessas duas raças, ou sair daqui do jeito que nasceu e está.");
             say(player, "Onoki: Se quiser algum deles, diga no chat: \"Quero me tornar um Jashin\" ou \"Quero me tornar um Híbrido\".");
-            say(player, "Onoki: Se não quiser nada, diga \"Não quero nada\". Devo ter outras coisas que te interessem.");
+            say(player, "Onoki: Se quiser apenas trocar sua Kikan ou Técnica Jio, diga \"Resetar Kikan\" ou \"Resetar Técnica Jio\". Se não quiser nada, diga \"Não quero nada\".");
             return;
         }
         showProgress(player, progress);
@@ -89,6 +90,15 @@ public final class OnokiMissionSystem {
         }
         if (!progress.onokiChatOpen()) return;
         event.setCanceled(true);
+
+        if (message.equals("resetar kikan")) {
+            resetKikan(player);
+            return;
+        }
+        if (message.equals("resetar técnica jio") || message.equals("resetar tecnica jio")) {
+            resetJioTechnique(player);
+            return;
+        }
         if (message.equals("quero me tornar um jashin") || message.equals("jashin")) {
             if (!canChoose(player)) return;
             player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("JASHIN"));
@@ -117,7 +127,7 @@ public final class OnokiMissionSystem {
             return;
         }
         player.setData(ModAttachments.STORY_PROGRESS, progress.withOnokiChatOpen(true));
-        say(player, "Onoki: Não entendi. Fala direito, jogador(a). Jashin, Híbrido ou nada?");
+        say(player, "Onoki: Não entendi. Fala direito, jogador(a). Jashin, Híbrido, reset ou nada?");
     }
 
     private static void resetKikan(ServerPlayer player) {
