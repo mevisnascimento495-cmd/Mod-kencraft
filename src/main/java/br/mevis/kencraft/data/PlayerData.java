@@ -41,7 +41,6 @@ public record PlayerData(
     ).apply(i,(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritual,life,mental,physical,mission,arfClass,p)->new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritual,life,mental,physical,mission,arfClass,p.rinkaClass(),p.jinsuikakuConsumed(),p.jinsuikakuRankCConsumed(),p.kikanType(),normalizeTechnique(p.jioTechnique()),p.jioAbilitySlot())));
     public static final StreamCodec<RegistryFriendlyByteBuf,PlayerData> STREAM_CODEC=ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
-    /** Current supported Jio techniques. */
     public static String normalizeTechnique(String t){
         if (t == null) return "NONE";
         return switch (t.trim().toLowerCase(java.util.Locale.ROOT)) {
@@ -53,7 +52,6 @@ public record PlayerData(
             default -> "NONE";
         };
     }
-
     @Override public String jioTechnique() { return normalizeTechnique(jioTechnique); }
     public boolean hasRace(){return race!=Race.NONE;}
     public static int spentPoints(int level){return Math.max(0,Math.min(MAX_STATUS,level)-MIN_STATUS);}
@@ -61,6 +59,7 @@ public record PlayerData(
     public int calculatedHumanMaxJio(){return race==Race.HUMAN?(int)Math.round(100.0D*jioMultiplier()):maxJio;}
     public static PlayerData forRinka(){return new PlayerData(Race.RINKA,0,0,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,0,0,-1,0,"NONE",0,0,"NONE","NONE",0);}
     public static PlayerData forHuman(){return new PlayerData(Race.HUMAN,100,100,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,MIN_STATUS,0,0,-1,0,"NONE",0,0,"NONE","NONE",0);}
+    public PlayerData withRace(Race newRace){return new PlayerData(newRace,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot);}
     public PlayerData withStatus(String a,int v){v=Math.max(MIN_STATUS,Math.min(MAX_STATUS,v));return switch(a){case "strength"->copy(v,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life);case "defense"->copy(strength,v,intelligence,speed,genetics,perception,spiritualDevelopment,life);case "intelligence"->copy(strength,defense,v,speed,genetics,perception,spiritualDevelopment,life);case "speed"->copy(strength,defense,intelligence,v,genetics,perception,spiritualDevelopment,life);case "genetics"->copy(strength,defense,intelligence,speed,v,perception,spiritualDevelopment,life);case "perception"->copy(strength,defense,intelligence,speed,genetics,v,spiritualDevelopment,life);case "spiritual"->copy(strength,defense,intelligence,speed,genetics,perception,v,life);case "life"->copy(strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,v);default->this;};}
     private PlayerData copy(int s,int d,int in,int sp,int g,int p,int sd,int l){return new PlayerData(race,jio,maxJio,s,d,in,sp,g,p,sd,l,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot);}
     public PlayerData withXp(int m,int p){return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,Math.max(0,m),Math.max(0,p),arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,jioAbilitySlot);}
@@ -73,5 +72,5 @@ public record PlayerData(
     public PlayerData withKikanType(String t){return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,t==null?"NONE":t,jioTechnique,jioAbilitySlot);}
     public PlayerData withJioTechnique(String t){return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,normalizeTechnique(t),0);}
     public PlayerData withJioAbilitySlot(int s){return new PlayerData(race,jio,maxJio,strength,defense,intelligence,speed,genetics,perception,spiritualDevelopment,life,mentalXp,physicalXp,arfMissionKills,arfClass,rinkaClass,jinsuikakuConsumed,jinsuikakuRankCConsumed,kikanType,jioTechnique,Math.max(0,Math.min(2,s)));}
-    public boolean canUseKikan(){return race==Race.RINKA&&(rinkaClass.equals("C")||rinkaClass.equals("B")||rinkaClass.equals("A")||rinkaClass.equals("S"));}
+    public boolean canUseKikan(){return race==Race.RINKA || race==Race.HYBRID;}
 }
