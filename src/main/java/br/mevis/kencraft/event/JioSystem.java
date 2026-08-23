@@ -126,12 +126,13 @@ public final class JioSystem {
         }
 
         if (KING_OF_LIES.equals(technique)) {
-            if (data.jio() < 30) {
-                player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: 30 Jio."));
+            int cost = slot == 2 ? 150 : 30;
+            if (data.jio() < cost) {
+                player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: " + cost + " Jio."));
                 return 0;
             }
             int max = ClanSystem.maxJio(player, data);
-            player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - 30, max));
+            player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - cost, max));
             useKingOfLies(player, slot);
             return 1;
         }

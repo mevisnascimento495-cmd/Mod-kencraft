@@ -29,6 +29,7 @@ public final class KenCraftEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<ArfInvestigatorEntity>> ARF_INVESTIGATOR = ENTITY_TYPES.register("arf_investigator", () -> EntityType.Builder.of(ArfInvestigatorEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:arf_investigator"));
     public static final DeferredHolder<EntityType<?>, EntityType<ArfGeneralEntity>> ARF_GENERAL = ENTITY_TYPES.register("arf_general", () -> EntityType.Builder.of(ArfGeneralEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:arf_general"));
     public static final DeferredHolder<EntityType<?>, EntityType<AkioGinshoEntity>> AKIO_GINSHO = ENTITY_TYPES.register("akio_ginsho", () -> EntityType.Builder.of(AkioGinshoEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:akio_ginsho"));
+    public static final DeferredHolder<EntityType<?>, EntityType<OnokiEntity>> ONOKI = ENTITY_TYPES.register("onoki", () -> EntityType.Builder.of(OnokiEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:onoki"));
     public static final DeferredHolder<EntityType<?>, EntityType<HomareEntity>> SHIN_HOMARE = ENTITY_TYPES.register("shin_homare", () -> EntityType.Builder.of(HomareEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:shin_homare"));
     public static final DeferredHolder<EntityType<?>, EntityType<HomareEntity>> KAORI_HOMARE = ENTITY_TYPES.register("kaori_homare", () -> EntityType.Builder.of(HomareEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:kaori_homare"));
 
