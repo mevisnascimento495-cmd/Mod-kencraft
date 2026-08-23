@@ -49,6 +49,7 @@ public record PlayerData(
             case "hakai satsu totetsu: seimei kui" -> "Hakai satsu Totetsu: Seimei kui";
             case "kata kyoka" -> "Kata kyoka";
             case "the paradise" -> "The Paradise";
+            case "the king of lies" -> "The King of Lies";
             default -> "NONE";
         };
     }

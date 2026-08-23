@@ -97,11 +97,11 @@ public final class ClanSystem {
     }
 
     public static double defenseMultiplier(ServerPlayer player) {
-        return switch (player.getData(ModAttachments.CLAN_DATA).clan()) {
-            case HIKARI -> 1.10D;
-            case YAKUMORI -> 1.20D;
-            default -> 1.0D;
-        };
+        if (HIKARI.equals(player.getData(ModAttachments.CLAN_DATA).clan())) {
+            PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+            return "The King of Lies".equals(PlayerData.normalizeTechnique(data.jioTechnique())) ? 1.20D : 1.10D;
+        }
+        return YAKUMORI.equals(player.getData(ModAttachments.CLAN_DATA).clan()) ? 1.20D : 1.0D;
     }
 
     /** Reserved for the future God Thunder roll system. */

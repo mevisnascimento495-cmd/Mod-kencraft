@@ -8,8 +8,14 @@ import br.mevis.kencraft.data.Race;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockHitResult;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -21,7 +27,8 @@ public final class JioSystem {
     public static final String HAKAI = "Hakai satsu Totetsu: Seimei kui";
     public static final String KATA = "Kata kyoka";
     public static final String PARADISE = "The Paradise";
-    private static final String[] TECHNIQUES = {SEISHIN, HAKAI, KATA, PARADISE};
+    public static final String KING_OF_LIES = "The King of Lies";
+    private static final String[] TECHNIQUES = {SEISHIN, HAKAI, KATA, PARADISE, KING_OF_LIES};
 
     private JioSystem() {}
 
@@ -118,6 +125,17 @@ public final class JioSystem {
             return 1;
         }
 
+        if (KING_OF_LIES.equals(technique)) {
+            if (data.jio() < 30) {
+                player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: 30 Jio."));
+                return 0;
+            }
+            int max = ClanSystem.maxJio(player, data);
+            player.setData(ModAttachments.PLAYER_DATA, data.withJio(data.jio() - 30, max));
+            useKingOfLies(player, slot);
+            return 1;
+        }
+
         int cost = cost(techniqueIndex, slot);
         if (data.jio() < cost) {
             player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: " + cost + " Jio."));
@@ -144,6 +162,62 @@ public final class JioSystem {
                     net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED, 240, 1, false, true));
         }
         return 1;
+    }
+
+    private static void useKingOfLies(ServerPlayer player, int slot) {
+        switch (slot) {
+            case 0 -> {
+                player.sendSystemMessage(Component.literal("Você é forte demais"));
+                player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.DAMAGE_BOOST, 120, 9, false, true));
+            }
+            case 1 -> {
+                player.sendSystemMessage(Component.literal("Seus órgãos podem explodir"));
+                LivingEntity target = findNearestLivingTarget(player, 30.0D);
+                if (target != null) {
+                    ServerLevel level = player.serverLevel();
+                    level.explode(player, target.getX(), target.getY(), target.getZ(), 2.0F, false, ServerLevel.ExplosionInteraction.NONE);
+                    target.kill();
+                }
+            }
+            case 2 -> {
+                player.sendSystemMessage(Component.literal("Você morreu"));
+                LivingEntity target = findAimedLivingTarget(player, 64.0D);
+                if (target != null) target.kill();
+            }
+            default -> {}
+        }
+    }
+
+    private static LivingEntity findNearestLivingTarget(ServerPlayer player, double range) {
+        AABB box = player.getBoundingBox().inflate(range);
+        return player.level().getEntitiesOfClass(LivingEntity.class, box,
+                        entity -> entity.isAlive() && entity != player)
+                .stream()
+                .min(java.util.Comparator.comparingDouble(player::distanceToSqr))
+                .orElse(null);
+    }
+
+    private static LivingEntity findAimedLivingTarget(ServerPlayer player, double range) {
+        Vec3 start = player.getEyePosition();
+        Vec3 look = player.getLookAngle().normalize();
+        Vec3 end = start.add(look.scale(range));
+        BlockHitResult blockHit = player.level().clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        double maxDistance = start.distanceToSqr(blockHit.getLocation());
+
+        AABB search = player.getBoundingBox().expandTowards(look.scale(range)).inflate(2.0D);
+        LivingEntity best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (LivingEntity entity : player.level().getEntitiesOfClass(LivingEntity.class, search,
+                target -> target.isAlive() && target != player)) {
+            java.util.Optional<Vec3> hit = entity.getBoundingBox().inflate(0.15D).clip(start, end);
+            if (hit.isEmpty()) continue;
+            double distance = start.distanceToSqr(hit.get());
+            if (distance > maxDistance || distance >= bestDistance) continue;
+            best = entity;
+            bestDistance = distance;
+        }
+        return best;
     }
 
     private static int charge(CommandSourceStack source) {
@@ -191,6 +265,12 @@ public final class JioSystem {
         if (technique == 3) return switch (slot) {
             case 1 -> 12;
             case 2 -> 200;
+            default -> 0;
+        };
+        if (technique == 4) return switch (slot) {
+            case 0 -> 120;
+            case 1 -> 20;
+            case 2 -> 10;
             default -> 0;
         };
         return 0;
