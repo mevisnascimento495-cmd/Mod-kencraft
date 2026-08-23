@@ -46,7 +46,7 @@ public final class OnokiMissionSystem {
             return;
         }
         if (progress.onokiEvolutionComplete()) {
-            player.setData(ModAttachments.STORY_PROGRESS, progress.withShopOpen(true));
+            player.setData(ModAttachments.STORY_PROGRESS, progress.withShopOpen(true).withOnokiChatOpen(true));
             say(player, "Onoki: Evolução concluída. Agora vendo duas coisas: reset de Kikan por 10 XP físico e reset de Técnica Jio por 10 XP mental.");
             say(player, "Onoki: Digite \"Resetar Kikan\" ou \"Resetar Técnica Jio\".");
             return;
@@ -79,26 +79,11 @@ public final class OnokiMissionSystem {
         ServerPlayer player = event.getPlayer();
         StoryProgress progress = player.getData(ModAttachments.STORY_PROGRESS);
         String message = event.getRawText().trim().toLowerCase(Locale.ROOT);
-
-        if (progress.onokiShopOpen()) {
-            event.setCanceled(true);
-            player.setData(ModAttachments.STORY_PROGRESS, progress.withShopOpen(false));
-            if (message.equals("resetar kikan")) { resetKikan(player); return; }
-            if (message.equals("resetar técnica jio") || message.equals("resetar tecnica jio")) { resetJioTechnique(player); return; }
-            say(player, "Onoki: Eu só vendo \"Resetar Kikan\" e \"Resetar Técnica Jio\". Não complica.");
-            return;
-        }
         if (!progress.onokiChatOpen()) return;
         event.setCanceled(true);
 
-        if (message.equals("resetar kikan")) {
-            resetKikan(player);
-            return;
-        }
-        if (message.equals("resetar técnica jio") || message.equals("resetar tecnica jio")) {
-            resetJioTechnique(player);
-            return;
-        }
+        if (message.equals("resetar kikan")) { resetKikan(player); return; }
+        if (message.equals("resetar técnica jio") || message.equals("resetar tecnica jio")) { resetJioTechnique(player); return; }
         if (message.equals("quero me tornar um jashin") || message.equals("jashin")) {
             if (!canChoose(player)) return;
             player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("JASHIN"));
@@ -106,35 +91,28 @@ public final class OnokiMissionSystem {
             say(player, "Onoki: Derrote 100 Rinkas Rank C e coma 20 Jinsuikaku Rank C para tornar seu corpo fácil de adaptar à mutação.");
             say(player, "Onoki: Logo depois, traga o coração de alguém com uma técnica, ou um Rinka com uma Kikan.");
             say(player, "Onoki: O Aodai Shou Aijou é um ótimo exemplo. O garoto de cabelo verde, você deve conhecer.");
-            say(player, "Onoki: Mate-o e traga o coração dele. Depois volte aqui. Eu vou conferir tudo, porque confiar em você é pedir pra dar errado.");
+            say(player, "Onoki: Mate-o e traga o coração dele. Depois volte aqui.");
             return;
         }
         if (message.equals("quero me tornar um híbrido") || message.equals("híbrido") || message.equals("hibrido")) {
             if (!canChoose(player)) return;
             player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("HYBRID"));
             say(player, "Onoki: HAHAHAHA! Sua ambiciosidade é algo que me assusta... mas vou te ajudar.");
-            say(player, "Onoki: Se você quer tanto se tornar o auge da sua espécie, mate Akio Ginshō, o general mais forte da história da ARF.");
-            say(player, "Onoki: Em força bruta ele é inferior a Tatsuo Yakumori, mas ainda é poderoso o suficiente. Traga o coração dele.");
-            say(player, "Onoki: Depois de matar Akio, mate 120 Rishins e Rinkas. Depois, mate 30 generais da ARF.");
-            say(player, "Onoki: Por seguida, coma 50 Jinsuikaku Rank C. Sendo humano ou Rinka, tanto faz.");
-            say(player, "Onoki: Depois de completar tudo, volte a mim e eu te tornarei o mais forte que eu conseguir.");
+            say(player, "Onoki: Mate Akio Ginshō, traga o coração dele, mate 120 Rishins e Rinkas, 30 generais da ARF e coma 50 Jinsuikaku Rank C.");
+            say(player, "Onoki: Depois volte a mim e eu te tornarei o mais forte que eu conseguir.");
             return;
         }
         if (message.equals("não quero nada") || message.equals("nao quero nada")) {
-            player.setData(ModAttachments.STORY_PROGRESS, progress.withOnokiChatOpen(false));
+            player.setData(ModAttachments.STORY_PROGRESS, progress.withOnokiChatOpen(false).withShopOpen(false));
             say(player, "Onoki: Hm... prudente. Ou medroso. Ainda não decidi.");
-            say(player, "Onoki: Não tem problema. Existem outras coisas que posso te oferecer.");
             return;
         }
-        player.setData(ModAttachments.STORY_PROGRESS, progress.withOnokiChatOpen(true));
         say(player, "Onoki: Não entendi. Fala direito, jogador(a). Jashin, Híbrido, reset ou nada?");
     }
 
     private static void resetKikan(ServerPlayer player) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HYBRID && data.race() != Race.RINKA) {
-            say(player, "Onoki: Você não tem uma Kikan que eu possa resetar."); return;
-        }
+        if (data.race() != Race.HYBRID && data.race() != Race.RINKA) { say(player, "Onoki: Você não tem uma Kikan que eu possa resetar."); return; }
         if (data.physicalXp() < 10) { say(player, "Onoki: Você precisa de 10 XP físico."); return; }
         player.setData(ModAttachments.PLAYER_DATA, data.withXp(data.mentalXp(), data.physicalXp()-10).withKikanType("NONE"));
         player.setData(ModAttachments.KIKAKOGOU_STATE, KikakogouState.DEFAULT);
@@ -143,9 +121,7 @@ public final class OnokiMissionSystem {
 
     private static void resetJioTechnique(ServerPlayer player) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HUMAN && data.race() != Race.HYBRID && data.race() != Race.JASHIN) {
-            say(player, "Onoki: Você não tem acesso ao reset de Técnica Jio."); return;
-        }
+        if (data.race() != Race.HUMAN && data.race() != Race.HYBRID && data.race() != Race.JASHIN) { say(player, "Onoki: Você não tem acesso ao reset de Técnica Jio."); return; }
         if (data.mentalXp() < 10) { say(player, "Onoki: Você precisa de 10 XP mental."); return; }
         player.setData(ModAttachments.PLAYER_DATA, data.withXp(data.mentalXp()-10, data.physicalXp()).withJioTechnique("NONE"));
         say(player, "Onoki: Pronto. Sua Técnica Jio foi resetada. Agora pode girar outra.");
@@ -165,41 +141,23 @@ public final class OnokiMissionSystem {
         player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 255, false, true));
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 255, false, true));
         StoryProgress next = progress.tickEvolution();
-        if (next.onokiEvolutionTicks() == 0) {
-            finishEvolution(player, next);
-        } else {
-            player.setData(ModAttachments.STORY_PROGRESS, next);
-        }
+        if (next.onokiEvolutionTicks() == 0) finishEvolution(player, next); else player.setData(ModAttachments.STORY_PROGRESS, next);
     }
 
     private static void finishEvolution(ServerPlayer player, StoryProgress progress) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         Race target = progress.onokiPath().equals("HYBRID") ? Race.HYBRID : Race.JASHIN;
         PlayerData evolved = data.withRace(target).withJio(100,100);
-        evolved = evolved.withStatus("strength", Math.min(PlayerData.MAX_STATUS, data.strength() + EVOLUTION_STAT_BONUS))
-                .withStatus("defense", Math.min(PlayerData.MAX_STATUS, data.defense() + EVOLUTION_STAT_BONUS))
-                .withStatus("spiritual", Math.min(PlayerData.MAX_STATUS, data.spiritualDevelopment() + EVOLUTION_STAT_BONUS))
-                .withStatus("genetics", Math.min(PlayerData.MAX_STATUS, data.genetics() + EVOLUTION_STAT_BONUS))
-                .withStatus("life", Math.min(PlayerData.MAX_STATUS, data.life() + EVOLUTION_STAT_BONUS));
-        if (target == Race.JASHIN) {
-            evolved = evolved.withKikanType("NONE").withJioTechnique(data.jioTechnique().equals("NONE") ? "NONE" : data.jioTechnique());
-            player.setData(ModAttachments.KIKAKOGOU_STATE, KikakogouState.DEFAULT);
-        }
-        player.setData(ModAttachments.PLAYER_DATA, evolved);
-        player.removeEffect(MobEffects.WEAKNESS);
-        player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-        player.setData(ModAttachments.STORY_PROGRESS, progress.finishEvolution());
-        say(player, target == Race.HYBRID ? "Onoki: Pronto. Você agora é um Híbrido. Seu corpo alcançou o auge que eu consegui forçar." : "Onoki: Pronto. Você agora é um Jashin. O Jio ficou, sua Kikan e seu Kikakogou foram embora.");
-        say(player, "Onoki: Depois volte aqui. Eu tenho dois resets para vender.");
+        evolved = evolved.withStatus("strength", Math.min(PlayerData.MAX_STATUS, data.strength() + EVOLUTION_STAT_BONUS)).withStatus("defense", Math.min(PlayerData.MAX_STATUS, data.defense() + EVOLUTION_STAT_BONUS)).withStatus("spiritual", Math.min(PlayerData.MAX_STATUS, data.spiritualDevelopment() + EVOLUTION_STAT_BONUS)).withStatus("genetics", Math.min(PlayerData.MAX_STATUS, data.genetics() + EVOLUTION_STAT_BONUS)).withStatus("life", Math.min(PlayerData.MAX_STATUS, data.life() + EVOLUTION_STAT_BONUS));
+        if (target == Race.JASHIN) { evolved = evolved.withKikanType("NONE").withJioTechnique(data.jioTechnique().equals("NONE") ? "NONE" : data.jioTechnique()); player.setData(ModAttachments.KIKAKOGOU_STATE, KikakogouState.DEFAULT); }
+        player.setData(ModAttachments.PLAYER_DATA, evolved); player.removeEffect(MobEffects.WEAKNESS); player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN); player.setData(ModAttachments.STORY_PROGRESS, progress.finishEvolution());
+        say(player, target == Race.HYBRID ? "Onoki: Pronto. Você agora é um Híbrido." : "Onoki: Pronto. Você agora é um Jashin. O Jio ficou, sua Kikan e seu Kikakogou foram embora.");
     }
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        Entity killer = event.getSource().getEntity();
-        if (!(killer instanceof ServerPlayer player)) return;
-        LivingEntity dead = event.getEntity();
-        StoryProgress progress = player.getData(ModAttachments.STORY_PROGRESS);
-        String path = progress.onokiPath();
+        Entity killer = event.getSource().getEntity(); if (!(killer instanceof ServerPlayer player)) return;
+        LivingEntity dead = event.getEntity(); StoryProgress progress = player.getData(ModAttachments.STORY_PROGRESS); String path = progress.onokiPath();
         if (path.equals("NONE") || progress.onokiEvolutionComplete()) return;
         if (dead instanceof RankCRinkaEntity && path.equals("JASHIN")) player.setData(ModAttachments.STORY_PROGRESS, progress.withOnokiRankCKills(progress.onokiRankCKills()+1));
         if ((dead instanceof RishinEntity || dead instanceof RinkaEntity) && path.equals("HYBRID")) player.setData(ModAttachments.STORY_PROGRESS, progress.withOnokiRishinRinkaKills(progress.onokiRishinRinkaKills()+1));
@@ -210,31 +168,13 @@ public final class OnokiMissionSystem {
 
     public static void showProgress(ServerPlayer player, StoryProgress progress) {
         if (progress.onokiPath().equals("JASHIN")) {
-            boolean heart=hasItem(player,KenCraftItems.AODAI_HEART.get());
-            say(player,"Onoki: Jashin, né? Rinkas Rank C: "+progress.onokiRankCKills()+"/100.");
-            say(player,"Onoki: Jinsuikaku Rank C: "+progress.onokiJinsuikakuRankC()+"/20.");
-            say(player,"Onoki: Coração do Aodai: "+(heart?"ENTREGUE":"FALTA")+".");
-            if(progress.onokiRankCKills()>=100&&progress.onokiJinsuikakuRankC()>=20&&heart){consumeOne(player,KenCraftItems.AODAI_HEART.get()); beginEvolution(player,progress);}
-            return;
+            boolean heart=hasItem(player,KenCraftItems.AODAI_HEART.get()); say(player,"Onoki: Jashin, né? Rinkas Rank C: "+progress.onokiRankCKills()+"/100."); say(player,"Onoki: Jinsuikaku Rank C: "+progress.onokiJinsuikakuRankC()+"/20."); say(player,"Onoki: Coração do Aodai: "+(heart?"ENTREGUE":"FALTA")+".");
+            if(progress.onokiRankCKills()>=100&&progress.onokiJinsuikakuRankC()>=20&&heart){consumeOne(player,KenCraftItems.AODAI_HEART.get());beginEvolution(player,progress);} return;
         }
-        if(progress.onokiPath().equals("HYBRID")){
-            boolean heart=hasItem(player,KenCraftItems.AKIO_GINSHO_HEART.get());
-            say(player,"Onoki: Híbrido... coração do Akio: "+(heart?"ENTREGUE":"FALTA")+".");
-            say(player,"Onoki: Rishins e Rinkas: "+progress.onokiRishinRinkaKills()+"/120.");
-            say(player,"Onoki: Generais ARF: "+progress.onokiArfGeneralKills()+"/30.");
-            say(player,"Onoki: Jinsuikaku Rank C: "+progress.onokiJinsuikakuRankC()+"/50.");
-            if(progress.onokiRishinRinkaKills()>=120&&progress.onokiArfGeneralKills()>=30&&progress.onokiJinsuikakuRankC()>=50&&heart){consumeOne(player,KenCraftItems.AKIO_GINSHO_HEART.get());beginEvolution(player,progress);}
-        }
+        if(progress.onokiPath().equals("HYBRID")) { boolean heart=hasItem(player,KenCraftItems.AKIO_GINSHO_HEART.get()); say(player,"Onoki: Híbrido... coração do Akio: "+(heart?"ENTREGUE":"FALTA")+"."); say(player,"Onoki: Rishins e Rinkas: "+progress.onokiRishinRinkaKills()+"/120."); say(player,"Onoki: Generais ARF: "+progress.onokiArfGeneralKills()+"/30."); say(player,"Onoki: Jinsuikaku Rank C: "+progress.onokiJinsuikakuRankC()+"/50."); if(progress.onokiRishinRinkaKills()>=120&&progress.onokiArfGeneralKills()>=30&&progress.onokiJinsuikakuRankC()>=50&&heart){consumeOne(player,KenCraftItems.AKIO_GINSHO_HEART.get());beginEvolution(player,progress);} }
     }
 
-    private static void beginEvolution(ServerPlayer player, StoryProgress progress){
-        player.setData(ModAttachments.PLAYER_DATA, player.getData(ModAttachments.PLAYER_DATA).withJio(0,player.getData(ModAttachments.PLAYER_DATA).maxJio()));
-        player.setData(ModAttachments.STORY_PROGRESS, progress.startEvolution());
-        player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,EVOLUTION_TICKS,255,false,true));
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,EVOLUTION_TICKS,255,false,true));
-        say(player,"Onoki: Pare. Seu corpo entrou em colapso por 20 segundos. Depois disso, a evolução termina.");
-    }
-
+    private static void beginEvolution(ServerPlayer player, StoryProgress progress){ PlayerData data=player.getData(ModAttachments.PLAYER_DATA); player.setData(ModAttachments.PLAYER_DATA,data.withJio(0,data.maxJio())); player.setData(ModAttachments.STORY_PROGRESS,progress.startEvolution()); player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,EVOLUTION_TICKS,255,false,true)); player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,EVOLUTION_TICKS,255,false,true)); say(player,"Onoki: Pare. Seu corpo entrou em colapso por 20 segundos. Depois disso, a evolução termina."); }
     private static void giveHeart(ServerPlayer player,Item item,String name){if(!hasItem(player,item)){player.getInventory().placeItemBackInInventory(new ItemStack(item));say(player,"Você recebeu: "+name+".");}}
     private static boolean hasItem(ServerPlayer player,Item item){for(int i=0;i<player.getInventory().getContainerSize();i++)if(player.getInventory().getItem(i).is(item))return true;return false;}
     private static void consumeOne(ServerPlayer player,Item item){for(int i=0;i<player.getInventory().getContainerSize();i++){ItemStack s=player.getInventory().getItem(i);if(s.is(item)){s.shrink(1);return;}}}
