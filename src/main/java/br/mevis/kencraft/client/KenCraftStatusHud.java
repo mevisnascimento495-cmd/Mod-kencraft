@@ -33,7 +33,7 @@ public final class KenCraftStatusHud {
         int y = 8;
         int width = 188;
         int lineHeight = 12;
-        int statusCount = data.race() == Race.RINKA ? 5 : 5;
+        int statusCount = 5;
         boolean noRace = data.race() == Race.NONE;
         int height = noRace ? 58 : 32 + (statusCount * lineHeight) + (data.race() == Race.HUMAN ? lineHeight : 0);
 
@@ -43,6 +43,8 @@ public final class KenCraftStatusHud {
         String race = switch (data.race()) {
             case RINKA -> "Rinka";
             case HUMAN -> "Humano";
+            case HYBRID -> "Híbrido";
+            case JASHIN -> "Jashin";
             case NONE -> "Sem raça";
         };
 
