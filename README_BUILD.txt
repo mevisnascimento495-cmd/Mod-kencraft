@@ -24,5 +24,10 @@ Arquivos principais:
 Build:
 ./gradlew clean build
 
+Windows:
+gradlew.bat clean build
+
+O projeto inclui o Gradle Wrapper 8.10.2. O bootstrap do wrapper baixa o JAR oficial do wrapper quando necessário e usa a distribuição Gradle 8.10.2 definida em gradle/wrapper/gradle-wrapper.properties.
+
 JAR esperado:
-build/libs/kencraft-0.3.1.jar
+build/libs/kencraft-0.5.0.jar
