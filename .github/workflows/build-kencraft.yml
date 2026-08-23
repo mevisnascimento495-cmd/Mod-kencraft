@@ -31,6 +31,7 @@ jobs:
           python3 - <<'PY'
           import base64
           from pathlib import Path
+
           files = [
             ("src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku.png"),
             ("src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png"),
@@ -48,12 +49,19 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import struct
-          paths = [Path("src/main/resources/assets/kencraft/textures/entity/rinka.png"), Path("src/main/resources/assets/kencraft/textures/entity/arf.png"), Path("src/main/resources/assets/kencraft/textures/entity/shin_homare.png"), Path("src/main/resources/assets/kencraft/textures/entity/kaori_homare.png")]
+          paths = [
+            Path("src/main/resources/assets/kencraft/textures/entity/rinka.png"),
+            Path("src/main/resources/assets/kencraft/textures/entity/arf.png"),
+            Path("src/main/resources/assets/kencraft/textures/entity/shin_homare.png"),
+            Path("src/main/resources/assets/kencraft/textures/entity/kaori_homare.png"),
+          ]
           for path in paths:
             data = path.read_bytes()
-            if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR": raise SystemExit(f"Invalid PNG: {path}")
+            if data[:8] != b"\x89PNG\r\n\x1a\n" or data[12:16] != b"IHDR":
+                raise SystemExit(f"Invalid PNG: {path}")
             w, h = struct.unpack(">II", data[16:24])
-            if (w, h) != (64, 64): raise SystemExit(f"Skin must be 64x64: {path} -> {w}x{h}")
+            if (w, h) != (64, 64):
+                raise SystemExit(f"Skin must be 64x64: {path} -> {w}x{h}")
           PY
       - name: Verify complete project
         run: |
@@ -61,9 +69,6 @@ jobs:
           test -f build.gradle
           test -f settings.gradle
           test -f gradle.properties
-          test -f gradlew
-          test -f gradlew.bat
-          test -f gradle/wrapper/gradle-wrapper.properties
           test -f src/main/resources/META-INF/neoforge.mods.toml
           test -f src/main/java/br/mevis/kencraft/KenCraft.java
           test -f src/main/java/br/mevis/kencraft/event/JioSystem.java
@@ -77,12 +82,12 @@ jobs:
           test -f src/main/resources/assets/kencraft/textures/entity/kaori_homare.png
           if grep -q "RegisterCommandsEvent" src/main/java/br/mevis/kencraft/event/KenCraftJioCommand.java; then exit 1; fi
       - name: Build KenCraft mod
-        run: ./gradlew clean build --no-daemon --stacktrace --refresh-dependencies
+        run: gradle clean build --no-daemon --stacktrace --refresh-dependencies
       - name: Explicitly create JAR
         run: |
           set -euo pipefail
-          ./gradlew jar --no-daemon --stacktrace
-          if ./gradlew tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then ./gradlew reobfJar --no-daemon --stacktrace; fi
+          gradle jar --no-daemon --stacktrace
+          if gradle tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then gradle reobfJar --no-daemon --stacktrace; fi
       - name: Find production JAR
         run: |
           set -euo pipefail

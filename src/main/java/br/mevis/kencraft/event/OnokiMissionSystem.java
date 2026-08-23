@@ -21,6 +21,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.ServerChatEvent;
@@ -48,7 +49,7 @@ public final class OnokiMissionSystem {
         if (progress.onokiEvolutionComplete()) {
             player.setData(ModAttachments.STORY_PROGRESS, progress.withShopOpen(true));
             say(player, "Onoki: Evolução concluída. Agora vendo duas coisas: reset de Kikan por 10 XP físico e reset de Técnica Jio por 10 XP mental.");
-            say(player, "Onoki: Digite \"Resetar Kikan\" ou \"Resetar Técnica Jio\".");
+            say(player, "Onoki: Digite \"Resetar Kikan\" ou \"Resetar Técnica Jio\". Para cancelar, digite \"sair\".");
             return;
         }
         if (progress.onokiPath().equals("NONE")) {
@@ -81,10 +82,15 @@ public final class OnokiMissionSystem {
 
         if (progress.onokiShopOpen()) {
             event.setCanceled(true);
+            if (message.equals("sair") || message.equals("voltar") || message.equals("cancelar")) {
+                player.setData(ModAttachments.STORY_PROGRESS, progress.withShopOpen(false));
+                say(player, "Onoki: Certo. Loja fechada.");
+                return;
+            }
             player.setData(ModAttachments.STORY_PROGRESS, progress.withShopOpen(false));
             if (message.equals("resetar kikan")) { resetKikan(player); return; }
             if (message.equals("resetar técnica jio") || message.equals("resetar tecnica jio")) { resetJioTechnique(player); return; }
-            say(player, "Onoki: Eu só vendo \"Resetar Kikan\" e \"Resetar Técnica Jio\". Não complica.");
+            say(player, "Onoki: Eu só vendo \"Resetar Kikan\" e \"Resetar Técnica Jio\". Digite \"sair\" para cancelar.");
             return;
         }
         if (!progress.onokiChatOpen()) return;
@@ -152,8 +158,14 @@ public final class OnokiMissionSystem {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         StoryProgress progress = player.getData(ModAttachments.STORY_PROGRESS);
         if (progress.onokiEvolutionTicks() <= 0 || progress.onokiEvolutionComplete()) return;
+
         player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 40, 255, false, true));
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 255, false, true));
+        player.setDeltaMovement(Vec3.ZERO);
+        player.hurtMarked = true;
+        player.fallDistance = 0.0F;
+        player.setSprinting(false);
+
         StoryProgress next = progress.tickEvolution();
         if (next.onokiEvolutionTicks() == 0) {
             finishEvolution(player, next);
@@ -218,7 +230,8 @@ public final class OnokiMissionSystem {
     }
 
     private static void beginEvolution(ServerPlayer player, StoryProgress progress){
-        player.setData(ModAttachments.PLAYER_DATA, player.getData(ModAttachments.PLAYER_DATA).withJio(0,player.getData(ModAttachments.PLAYER_DATA).maxJio()));
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        player.setData(ModAttachments.PLAYER_DATA, data.withJio(0, data.maxJio()));
         player.setData(ModAttachments.STORY_PROGRESS, progress.startEvolution());
         player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS,EVOLUTION_TICKS,255,false,true));
         player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,EVOLUTION_TICKS,255,false,true));
