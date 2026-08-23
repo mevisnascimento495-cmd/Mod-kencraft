@@ -3,6 +3,7 @@ package br.mevis.kencraft.item;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.event.OnokiMissionSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -12,15 +13,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-/** Rank C organ dropped by elite Rinkas. Five unlock Rank B; fifteen unlock Rank A. */
+/** Rank C organ used by Rinkas and by Onoki's evolution trials. */
 public final class JinsuikakuRankCItem extends Item {
     public JinsuikakuRankCItem(Properties properties) { super(properties); }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.RINKA) {
-            player.sendSystemMessage(Component.literal("A Jinsuikaku Rank C só pode ser consumida por um Rinka."));
+        Race race = player.getData(ModAttachments.PLAYER_DATA).race();
+        if (race != Race.RINKA && race != Race.HUMAN) {
+            player.sendSystemMessage(Component.literal("A Jinsuikaku Rank C só pode ser consumida por um Humano ou Rinka."));
             return InteractionResultHolder.fail(stack);
         }
         return super.use(level, player, hand);
@@ -48,6 +50,7 @@ public final class JinsuikakuRankCItem extends Item {
                             "Jinsuikaku Rank C devorada: " + consumed + "."));
                 }
             }
+            OnokiMissionSystem.onRankCConsumed(player);
         }
         return super.finishUsingItem(stack, level, entity);
     }

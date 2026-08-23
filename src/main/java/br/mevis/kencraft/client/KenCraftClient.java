@@ -30,5 +30,6 @@ public final class KenCraftClient {
         event.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.ARF_GENERAL.get(), ArfGeneralRenderer::new);
         event.registerEntityRenderer(KenCraftEntities.AKIO_GINSHO.get(), AkioGinshoRenderer::new);
+        event.registerEntityRenderer(KenCraftEntities.ONOKI.get(), OnokiRenderer::new);
     }
 }

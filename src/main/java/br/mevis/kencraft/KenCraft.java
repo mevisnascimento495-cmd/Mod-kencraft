@@ -54,6 +54,8 @@ public class KenCraft {
             if (CreativeModeTabs.INGREDIENTS.equals(event.getTabKey())) {
                 event.accept(KenCraftItems.JINSUIKAKU.get());
                 event.accept(KenCraftItems.JINSUIKAKU_RANK_C.get());
+                event.accept(KenCraftItems.AODAI_HEART.get());
+                event.accept(KenCraftItems.AKIO_GINSHO_HEART.get());
             }
             if (CreativeModeTabs.SPAWN_EGGS.equals(event.getTabKey())) {
                 event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());

@@ -1,13 +1,18 @@
 package br.mevis.kencraft.entity;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.event.OnokiMissionSystem;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.player.Player;
@@ -25,7 +30,9 @@ public class OnokiEntity extends PathfinderMob {
 
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 30.0D)
+                .add(Attributes.MAX_HEALTH, 1000.0D)
+                .add(Attributes.ATTACK_DAMAGE, 15.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D)
                 .add(Attributes.MOVEMENT_SPEED, 0.18D)
                 .add(Attributes.FOLLOW_RANGE, 16.0D);
     }
@@ -38,9 +45,21 @@ public class OnokiEntity extends PathfinderMob {
     @Override
     protected void registerGoals() {
         goalSelector.addGoal(1, new FloatGoal(this));
-        goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 0.55D));
-        goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+        goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.65D, true));
+        goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.55D));
+        goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+        targetSelector.addGoal(1, new HurtByTargetGoal(this));
+    }
+
+    @Override
+    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
+        if (level().isClientSide) return InteractionResult.SUCCESS;
+        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+            OnokiMissionSystem.talkToOnoki(serverPlayer);
+        }
+        return InteractionResult.CONSUME;
     }
 
     @Override
