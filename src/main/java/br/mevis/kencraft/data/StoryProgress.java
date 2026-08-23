@@ -1,20 +1,22 @@
 package br.mevis.kencraft.data;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 
-/** Persistent story progress for the KenCraft narrative. */
-public record StoryProgress(int stage) {
-    public static final StoryProgress DEFAULT = new StoryProgress(0);
-    public static final Codec<StoryProgress> CODEC = Codec.INT.xmap(StoryProgress::new, StoryProgress::stage);
-    public static final StreamCodec<RegistryFriendlyByteBuf, StoryProgress> STREAM_CODEC =
-            StreamCodec.of(
-                    (buf, value) -> buf.writeVarInt(value.stage()),
-                    buf -> new StoryProgress(buf.readVarInt())
-            );
-
-    public StoryProgress withStage(int nextStage) {
-        return new StoryProgress(Math.max(0, nextStage));
-    }
+public record StoryProgress(int stage, String onokiPath, int onokiRankCKills, int onokiJinsuikakuRankC, int onokiRishinRinkaKills, int onokiArfGeneralKills, boolean onokiChatOpen, boolean onokiAodaiHeartReady, boolean onokiAkioHeartReady, boolean onokiMissionReady) {
+ public static final StoryProgress DEFAULT=new StoryProgress(0,"NONE",0,0,0,0,false,false,false,false);
+ public static final Codec<StoryProgress> CODEC=RecordCodecBuilder.create(i->i.group(Codec.INT.optionalFieldOf("stage",0).forGetter(StoryProgress::stage),Codec.STRING.optionalFieldOf("onokiPath","NONE").forGetter(StoryProgress::onokiPath),Codec.INT.optionalFieldOf("onokiRankCKills",0).forGetter(StoryProgress::onokiRankCKills),Codec.INT.optionalFieldOf("onokiJinsuikakuRankC",0).forGetter(StoryProgress::onokiJinsuikakuRankC),Codec.INT.optionalFieldOf("onokiRishinRinkaKills",0).forGetter(StoryProgress::onokiRishinRinkaKills),Codec.INT.optionalFieldOf("onokiArfGeneralKills",0).forGetter(StoryProgress::onokiArfGeneralKills),Codec.BOOL.optionalFieldOf("onokiChatOpen",false).forGetter(StoryProgress::onokiChatOpen),Codec.BOOL.optionalFieldOf("onokiAodaiHeartReady",false).forGetter(StoryProgress::onokiAodaiHeartReady),Codec.BOOL.optionalFieldOf("onokiAkioHeartReady",false).forGetter(StoryProgress::onokiAkioHeartReady),Codec.BOOL.optionalFieldOf("onokiMissionReady",false).forGetter(StoryProgress::onokiMissionReady)).apply(i,StoryProgress::new));
+ public static final StreamCodec<RegistryFriendlyByteBuf,StoryProgress> STREAM_CODEC=StreamCodec.of((b,v)->{b.writeVarInt(v.stage());b.writeUtf(v.onokiPath(),16);b.writeVarInt(v.onokiRankCKills());b.writeVarInt(v.onokiJinsuikakuRankC());b.writeVarInt(v.onokiRishinRinkaKills());b.writeVarInt(v.onokiArfGeneralKills());b.writeBoolean(v.onokiChatOpen());b.writeBoolean(v.onokiAodaiHeartReady());b.writeBoolean(v.onokiAkioHeartReady());b.writeBoolean(v.onokiMissionReady());},b->new StoryProgress(b.readVarInt(),b.readUtf(16),b.readVarInt(),b.readVarInt(),b.readVarInt(),b.readVarInt(),b.readBoolean(),b.readBoolean(),b.readBoolean(),b.readBoolean()));
+ public StoryProgress withStage(int v){return new StoryProgress(Math.max(0,v),onokiPath,onokiRankCKills,onokiJinsuikakuRankC,onokiRishinRinkaKills,onokiArfGeneralKills,onokiChatOpen,onokiAodaiHeartReady,onokiAkioHeartReady,onokiMissionReady);}
+ public StoryProgress startOnokiPath(String p){return new StoryProgress(stage,p,0,0,0,0,false,false,false,false);}
+ public StoryProgress withOnokiChatOpen(boolean v){return new StoryProgress(stage,onokiPath,onokiRankCKills,onokiJinsuikakuRankC,onokiRishinRinkaKills,onokiArfGeneralKills,v,onokiAodaiHeartReady,onokiAkioHeartReady,onokiMissionReady);}
+ public StoryProgress withOnokiRankCKills(int v){return copy(v,onokiJinsuikakuRankC,onokiRishinRinkaKills,onokiArfGeneralKills,onokiChatOpen,onokiAodaiHeartReady,onokiAkioHeartReady,onokiMissionReady);}
+ public StoryProgress withOnokiJinsuikakuRankC(int v){return copy(onokiRankCKills,v,onokiRishinRinkaKills,onokiArfGeneralKills,onokiChatOpen,onokiAodaiHeartReady,onokiAkioHeartReady,onokiMissionReady);}
+ public StoryProgress withOnokiRishinRinkaKills(int v){return copy(onokiRankCKills,onokiJinsuikakuRankC,v,onokiArfGeneralKills,onokiChatOpen,onokiAodaiHeartReady,onokiAkioHeartReady,onokiMissionReady);}
+ public StoryProgress withOnokiArfGeneralKills(int v){return copy(onokiRankCKills,onokiJinsuikakuRankC,onokiRishinRinkaKills,v,onokiChatOpen,onokiAodaiHeartReady,onokiAkioHeartReady,onokiMissionReady);}
+ public StoryProgress withOnokiHearts(boolean a,boolean b){return copy(onokiRankCKills,onokiJinsuikakuRankC,onokiRishinRinkaKills,onokiArfGeneralKills,onokiChatOpen,a,b,onokiMissionReady);}
+ public StoryProgress withOnokiMissionReady(boolean v){return copy(onokiRankCKills,onokiJinsuikakuRankC,onokiRishinRinkaKills,onokiArfGeneralKills,onokiChatOpen,onokiAodaiHeartReady,onokiAkioHeartReady,v);}
+ private StoryProgress copy(int a,int b,int c,int d,boolean e,boolean f,boolean g,boolean h){return new StoryProgress(stage,onokiPath,Math.max(0,a),Math.max(0,b),Math.max(0,c),Math.max(0,d),e,f,g,h);}
 }
