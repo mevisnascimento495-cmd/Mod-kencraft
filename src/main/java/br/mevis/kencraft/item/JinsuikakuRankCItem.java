@@ -50,7 +50,9 @@ public final class JinsuikakuRankCItem extends Item {
                             "Jinsuikaku Rank C devorada: " + consumed + "."));
                 }
             }
-            OnokiMissionSystem.onRankCConsumed(player);
+            if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                OnokiMissionSystem.onRankCConsumed(serverPlayer);
+            }
         }
         return super.finishUsingItem(stack, level, entity);
     }

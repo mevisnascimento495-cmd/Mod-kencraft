@@ -40,8 +40,6 @@ public final class KenCraftItems {
 
     public static final DeferredHolder<Item,JinsuikakuItem> JINSUIKAKU = ITEMS.register("jinsuikaku", () -> new JinsuikakuItem(new Item.Properties().stacksTo(16).food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(4).saturationModifier(0.4F).alwaysEdible().build())));
     public static final DeferredHolder<Item,JinsuikakuRankCItem> JINSUIKAKU_RANK_C = ITEMS.register("jinsuikaku_rank_c", () -> new JinsuikakuRankCItem(new Item.Properties().stacksTo(16).food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(6).saturationModifier(0.6F).alwaysEdible().build())));
-    public static final DeferredHolder<Item, Item> AODAI_HEART = ITEMS.register("aodai_heart", () -> new Item(new Item.Properties().stacksTo(1)));
-    public static final DeferredHolder<Item, Item> AKIO_GINSHO_HEART = ITEMS.register("akio_ginsho_heart", () -> new Item(new Item.Properties().stacksTo(1)));
     public static final DeferredHolder<Item,DeferredSpawnEggItem> RINKA_SPAWN_EGG = ITEMS.register("rinka_spawn_egg", () -> new DeferredSpawnEggItem(KenCraftEntities.RINKA,0x241C1C,0x8B1E2D,new Item.Properties()));
     public static final DeferredHolder<Item,DeferredSpawnEggItem> RANK_C_RINKA_SPAWN_EGG = ITEMS.register("rank_c_rinka_spawn_egg", () -> new DeferredSpawnEggItem(KenCraftEntities.RANK_C_RINKA,0x160D16,0xB52B3B,new Item.Properties()));
     public static final DeferredHolder<Item,DeferredSpawnEggItem> RISHIN_SPAWN_EGG = ITEMS.register("rishin_spawn_egg", () -> new DeferredSpawnEggItem(KenCraftEntities.RISHIN,0x15151A,0x9B1825,new Item.Properties()));

@@ -3,6 +3,7 @@ package br.mevis.kencraft.entity;
 import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.event.OnokiMissionSystem;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
@@ -10,11 +11,11 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -56,9 +57,7 @@ public class OnokiEntity extends PathfinderMob {
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResult.PASS;
         if (level().isClientSide) return InteractionResult.SUCCESS;
-        if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
-            OnokiMissionSystem.talkToOnoki(serverPlayer);
-        }
+        OnokiMissionSystem.talkToOnoki((ServerPlayer) player);
         return InteractionResult.CONSUME;
     }
 
