@@ -73,6 +73,10 @@ public final class KenCraftEntities {
                     player.sendSystemMessage(Component.literal("Kaori: Ah, oi? Oque você faz aqui? Você tem um cheiro diferente... VOCÊ É UM RINKA! que legal, eu também sou uma Rinka, eu odeio investigadores ARF, creio que você também deve odiar eles, estou certa disso não é? Então entre, fale com o Shin, ele está sempre pronto para receber pessoas novas na cafeteria."));
                 } else if (race == Race.HUMAN) {
                     player.sendSystemMessage(Component.literal("Kaori: Ah, oi? Oque você faz aqui? Você parece ser bem legal, eu adoro pessoas com o seu perfume, vamos entre e fale com o Shin."));
+                } else if (race == Race.HYBRID) {
+                    player.sendSystemMessage(Component.literal("Kaori: Ah, oi? Oque você faz aqui? Você tem um cheiro estranho... você não é exatamente Humano nem Rinka, né? Hahaha, tanto faz. Entre e fale com o Shin, ele vai querer saber quem você é."));
+                } else if (race == Race.JASHIN) {
+                    player.sendSystemMessage(Component.literal("Kaori: Ah, oi? Oque você faz aqui? Você tem um cheiro muito diferente... então você é um Jashin. Não tenho medo de você, mas entre e fale com o Shin."));
                 } else {
                     player.sendSystemMessage(Component.literal("Kaori: Ah, oi? Oque você faz aqui? Escolha sua raça primeiro e depois volte a falar comigo."));
                     return InteractionResult.CONSUME;
@@ -99,6 +103,10 @@ public final class KenCraftEntities {
                     player.sendSystemMessage(Component.literal("Shin: Olá jogador(a) você deve ser o novo cliente, Você já conheceu a Kaori, então, oque você achou dela? Acho que você deve ter gostado dela, Senti seu cheiro de longe, você é Rinka, não precisa esconder, Você já conheceu o aodai? Vejo que sim, ele é bem orgulhoso, desculpa se ele te ofendeu, Os investigadores estão por toda parte, então recomendo você se preparar com uma Kikan."));
                 } else if (race == Race.HUMAN) {
                     player.sendSystemMessage(Component.literal("Shin: Olá jogador(a) você deve ser o novo cliente, vejo que você já conheceu a Kaori, mas eu tenho uma coisa pra te dizer, SE VOCÊ FOR DA ARF E ME FAZER ALGUM MAL PRA MIM OU PRA MINHA FILHA... EU TE MATAREI!"));
+                } else if (race == Race.HYBRID) {
+                    player.sendSystemMessage(Component.literal("Shin: Então você é um Híbrido... interessante. Você já falou com a Kaori, então pode ficar. Só não arrume problemas dentro da cafeteria."));
+                } else if (race == Race.JASHIN) {
+                    player.sendSystemMessage(Component.literal("Shin: Você é um Jashin. Não gosto de surpresas, mas já falou com a Kaori. Entre, fique tranquilo e não faça nada contra minha família."));
                 } else {
                     player.sendSystemMessage(Component.literal("Shin: Escolha sua raça antes de continuar a história."));
                     return InteractionResult.CONSUME;

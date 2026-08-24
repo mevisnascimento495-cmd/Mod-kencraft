@@ -13,16 +13,20 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-/** Rank C organ used by Rinkas and by Onoki's evolution trials. */
+/** Rank C organ used by all established player races and by Onoki's evolution trials. */
 public final class JinsuikakuRankCItem extends Item {
     public JinsuikakuRankCItem(Properties properties) { super(properties); }
+
+    private static boolean canConsume(Race race) {
+        return race == Race.HUMAN || race == Race.RINKA || race == Race.HYBRID || race == Race.JASHIN;
+    }
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         Race race = player.getData(ModAttachments.PLAYER_DATA).race();
-        if (race != Race.RINKA && race != Race.HUMAN) {
-            player.sendSystemMessage(Component.literal("A Jinsuikaku Rank C só pode ser consumida por um Humano ou Rinka."));
+        if (!canConsume(race)) {
+            player.sendSystemMessage(Component.literal("Você precisa possuir uma raça para consumir uma Jinsuikaku Rank C."));
             return InteractionResultHolder.fail(stack);
         }
         return super.use(level, player, hand);
@@ -32,7 +36,7 @@ public final class JinsuikakuRankCItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player && !level.isClientSide) {
             PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-            if (data.race() == Race.RINKA) {
+            if (canConsume(data.race()) && data.race() == Race.RINKA) {
                 int consumed = data.jinsuikakuRankCConsumed() + 1;
                 String oldClass = data.rinkaClass();
                 String newClass = rankClassForConsumed(consumed, oldClass);
@@ -46,9 +50,10 @@ public final class JinsuikakuRankCItem extends Item {
                                 "Você atingiu a Classe A. Já pode evoluir sua Kikan para uma Kikakogou."));
                     }
                 } else {
-                    player.sendSystemMessage(Component.literal(
-                            "Jinsuikaku Rank C devorada: " + consumed + "."));
+                    player.sendSystemMessage(Component.literal("Jinsuikaku Rank C devorada: " + consumed + "."));
                 }
+            } else if (canConsume(data.race())) {
+                player.sendSystemMessage(Component.literal("Jinsuikaku Rank C devorada. Seu corpo absorveu os nutrientes."));
             }
             if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 OnokiMissionSystem.onRankCConsumed(serverPlayer);
