@@ -114,9 +114,17 @@ jobs:
               required = "META-INF/neoforge.mods.toml"
               if required not in names:
                   raise SystemExit(f"Production JAR is missing {required}: {jar}")
+              if "br/mevis/kencraft/KenCraft.class" not in names:
+                  raise SystemExit(f"Production JAR is missing KenCraft.class: {jar}")
               toml = z.read(required).decode("utf-8")
-              if 'modId="kencraft"' not in toml:
-                  raise SystemExit(f"Production JAR does not contain modId=kencraft: {jar}")
+              if 'modId = "kencraft"' not in toml:
+                  raise SystemExit(f"Production JAR does not contain modId = kencraft: {jar}")
+              if 'version = "0.5.0"' not in toml:
+                  raise SystemExit(f"Production JAR does not contain version = 0.5.0: {jar}")
+              if "${" in toml:
+                  raise SystemExit(f"Production JAR still contains unexpanded TOML placeholders: {jar}")
+              if "kencraft.mixins.json" not in names:
+                  raise SystemExit(f"Production JAR is missing kencraft.mixins.json: {jar}")
           print(f"Valid KenCraft mod JAR: {jar}")
           PY
           mkdir -p dist
