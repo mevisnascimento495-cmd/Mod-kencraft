@@ -8,6 +8,7 @@ import br.mevis.kencraft.data.Race;
 import br.mevis.kencraft.data.StoryProgress;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.ServerChatEvent;
@@ -18,7 +19,13 @@ import java.util.Locale;
 public final class OnokiResetAccessSystem {
     private OnokiResetAccessSystem() {}
 
-    @SubscribeEvent
+    /**
+     * This handler must run before OnokiMissionSystem. Both listen to ServerChatEvent,
+     * but reset commands are valid while the player is still on Onoki's initial
+     * conversation (onokiPath == NONE). Without an explicit priority, the mission
+     * handler can consume the message as an evolution-choice response first.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void onChat(ServerChatEvent event) {
         ServerPlayer player = event.getPlayer();
         StoryProgress progress = player.getData(ModAttachments.STORY_PROGRESS);
