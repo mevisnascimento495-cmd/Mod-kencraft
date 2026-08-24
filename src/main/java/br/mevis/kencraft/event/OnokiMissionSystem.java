@@ -32,7 +32,6 @@ import java.util.Locale;
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class OnokiMissionSystem {
     private static final int EVOLUTION_TICKS = 400;
-    private static final int EVOLUTION_STAT_BONUS = 10;
     private OnokiMissionSystem() {}
 
     public static void talkToOnoki(ServerPlayer player) {
@@ -178,11 +177,6 @@ public final class OnokiMissionSystem {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         Race target = progress.onokiPath().equals("HYBRID") ? Race.HYBRID : Race.JASHIN;
         PlayerData evolved = data.withRace(target).withJio(100,100);
-        evolved = evolved.withStatus("strength", Math.min(PlayerData.MAX_STATUS, data.strength() + EVOLUTION_STAT_BONUS))
-                .withStatus("defense", Math.min(PlayerData.MAX_STATUS, data.defense() + EVOLUTION_STAT_BONUS))
-                .withStatus("spiritual", Math.min(PlayerData.MAX_STATUS, data.spiritualDevelopment() + EVOLUTION_STAT_BONUS))
-                .withStatus("genetics", Math.min(PlayerData.MAX_STATUS, data.genetics() + EVOLUTION_STAT_BONUS))
-                .withStatus("life", Math.min(PlayerData.MAX_STATUS, data.life() + EVOLUTION_STAT_BONUS));
         if (target == Race.JASHIN) {
             evolved = evolved.withKikanType("NONE").withJioTechnique(data.jioTechnique().equals("NONE") ? "NONE" : data.jioTechnique());
             player.setData(ModAttachments.KIKAKOGOU_STATE, KikakogouState.DEFAULT);
