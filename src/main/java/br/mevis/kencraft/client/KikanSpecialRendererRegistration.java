@@ -19,7 +19,7 @@ public final class KikanSpecialRendererRegistration {
 
     @SubscribeEvent
     public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        event.add(SPECIAL_LAYER, KikanSpecialModel::createBodyLayer);
+        event.registerLayerDefinition(SPECIAL_LAYER, KikanSpecialModel::createBodyLayer);
     }
 
     @SubscribeEvent

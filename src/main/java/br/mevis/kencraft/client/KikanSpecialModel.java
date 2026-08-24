@@ -89,6 +89,14 @@ public final class KikanSpecialModel extends HierarchicalModel<AbstractClientPla
     }
 
     @Override
+    public void setupAnim(AbstractClientPlayer player, float limbSwing, float limbSwingAmount,
+                          float ageInTicks, float netHeadYaw, float headPitch) {
+        // The Kikan overlay has its own animation state. Resetting the model here
+        // keeps the layer deterministic before KikanSpecialLayer applies its state.
+        root().getAllParts().forEach(ModelPart::resetPose);
+    }
+
+    @Override
     public ModelPart root() {
         return root;
     }

@@ -24,26 +24,6 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.10.2"
-      - name: Prepare textures
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import base64
-          from pathlib import Path
-
-          files = [
-            ("src/main/resources/assets/kencraft/textures/item/jinsuikaku.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku.png"),
-            ("src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png.b64", "src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png"),
-            ("src/main/resources/assets/kencraft/textures/entity/kikan.png.b64", "src/main/resources/assets/kencraft/textures/entity/kikan.png"),
-          ]
-          sig = b"\x89PNG\r\n\x1a\n"
-          for src, dst in files:
-            data = base64.b64decode("".join(Path(src).read_text(encoding="utf-8").split()), validate=True)
-            if not data.startswith(sig):
-                raise SystemExit(f"Invalid PNG payload: {src}")
-            Path(dst).write_bytes(data)
-          PY
       - name: Verify skin PNGs
         run: |
           python3 - <<'PY'
@@ -75,7 +55,9 @@ jobs:
           test -f src/main/java/br/mevis/kencraft/client/JioClientOverride.java
           test -f src/main/java/br/mevis/kencraft/client/JioAnimationState.java
           test -f src/main/resources/assets/kencraft/models/item/jinsuikaku_rank_c.json
+          test -f src/main/resources/assets/kencraft/textures/item/jinsuikaku.png
           test -f src/main/resources/assets/kencraft/textures/item/jinsuikaku_rank_c.png
+          test -f src/main/resources/assets/kencraft/textures/entity/kikan.png
           test -f src/main/resources/assets/kencraft/textures/entity/rinka.png
           test -f src/main/resources/assets/kencraft/textures/entity/arf.png
           test -f src/main/resources/assets/kencraft/textures/entity/shin_homare.png
@@ -88,11 +70,35 @@ jobs:
           set -euo pipefail
           gradle jar --no-daemon --stacktrace
           if gradle tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then gradle reobfJar --no-daemon --stacktrace; fi
+      - name: Validate production JAR
+        run: |
+          set -euo pipefail
+          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
+          test -n "$JAR"
+          python3 - "$JAR" <<'PY'
+          import sys, zipfile
+          from pathlib import Path
+          jar = Path(sys.argv[1])
+          required = [
+              "META-INF/neoforge.mods.toml",
+              "br/mevis/kencraft/KenCraft.class",
+          ]
+          with zipfile.ZipFile(jar) as z:
+              names = set(z.namelist())
+              for item in required:
+                  if item not in names:
+                      raise SystemExit(f"Invalid NeoForge JAR: missing {item}")
+              toml = z.read("META-INF/neoforge.mods.toml").decode("utf-8")
+              if 'modId = "kencraft"' not in toml:
+                  raise SystemExit("Invalid NeoForge JAR: kencraft modId not found")
+              if '${' in toml:
+                  raise SystemExit("Invalid NeoForge JAR: unresolved resource placeholder")
+          print(f"Valid KenCraft NeoForge JAR: {jar}")
+          PY
       - name: Find production JAR
         run: |
           set -euo pipefail
           JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' -print -quit 2>/dev/null || true)"
-          if [ -z "$JAR" ]; then JAR="$(find build -type f -name '*.jar' -print -quit 2>/dev/null || true)"; fi
           test -n "$JAR"
           mkdir -p dist
           cp "$JAR" dist/kencraft-${GITHUB_SHA::7}.jar
