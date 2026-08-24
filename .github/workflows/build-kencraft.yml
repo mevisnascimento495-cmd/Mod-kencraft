@@ -69,6 +69,9 @@ jobs:
           test -f build.gradle
           test -f settings.gradle
           test -f gradle.properties
+          test -f gradlew
+          test -f gradlew.bat
+          test -f gradle/wrapper/gradle-wrapper.properties
           test -f src/main/resources/META-INF/neoforge.mods.toml
           test -f src/main/java/br/mevis/kencraft/KenCraft.java
           test -f src/main/java/br/mevis/kencraft/event/JioSystem.java
@@ -82,12 +85,12 @@ jobs:
           test -f src/main/resources/assets/kencraft/textures/entity/kaori_homare.png
           if grep -q "RegisterCommandsEvent" src/main/java/br/mevis/kencraft/event/KenCraftJioCommand.java; then exit 1; fi
       - name: Build KenCraft mod
-        run: gradle clean build --no-daemon --stacktrace --refresh-dependencies
+        run: ./gradlew clean build --no-daemon --stacktrace --refresh-dependencies
       - name: Explicitly create JAR
         run: |
           set -euo pipefail
-          gradle jar --no-daemon --stacktrace
-          if gradle tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then gradle reobfJar --no-daemon --stacktrace; fi
+          ./gradlew jar --no-daemon --stacktrace
+          if ./gradlew tasks --all --no-daemon | grep -Eq '^reobfJar$|[[:space:]]reobfJar[[:space:]]'; then ./gradlew reobfJar --no-daemon --stacktrace; fi
       - name: Find production JAR
         run: |
           set -euo pipefail

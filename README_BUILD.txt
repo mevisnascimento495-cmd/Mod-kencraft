@@ -22,10 +22,12 @@ Arquivos principais:
 - ChatSelectionHandler.java
 
 Build:
-gradle clean build
+./gradlew clean build
 
-GitHub Actions:
-O projeto usa Gradle 8.10.2 configurado pelo workflow do repositório.
+Windows:
+gradlew.bat clean build
+
+O projeto inclui o Gradle Wrapper 8.10.2. O bootstrap do wrapper usa a distribuição Gradle 8.10.2 definida em gradle/wrapper/gradle-wrapper.properties.
 
 JAR esperado:
 build/libs/kencraft-0.5.0.jar
