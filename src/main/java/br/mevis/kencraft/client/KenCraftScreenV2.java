@@ -3,6 +3,7 @@ package br.mevis.kencraft.client;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.data.SpiritualState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -57,6 +58,14 @@ public final class KenCraftScreenV2 extends Screen {
         String technique = PlayerData.normalizeTechnique(d.jioTechnique());
         boolean canJio = d.race() == Race.HUMAN || d.race() == Race.HYBRID || d.race() == Race.JASHIN;
         if (canJio && "NONE".equals(technique) && (d.race() != Race.HUMAN || d.arfClass() >= 4)) addRenderableWidget(Button.builder(Component.literal("GIRAR TÉCNICA JIO"), b -> command("kencraftjio roll")).bounds(left + 125, top + 230, 170, 24).build());
+        if (canJio && !"NONE".equals(technique)) {
+            SpiritualState state = Minecraft.getInstance().player.getData(ModAttachments.SPIRITUAL_STATE);
+            boolean classReady = d.race() != Race.HUMAN || d.arfClass() >= 2;
+            String label = state.isSujo() ? "DESATIVAR SUJO" : (classReady ? "ATIVAR ESTADO SUJO" : "SUJO — SEGUNDA CLASSE");
+            Button button = Button.builder(Component.literal(label), b -> command("kencraftjio sujo")).bounds(left + 110, top + 214, 200, 24).build();
+            button.active = classReady || state.isSujo();
+            addRenderableWidget(button);
+        }
     }
 
     private void initKikan() {
@@ -69,10 +78,10 @@ public final class KenCraftScreenV2 extends Screen {
             addRenderableWidget(Button.builder(Component.literal("Humano"), b -> { shopChoice = 1; rebuildWidgets(); }).bounds(left + 90, top + 145, 110, 28).build());
             addRenderableWidget(Button.builder(Component.literal("Rinka"), b -> { shopChoice = 2; rebuildWidgets(); }).bounds(left + 220, top + 145, 110, 28).build());
         } else if (shopChoice == 1) {
-            addRenderableWidget(Button.builder(Component.literal("Reset de Técnica Jio — 10 XP Mental"), b -> { chat("kencraft loja pontos humano"); onClose(); }).bounds(left + 55, top + 145, 310, 28).build());
+            addRenderableWidget(Button.builder(Component.literal("Reset de Técnica Jio — 100 XP Mental"), b -> { chat("kencraft loja pontos humano"); onClose(); }).bounds(left + 55, top + 145, 310, 28).build());
             addRenderableWidget(Button.builder(Component.literal("Voltar"), b -> { shopChoice = 0; rebuildWidgets(); }).bounds(left + 150, top + 205, 120, 22).build());
         } else {
-            addRenderableWidget(Button.builder(Component.literal("Reset de Kikan — 10 XP Física"), b -> { chat("kencraft loja pontos rinka"); onClose(); }).bounds(left + 55, top + 145, 310, 28).build());
+            addRenderableWidget(Button.builder(Component.literal("Reset de Kikan — 100 XP Física"), b -> { chat("kencraft loja pontos rinka"); onClose(); }).bounds(left + 55, top + 145, 310, 28).build());
             addRenderableWidget(Button.builder(Component.literal("Voltar"), b -> { shopChoice = 0; rebuildWidgets(); }).bounds(left + 150, top + 205, 120, 22).build());
         }
     }
@@ -119,7 +128,10 @@ public final class KenCraftScreenV2 extends Screen {
         g.drawString(font, Component.literal("Técnica: " + prettyJio(technique)), left + 24, top + 132, 0xFFFFFFFF);
         g.drawString(font, Component.literal("Habilidade: " + (d.jioAbilitySlot() + 1) + "/3"), left + 24, top + 152, 0xFFFFFFFF);
         g.drawString(font, Component.literal("F usa a habilidade • G troca a habilidade"), left + 24, top + 176, 0xFFB8C5D1);
-        if ("NONE".equals(technique)) g.drawString(font, Component.literal("Gire uma técnica uma única vez."), left + 24, top + 196, 0xFFFFAA66);
+        if (!"NONE".equals(technique)) {
+            SpiritualState state = Minecraft.getInstance().player.getData(ModAttachments.SPIRITUAL_STATE);
+            g.drawString(font, Component.literal("Estado espiritual: " + (state.isSujo() ? "SUJO" : "NORMAL")), left + 24, top + 196, 0xFFFFAA66);
+        } else g.drawString(font, Component.literal("Gire uma técnica uma única vez."), left + 24, top + 196, 0xFFFFAA66);
     }
 
     private void renderKikan(GuiGraphics g, PlayerData d) {
@@ -132,8 +144,8 @@ public final class KenCraftScreenV2 extends Screen {
 
     private void renderPointShop(GuiGraphics g, PlayerData d) {
         if (shopChoice == 0) { g.drawCenteredString(font, Component.literal("LOJA DE PONTOS"), width / 2, top + 112, 0xFFFFFFFF); g.drawCenteredString(font, Component.literal("Escolha como deseja acessar a loja:"), width / 2, top + 128, 0xFFB8C5D1); }
-        else if (shopChoice == 1) { g.drawCenteredString(font, Component.literal("LOJA HUMANO"), width / 2, top + 112, 0xFFFFFFFF); g.drawCenteredString(font, Component.literal("Reset de Técnica Jio: 10 XP Mental"), width / 2, top + 128, 0xFF7AD7FF); }
-        else { g.drawCenteredString(font, Component.literal("LOJA RINKA"), width / 2, top + 112, 0xFFFFFFFF); g.drawCenteredString(font, Component.literal("Reset de Kikan: 10 XP Física"), width / 2, top + 128, 0xFF7AD7FF); }
+        else if (shopChoice == 1) { g.drawCenteredString(font, Component.literal("LOJA HUMANO"), width / 2, top + 112, 0xFFFFFFFF); g.drawCenteredString(font, Component.literal("Reset de Técnica Jio: 100 XP Mental"), width / 2, top + 128, 0xFF7AD7FF); }
+        else { g.drawCenteredString(font, Component.literal("LOJA RINKA"), width / 2, top + 112, 0xFFFFFFFF); g.drawCenteredString(font, Component.literal("Reset de Kikan: 100 XP Física"), width / 2, top + 128, 0xFF7AD7FF); }
     }
 
     private int valueOf(PlayerData d, String attr) { return switch (attr) { case "strength" -> d.strength(); case "defense" -> d.defense(); case "intelligence" -> d.intelligence(); case "speed" -> d.speed(); case "genetics" -> d.genetics(); case "perception" -> d.perception(); case "spiritual" -> d.spiritualDevelopment(); case "life" -> d.life(); default -> 1; }; }

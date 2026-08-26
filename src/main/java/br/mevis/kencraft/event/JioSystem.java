@@ -5,17 +5,18 @@ import br.mevis.kencraft.data.JioAnimationData;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.data.SpiritualState;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -33,12 +34,18 @@ public final class JioSystem {
 
     @SubscribeEvent public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> d=event.getDispatcher();
-        d.register(Commands.literal("kencraftjio").then(Commands.literal("roll").executes(c->roll(c.getSource()))).then(Commands.literal("next").executes(c->nextAbility(c.getSource()))).then(Commands.literal("use").executes(c->use(c.getSource()))).then(Commands.literal("charge").executes(c->charge(c.getSource()))));
+        d.register(Commands.literal("kencraftjio")
+                .then(Commands.literal("roll").executes(c->roll(c.getSource())))
+                .then(Commands.literal("next").executes(c->nextAbility(c.getSource())))
+                .then(Commands.literal("use").executes(c->use(c.getSource())))
+                .then(Commands.literal("charge").executes(c->charge(c.getSource())))
+                .then(Commands.literal("sujo").executes(c->toggleSujo(c.getSource()))));
     }
 
     private static boolean eligible(PlayerData data) {
         return (data.race()==Race.HUMAN && data.arfClass()>=4) || data.race()==Race.HYBRID || data.race()==Race.JASHIN;
     }
+
     private static int roll(CommandSourceStack source){
         if(!(source.getEntity() instanceof ServerPlayer player))return 0;
         PlayerData data=player.getData(ModAttachments.PLAYER_DATA);
@@ -50,12 +57,36 @@ public final class JioSystem {
         player.sendSystemMessage(Component.literal("Você girou sua técnica Jio e ganhou: "+chosen));
         player.sendSystemMessage(Component.literal("Use G para trocar de habilidade e F para usar a habilidade selecionada."));return 1;
     }
+
+    private static int toggleSujo(CommandSourceStack source){
+        if(!(source.getEntity() instanceof ServerPlayer player))return 0;
+        PlayerData data=player.getData(ModAttachments.PLAYER_DATA);
+        if(!eligible(data)){player.sendSystemMessage(Component.literal("Você não pode liberar o estado espiritual sem acesso ao Jio."));return 0;}
+        String technique=PlayerData.normalizeTechnique(data.jioTechnique());
+        if(NONE.equals(technique)){player.sendSystemMessage(Component.literal("Primeiro obtenha uma Técnica de Jio."));return 0;}
+        if(!SpiritualStateAccessGuard.canActivate(data)){
+            player.sendSystemMessage(SpiritualStateAccessGuard.requirementMessage());
+            return 0;
+        }
+        SpiritualState current=player.getData(ModAttachments.SPIRITUAL_STATE);
+        if(current.isSujo()){
+            player.setData(ModAttachments.SPIRITUAL_STATE, SpiritualState.DEFAULT);
+            player.sendSystemMessage(Component.literal("Estado Sujo desativado. Seu poder voltou ao estado normal."));
+        }else{
+            player.setData(ModAttachments.SPIRITUAL_STATE, new SpiritualState(SpiritualState.SUJO));
+            player.sendSystemMessage(Component.literal(technique+" — Estado Sujo liberado."));
+            player.sendSystemMessage(Component.literal("Seu Espírito Interior liberou uma parte do poder total da técnica."));
+        }
+        return 1;
+    }
+
     private static int nextAbility(CommandSourceStack source){
         if(!(source.getEntity() instanceof ServerPlayer player))return 0;
         PlayerData data=player.getData(ModAttachments.PLAYER_DATA);if(!eligible(data))return 0;
         String technique=PlayerData.normalizeTechnique(data.jioTechnique());if(NONE.equals(technique)){player.sendSystemMessage(Component.literal("Primeiro gire sua técnica Jio no menu R."));return 0;}
         int next=(data.jioAbilitySlot()+1)%3;player.setData(ModAttachments.PLAYER_DATA,data.withJioAbilitySlot(next));player.sendSystemMessage(Component.literal(technique+" — Habilidade "+(next+1)+"/3 selecionada."));return 1;
     }
+
     private static int use(CommandSourceStack source){
         if(!(source.getEntity() instanceof ServerPlayer player))return 0;PlayerData data=player.getData(ModAttachments.PLAYER_DATA);if(!eligible(data))return 0;
         String technique=PlayerData.normalizeTechnique(data.jioTechnique());if(NONE.equals(technique)){player.sendSystemMessage(Component.literal("Você ainda não possui uma técnica Jio. Gire uma no menu R."));return 0;}
@@ -67,13 +98,14 @@ public final class JioSystem {
             int cost=30;if(data.jio()<cost){player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: "+cost+" Jio."));return 0;}int max=ClanSystem.maxJio(player,data);player.setData(ModAttachments.PLAYER_DATA,data.withJio(data.jio()-cost,max));ParadiseController.useSecondary(player,slot);return 1;
         }
         if(KING_OF_LIES.equals(technique)){
-            int cost=slot==2?150:30;if(data.jio()<cost){player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: "+cost+" Jio."));return 0;}int max=ClanSystem.maxJio(player,data);player.setData(ModAttachments.PLAYER_DATA,data.withJio(data.jio()-cost,max));useKingOfLies(player,slot);return 1;
+            int cost=slot==2?150:30;if(data.jio()<cost){player.sendSystemMessage(Component.literal("Jio insuficiente. Custo: "+cost+" Jio."));return 0;}int max=ClanSystem.maxJio(player,data);player.setData(ModAttachments.PLAYER_DATA,data.withJio(data.jio()-cost,max));useKingOfLies(player,slot);return 1;
         }
-        int cost=cost(techniqueIndex,slot);if(data.jio()<cost){player.sendSystemMessage(Component.literal("Jio insuficiente. Custo desta habilidade: "+cost+" Jio."));return 0;}int max=ClanSystem.maxJio(player,data);player.setData(ModAttachments.PLAYER_DATA,data.withJio(data.jio()-cost,max));int duration=animationDuration(techniqueIndex,slot);if(duration>0)player.setData(ModAttachments.JIO_ANIMATION,new JioAnimationData(technique,slot,player.level().getGameTime(),duration));
+        int cost=cost(techniqueIndex,slot);if(data.jio()<cost){player.sendSystemMessage(Component.literal("Jio insuficiente. Custo: "+cost+" Jio."));return 0;}int max=ClanSystem.maxJio(player,data);player.setData(ModAttachments.PLAYER_DATA,data.withJio(data.jio()-cost,max));int duration=animationDuration(techniqueIndex,slot);if(duration>0)player.setData(ModAttachments.JIO_ANIMATION,new JioAnimationData(technique,slot,player.level().getGameTime(),duration));
         if(techniqueIndex==0&&slot==2)player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE,100,4,false,true));
         else if(techniqueIndex==2&&slot==0){player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE,240,2,false,true));player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST,240,1,false,true));player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SPEED,240,1,false,true));}
         return 1;
     }
+
     private static void useKingOfLies(ServerPlayer player,int slot){switch(slot){case 0->{player.sendSystemMessage(Component.literal("Você é forte demais"));player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.DAMAGE_BOOST,120,9,false,true));}case 1->{player.sendSystemMessage(Component.literal("Seus órgãos podem explodir"));LivingEntity target=findNearestLivingTarget(player,30.0D);if(target!=null){ServerLevel level=player.serverLevel();level.explode(player,target.getX(),target.getY(),target.getZ(),2.0F,false,net.minecraft.world.level.Level.ExplosionInteraction.NONE);target.kill();}}case 2->{player.sendSystemMessage(Component.literal("Você morreu"));LivingEntity target=findAimedLivingTarget(player,64.0D);if(target!=null)target.kill();}default->{}}}
     private static LivingEntity findNearestLivingTarget(ServerPlayer player,double range){AABB box=player.getBoundingBox().inflate(range);return player.level().getEntitiesOfClass(LivingEntity.class,box,e->e.isAlive()&&e!=player).stream().min(java.util.Comparator.comparingDouble(player::distanceToSqr)).orElse(null);}
     private static LivingEntity findAimedLivingTarget(ServerPlayer player,double range){Vec3 start=player.getEyePosition(),look=player.getLookAngle().normalize(),end=start.add(look.scale(range));BlockHitResult blockHit=player.level().clip(new ClipContext(start,end,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,player));double maxDistance=start.distanceToSqr(blockHit.getLocation());AABB search=player.getBoundingBox().expandTowards(look.scale(range)).inflate(2.0D);LivingEntity best=null;double bestDistance=Double.MAX_VALUE;for(LivingEntity entity:player.level().getEntitiesOfClass(LivingEntity.class,search,target->target.isAlive()&&target!=player)){java.util.Optional<Vec3> hit=entity.getBoundingBox().inflate(0.15D).clip(start,end);if(hit.isEmpty())continue;double distance=start.distanceToSqr(hit.get());if(distance>maxDistance||distance>=bestDistance)continue;best=entity;bestDistance=distance;}return best;}
