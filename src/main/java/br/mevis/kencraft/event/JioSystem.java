@@ -138,17 +138,17 @@ public final class JioSystem {
         player.getPersistentData().putInt(SUJO_AUX,0);
         player.getPersistentData().putInt(SUJO_AUX2,0);
         switch(techniqueIndex){
-            case 0 -> { // Seishin dan
+            case 0 -> {
                 if(slot==0) { player.getPersistentData().putInt(SUJO_ATTACK,200); player.sendSystemMessage(Component.literal("Seishin dan — Metralhadora de Jio por 10s.")); }
                 else if(slot==1) { player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,200,255,false,true)); player.addEffect(new MobEffectInstance(MobEffects.REGENERATION,200,255,false,true)); player.sendSystemMessage(Component.literal("Seishin dan — Imortalidade por 10s.")); }
                 else { player.getPersistentData().putInt(SUJO_ATTACK,100); player.getPersistentData().putBoolean(INTANGIBLE_OLD_NO_PHYSICS,player.noPhysics); player.getPersistentData().putBoolean(INTANGIBLE_OLD_INVULNERABLE,player.isInvulnerable()); player.noPhysics=true; player.setInvulnerable(true); player.getAbilities().mayfly=true; player.getAbilities().flying=true; player.onUpdateAbilities(); player.sendSystemMessage(Component.literal("Seishin dan — intangibilidade e voo por 5s.")); }
             }
-            case 1 -> { // Hakai satsu Totetsu: Seimei kui
+            case 1 -> {
                 if(slot==0) { player.getPersistentData().putInt(SUJO_ATTACK,60); player.sendSystemMessage(Component.literal("Hakai satsu Totetsu: Seimei kui — barragem explosiva.")); }
                 else if(slot==1) { player.getPersistentData().putInt(SUJO_AUX,1); player.setDeltaMovement(player.getDeltaMovement().x,1.15D,player.getDeltaMovement().z); player.hurtMarked=true; player.sendSystemMessage(Component.literal("Hakai satsu Totetsu: Seimei kui — salto explosivo preparado.")); }
                 else { player.getPersistentData().putInt(SUJO_ATTACK,160); player.sendSystemMessage(Component.literal("Hakai satsu Totetsu: Seimei kui — barragem de 8s, 70 de dano por golpe.")); }
             }
-            case 2 -> { // Kata kyoka
+            case 2 -> {
                 int duration=animationDuration(2,slot); if(duration>0) player.setData(ModAttachments.JIO_ANIMATION,new JioAnimationData(KATA,slot,player.level().getGameTime(),duration+Math.max(1,duration/10))); player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,Math.max(40,duration+20),1,false,true)); player.sendSystemMessage(Component.literal("Kata kyoka — Estado Sujo: duração e dano aumentados."));
             }
             case 4 -> useKingOfLiesSujo(player,slot);
@@ -177,13 +177,13 @@ public final class JioSystem {
         if(attack>0){
             if(KING_OF_LIES.equals(technique)&&aux>0){ if(player.tickCount%20==0) kingMassacreTick(player); aux--; player.getPersistentData().putInt(SUJO_AUX,aux); }
             else if(SEISHIN.equals(technique)&&data.jioAbilitySlot()==0){ if(player.tickCount%4==0) jioMachineGunTick(player); attack--; player.getPersistentData().putInt(SUJO_ATTACK,attack); }
-            else if(SEISHIN.equals(technique)&&data.jioAbilitySlot()==2){ if(attack==100){} attack--; if(attack<=0) restoreIntangible(player); player.getPersistentData().putInt(SUJO_ATTACK,attack); }
+            else if(SEISHIN.equals(technique)&&data.jioAbilitySlot()==2){ attack--; if(attack<=0) restoreIntangible(player); player.getPersistentData().putInt(SUJO_ATTACK,attack); }
             else if(HAKAI.equals(technique)&&data.jioAbilitySlot()==0){ if(player.tickCount%5==0) explosiveBarrageTick(player); attack--; player.getPersistentData().putInt(SUJO_ATTACK,attack); }
             else if(HAKAI.equals(technique)&&data.jioAbilitySlot()==2){ if(player.tickCount%2==0) hakaiBarrage70(player); attack--; player.getPersistentData().putInt(SUJO_ATTACK,attack); }
             else { attack--; player.getPersistentData().putInt(SUJO_ATTACK,attack); }
         }
         if(player.getPersistentData().getInt(SUJO_AUX2)>0){int t=player.getPersistentData().getInt(SUJO_AUX2)-1;player.getPersistentData().putInt(SUJO_AUX2,t);if(t<=0)restoreIntangible(player);}
-        if(HAKAI.equals(technique)&&data.jioAbilitySlot()==1&&player.getPersistentData().getInt(SUJO_AUX)==1&&player.onGround()&&player.getDeltaMovement().y<=0.05D){player.getPersistentData().putInt(SUJO_AUX,0);player.serverLevel().explode(player,player.getX(),player.getY(),player.getZ(),4.0F,true,net.minecraft.world.level.Level.ExplosionInteraction.BLOCK);for(LivingEntity target:player.level().getEntitiesOfClass(LivingEntity.class,player.getBoundingBox().inflate(5),e->e!=player&&e.isAlive())){target.hurt(player.damageSources().playerAttack(player),70.0F);target.setSecondsOnFire(6);target.setDeltaMovement(target.getDeltaMovement().x,1.0D,target.getDeltaMovement().z);target.hurtMarked=true;}}
+        if(HAKAI.equals(technique)&&data.jioAbilitySlot()==1&&player.getPersistentData().getInt(SUJO_AUX)==1&&player.onGround()&&player.getDeltaMovement().y<=0.05D){player.getPersistentData().putInt(SUJO_AUX,0);player.serverLevel().explode(player,player.getX(),player.getY(),player.getZ(),4.0F,true,net.minecraft.world.level.Level.ExplosionInteraction.BLOCK);for(LivingEntity target:player.level().getEntitiesOfClass(LivingEntity.class,player.getBoundingBox().inflate(5),e->e!=player&&e.isAlive())){target.hurt(player.damageSources().playerAttack(player),70.0F);target.setRemainingFireTicks(120);target.setDeltaMovement(target.getDeltaMovement().x,1.0D,target.getDeltaMovement().z);target.hurtMarked=true;}}
     }
 
     private static void explosiveBarrageTick(ServerPlayer player){for(LivingEntity target:player.level().getEntitiesOfClass(LivingEntity.class,player.getBoundingBox().inflate(4),e->e!=player&&e.isAlive())){player.serverLevel().explode(player,target.getX(),target.getY()+0.7,target.getZ(),1.4F,false,net.minecraft.world.level.Level.ExplosionInteraction.NONE);target.hurt(player.damageSources().playerAttack(player),14.0F);}}
