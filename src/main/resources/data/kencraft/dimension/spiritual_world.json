@@ -1,0 +1,15 @@
+{
+  "type": "kencraft:spiritual_world",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "minecraft:soul_sand_valley",
+      "lakes": false,
+      "features": false,
+      "layers": [
+        {"block": "minecraft:obsidian", "height": 1}
+      ],
+      "structure_overrides": []
+    }
+  }
+}
