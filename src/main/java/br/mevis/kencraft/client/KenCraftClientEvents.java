@@ -33,6 +33,14 @@ public final class KenCraftClientEvents {
             boolean canJio = data.race() == Race.HUMAN || data.race() == Race.HYBRID || data.race() == Race.JASHIN;
             boolean canKikan = data.race() == Race.RINKA || data.race() == Race.HYBRID;
 
+            if (minecraft.player.isAlive() && KenCraftClient.SPIRITUAL_SUJO.consumeClick()) {
+                minecraft.player.connection.sendCommand("kencraftjio sujo");
+                return;
+            }
+            if (minecraft.player.isAlive() && KenCraftClient.SPIRITUAL_TRAIN.consumeClick()) {
+                minecraft.player.connection.sendCommand("kencraftjio train");
+                return;
+            }
             if (minecraft.player.isAlive() && KikakogouKeyHandler.KIKAKOGOU.consumeClick()) {
                 minecraft.player.connection.sendCommand("kencraft kikakogou toggle");
                 return;
