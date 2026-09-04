@@ -5,7 +5,7 @@ import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.SpiritualState;
 import br.mevis.kencraft.entity.KenCraftEntities;
-import br.mevis.kencraft.entity.RinkaEntity;
+import br.mevis.kencraft.entity.InteriorSpiritEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -51,7 +51,6 @@ public final class SpiritualTrainingSystem {
 
     private SpiritualTrainingSystem() {}
 
-    /** Called by the B key command. Training is deliberately not started by the V/Sujo state. */
     public static int startTraining(ServerPlayer player) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         String technique = PlayerData.normalizeTechnique(data.jioTechnique());
@@ -86,12 +85,12 @@ public final class SpiritualTrainingSystem {
         player.getPersistentData().putString(TRAINING_TECHNIQUE, technique);
         ensureArena(level, technique);
 
-        for (RinkaEntity old : level.getEntitiesOfClass(RinkaEntity.class,
+        for (InteriorSpiritEntity old : level.getEntitiesOfClass(InteriorSpiritEntity.class,
                 new AABB(-32, 0, -32, 32, 128, 32), e -> e.getTags().contains(SPIRIT_TAG))) {
             old.discard();
         }
 
-        RinkaEntity spirit = KenCraftEntities.RINKA.get().create(level);
+        InteriorSpiritEntity spirit = KenCraftEntities.INTERIOR_SPIRIT.get().create(level);
         if (spirit == null) {
             clearTraining(player);
             return 0;
@@ -101,9 +100,6 @@ public final class SpiritualTrainingSystem {
         spirit.setCustomName(Component.literal("Espírito Interior — " + technique));
         spirit.setCustomNameVisible(true);
         spirit.setPersistenceRequired();
-        spirit.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(500.0D);
-        spirit.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).setBaseValue(16.0D);
-        spirit.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR).setBaseValue(8.0D);
         spirit.setHealth(500.0F);
         level.addFreshEntity(spirit);
 
@@ -115,7 +111,6 @@ public final class SpiritualTrainingSystem {
     @SubscribeEvent
     public static void tick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-
         if (player.getPersistentData().getBoolean(TRAINING)) {
             tickTraining(player);
             return;
@@ -124,9 +119,7 @@ public final class SpiritualTrainingSystem {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         String technique = PlayerData.normalizeTechnique(data.jioTechnique());
         if (!player.getData(ModAttachments.SPIRITUAL_STATE).isSujo()) {
-            if (player.getPersistentData().getLong(SUJO_EXPIRY) != 0L) {
-                player.getPersistentData().putLong(SUJO_EXPIRY, 0L);
-            }
+            if (player.getPersistentData().getLong(SUJO_EXPIRY) != 0L) player.getPersistentData().putLong(SUJO_EXPIRY, 0L);
             return;
         }
 
@@ -151,7 +144,7 @@ public final class SpiritualTrainingSystem {
             return;
         }
 
-        List<RinkaEntity> spirits = player.serverLevel().getEntitiesOfClass(RinkaEntity.class,
+        List<InteriorSpiritEntity> spirits = player.serverLevel().getEntitiesOfClass(InteriorSpiritEntity.class,
                 player.getBoundingBox().inflate(32.0D), e -> e.getTags().contains(SPIRIT_TAG) && e.isAlive());
         if (spirits.isEmpty()) {
             startReplacementSpirit(player, technique);
@@ -161,23 +154,21 @@ public final class SpiritualTrainingSystem {
     }
 
     private static void startReplacementSpirit(ServerPlayer player, String technique) {
-        RinkaEntity spirit = KenCraftEntities.RINKA.get().create(player.serverLevel());
+        InteriorSpiritEntity spirit = KenCraftEntities.INTERIOR_SPIRIT.get().create(player.serverLevel());
         if (spirit == null) return;
         spirit.moveTo(10.5D, 2.0D, 5.5D, 0.0F, 0.0F);
         spirit.addTag(SPIRIT_TAG);
         spirit.setCustomName(Component.literal("Espírito Interior — " + technique));
         spirit.setCustomNameVisible(true);
         spirit.setPersistenceRequired();
-        spirit.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).setBaseValue(500.0D);
-        spirit.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).setBaseValue(16.0D);
-        spirit.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR).setBaseValue(8.0D);
         spirit.setHealth(500.0F);
         player.serverLevel().addFreshEntity(spirit);
     }
 
     private static void useSpiritTechnique(ServerPlayer player, LivingEntity spirit, String technique) {
         if (PARADISE.equals(technique)) {
-            player.addEffect(new MobEffectInstance(KenCraftEffects.SUFOCO, 80, 0, false, true, true));
+            // Training must not apply The Paradise's Sufoco passively. The training spirit's
+            // automatic attack is represented by the launch/damage portion only.
             player.hurt(player.damageSources().mobAttack(spirit), 12.0F);
             player.setDeltaMovement(player.getDeltaMovement().x, 0.65D, player.getDeltaMovement().z);
             player.hurtMarked = true;
@@ -191,7 +182,7 @@ public final class SpiritualTrainingSystem {
 
     @SubscribeEvent
     public static void onSpiritDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof RinkaEntity spirit) || !spirit.getTags().contains(SPIRIT_TAG)) return;
+        if (!(event.getEntity() instanceof InteriorSpiritEntity spirit) || !spirit.getTags().contains(SPIRIT_TAG)) return;
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
         if (!player.getPersistentData().getBoolean(TRAINING)) return;
 
@@ -246,7 +237,6 @@ public final class SpiritualTrainingSystem {
         nbt.remove(ORIGIN_PITCH);
     }
 
-    /** Builds the requested 20x20 training room in the selected training dimension. */
     public static void ensureArena(ServerLevel level, String technique) {
         boolean paradise = PARADISE.equals(technique);
         for (int x = 0; x < 20; x++) {
@@ -273,7 +263,6 @@ public final class SpiritualTrainingSystem {
         }
     }
 
-    /** Compatibility helper retained for the older spiritual-world system. */
     public static void ensureArena(ServerLevel level) {
         ensureArena(level, PARADISE);
     }
