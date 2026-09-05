@@ -22,7 +22,7 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.List;
@@ -85,13 +85,20 @@ public final class SpiritualTrainingSystem {
         player.getPersistentData().putString(TRAINING_TECHNIQUE, technique);
         ensureArena(level, technique);
 
-        for (InteriorSpiritEntity old : level.getEntitiesOfClass(InteriorSpiritEntity.class,
-                new AABB(-32, 0, -32, 32, 128, 32), e -> e.getTags().contains(SPIRIT_TAG))) {
-            old.discard();
-        }
+        // The spirit is a singleton per training dimension. Reuse the existing one
+        // instead of creating a new spirit every time another player starts training.
+        List<InteriorSpiritEntity> spirits = level.getEntitiesOfClass(InteriorSpiritEntity.class,
+                new AABB(-32, 0, -32, 32, 128, 32), InteriorSpiritEntity::isAlive);
+        InteriorSpiritEntity spirit = spirits.isEmpty()
+                ? KenCraftEntities.INTERIOR_SPIRIT.get().create(level)
+                : spirits.get(0);
+        for (int i = 1; i < spirits.size(); i++) spirits.get(i).discard();
 
-        InteriorSpiritEntity spirit = KenCraftEntities.INTERIOR_SPIRIT.get().create(level);
         if (spirit == null) {
+            clearTraining(player);
+            return 0;
+        }
+        if (!spirit.isAlive()) {
             clearTraining(player);
             return 0;
         }
@@ -100,8 +107,8 @@ public final class SpiritualTrainingSystem {
         spirit.setCustomName(Component.literal("Espírito Interior — " + technique));
         spirit.setCustomNameVisible(true);
         spirit.setPersistenceRequired();
-        spirit.setHealth(500.0F);
-        level.addFreshEntity(spirit);
+        if (spirit.getHealth() <= 0.0F) spirit.setHealth(500.0F);
+        if (!spirits.contains(spirit)) level.addFreshEntity(spirit);
 
         player.teleportTo(level, 10.5D, 2.0D, 10.5D, player.getYRot(), player.getXRot());
         player.sendSystemMessage(Component.literal("Ótimo, vamos para seu treinamento, consiga me derrotar aqui e agora e vou te dar o potencial total do seu estado sujo."));
@@ -150,10 +157,16 @@ public final class SpiritualTrainingSystem {
             startReplacementSpirit(player, technique);
             return;
         }
+        // Never allow a duplicate spirit to remain active in the arena.
+        for (int i = 1; i < spirits.size(); i++) spirits.get(i).discard();
         if (player.tickCount % 40 == 0) useSpiritTechnique(player, spirits.get(0), technique);
     }
 
     private static void startReplacementSpirit(ServerPlayer player, String technique) {
+        List<InteriorSpiritEntity> existing = player.serverLevel().getEntitiesOfClass(InteriorSpiritEntity.class,
+                new AABB(-32, 0, -32, 32, 128, 32), InteriorSpiritEntity::isAlive);
+        if (!existing.isEmpty()) return;
+
         InteriorSpiritEntity spirit = KenCraftEntities.INTERIOR_SPIRIT.get().create(player.serverLevel());
         if (spirit == null) return;
         spirit.moveTo(10.5D, 2.0D, 5.5D, 0.0F, 0.0F);
