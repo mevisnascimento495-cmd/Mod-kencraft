@@ -21,7 +21,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class LegacyInteriorSpiritCleanup {
     private static final String SPIRIT_TAG = "kencraft_interior_spirit";
-
     private LegacyInteriorSpiritCleanup() {}
 
     @SubscribeEvent
@@ -45,7 +44,8 @@ public final class LegacyInteriorSpiritCleanup {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         Level level = player.level();
         if (!isTrainingDimension(level)) return;
-        if (player.tickCount % 5 != 0) return;
+
+        // No technique effect is allowed to remain on the player while training.
         player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
         player.removeEffect(MobEffects.WEAKNESS);
         player.removeEffect(MobEffects.POISON);
