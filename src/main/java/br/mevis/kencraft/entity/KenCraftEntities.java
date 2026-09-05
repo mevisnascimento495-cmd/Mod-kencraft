@@ -32,6 +32,8 @@ public final class KenCraftEntities {
     public static final DeferredHolder<EntityType<?>, EntityType<OnokiEntity>> ONOKI = ENTITY_TYPES.register("onoki", () -> EntityType.Builder.of(OnokiEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:onoki"));
     public static final DeferredHolder<EntityType<?>, EntityType<HomareEntity>> SHIN_HOMARE = ENTITY_TYPES.register("shin_homare", () -> EntityType.Builder.of(HomareEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:shin_homare"));
     public static final DeferredHolder<EntityType<?>, EntityType<HomareEntity>> KAORI_HOMARE = ENTITY_TYPES.register("kaori_homare", () -> EntityType.Builder.of(HomareEntity::new, MobCategory.CREATURE).sized(0.6F,1.8F).build("kencraft:kaori_homare"));
+    /** Training-only entity; MISC prevents it from participating in natural mob spawning. */
+    public static final DeferredHolder<EntityType<?>, EntityType<InteriorSpiritEntity>> INTERIOR_SPIRIT = ENTITY_TYPES.register("interior_spirit", () -> EntityType.Builder.of(InteriorSpiritEntity::new, MobCategory.MISC).sized(0.6F,1.8F).build("kencraft:interior_spirit"));
 
     private KenCraftEntities() {}
 
