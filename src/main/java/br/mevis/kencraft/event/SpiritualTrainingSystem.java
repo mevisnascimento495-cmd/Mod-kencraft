@@ -13,9 +13,6 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -159,7 +156,6 @@ public final class SpiritualTrainingSystem {
         }
         // Never allow a duplicate spirit to remain active in the arena.
         for (int i = 1; i < spirits.size(); i++) spirits.get(i).discard();
-        if (player.tickCount % 40 == 0) useSpiritTechnique(player, spirits.get(0), technique);
     }
 
     private static void startReplacementSpirit(ServerPlayer player, String technique) {
@@ -176,21 +172,6 @@ public final class SpiritualTrainingSystem {
         spirit.setPersistenceRequired();
         spirit.setHealth(500.0F);
         player.serverLevel().addFreshEntity(spirit);
-    }
-
-    private static void useSpiritTechnique(ServerPlayer player, LivingEntity spirit, String technique) {
-        if (PARADISE.equals(technique)) {
-            // Training must not apply The Paradise's Sufoco passively. The training spirit's
-            // automatic attack is represented by the launch/damage portion only.
-            player.hurt(player.damageSources().mobAttack(spirit), 12.0F);
-            player.setDeltaMovement(player.getDeltaMovement().x, 0.65D, player.getDeltaMovement().z);
-            player.hurtMarked = true;
-        } else if (KING.equals(technique)) {
-            player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 3, false, true, true));
-            player.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 3, false, true, true));
-            player.addEffect(new MobEffectInstance(MobEffects.POISON, 80, 1, false, true, true));
-            player.hurt(player.damageSources().mobAttack(spirit), 10.0F);
-        }
     }
 
     @SubscribeEvent
