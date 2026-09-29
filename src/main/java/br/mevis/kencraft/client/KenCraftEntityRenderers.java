@@ -2,6 +2,7 @@ package br.mevis.kencraft.client;
 
 import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.entity.*;
+import br.mevis.kencraft.event.SpiritualTrainingSystem;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
@@ -20,7 +21,8 @@ public final class KenCraftEntityRenderers {
     private static final ResourceLocation RINKA_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/rinka.png");
     private static final ResourceLocation RISHIN_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/rishin_generated.png");
     private static final ResourceLocation AODAI_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/aodai.png");
-    private static final ResourceLocation INTERIOR_SPIRIT_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/interior_spirit.png");
+    private static final ResourceLocation INTERIOR_SPIRIT_PARADISE_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/interior_spirit_paradise.png");
+    private static final ResourceLocation INTERIOR_SPIRIT_KING_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/interior_spirit_king_of_lies.png");
     private KenCraftEntityRenderers() {}
     @SubscribeEvent public static void registerRenderers(EntityRenderersEvent.RegisterRenderers e) {
         e.registerEntityRenderer(KenCraftEntities.RINKA.get(), RinkaRenderer::new);
@@ -46,5 +48,5 @@ public final class KenCraftEntityRenderers {
     private static final class AodaiRenderer extends HumanoidMobRenderer<AodaiEntity,HumanoidModel<AodaiEntity>> { AodaiRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F); this.model.hat.visible=false; addLayer(new AodaiSnakeLayer(this,c));} public ResourceLocation getTextureLocation(AodaiEntity e){return AODAI_TEXTURE;} }
     private static final class ArfRenderer extends HumanoidMobRenderer<ArfInvestigatorEntity,HumanoidModel<ArfInvestigatorEntity>> { ArfRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F);} public ResourceLocation getTextureLocation(ArfInvestigatorEntity e){return ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/arf.png");} }
     private static final class GeneralRenderer extends HumanoidMobRenderer<ArfGeneralEntity,HumanoidModel<ArfGeneralEntity>> { GeneralRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F);} public ResourceLocation getTextureLocation(ArfGeneralEntity e){return ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/arf.png");} }
-    private static final class InteriorSpiritRenderer extends HumanoidMobRenderer<InteriorSpiritEntity,HumanoidModel<InteriorSpiritEntity>> { InteriorSpiritRenderer(EntityRendererProvider.Context c){super(c,spiritModel(c),0.5F);} public ResourceLocation getTextureLocation(InteriorSpiritEntity e){return INTERIOR_SPIRIT_TEXTURE;} }
+    private static final class InteriorSpiritRenderer extends HumanoidMobRenderer<InteriorSpiritEntity,HumanoidModel<InteriorSpiritEntity>> { InteriorSpiritRenderer(EntityRendererProvider.Context c){super(c,spiritModel(c),0.5F);} public ResourceLocation getTextureLocation(InteriorSpiritEntity e){ return e.level().dimension() == SpiritualTrainingSystem.KING_TRAINING ? INTERIOR_SPIRIT_KING_TEXTURE : INTERIOR_SPIRIT_PARADISE_TEXTURE; } }
 }
