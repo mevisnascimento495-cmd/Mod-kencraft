@@ -8,7 +8,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -36,11 +35,6 @@ public class InteriorSpiritEntity extends Monster {
         // The Inner Spirit is neutral. It must not automatically target or attack players.
         goalSelector.addGoal(0, new FloatGoal(this));
         goalSelector.addGoal(7, new RandomLookAroundGoal(this));
-    }
-
-    @Override
-    public boolean isPreventingPlayerRest(Player player) {
-        return false;
     }
 
     @SubscribeEvent
