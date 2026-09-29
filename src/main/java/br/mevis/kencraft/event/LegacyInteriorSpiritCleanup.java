@@ -14,7 +14,7 @@ import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingAttackEvent;
+import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 /** Isolates the spiritual training dimensions from all other mobs and legacy spirits. */
@@ -33,7 +33,7 @@ public final class LegacyInteriorSpiritCleanup {
     }
 
     @SubscribeEvent
-    public static void onLivingAttack(LivingAttackEvent event) {
+    public static void onLivingAttack(LivingIncomingDamageEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (!isTrainingDimension(player.level())) return;
         if (event.getSource().getEntity() instanceof InteriorSpiritEntity) event.setCanceled(true);
