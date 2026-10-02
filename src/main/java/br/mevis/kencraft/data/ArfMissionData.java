@@ -1,20 +1,59 @@
 package br.mevis.kencraft.data;
 
-import br.mevis.kencraft.KenCraft;
-import net.neoforged.neoforge.attachment.AttachmentType;
-import net.neoforged.neoforge.registries.DeferredRegister;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
-import java.util.function.Supplier;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
-public final class ModAttachments {
-    private ModAttachments() {}
-    public static final DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, KenCraft.MOD_ID);
-    public static final Supplier<AttachmentType<PlayerData>> PLAYER_DATA = ATTACHMENT_TYPES.register("player_data", () -> AttachmentType.builder(() -> PlayerData.DEFAULT).serialize(PlayerData.CODEC).sync(PlayerData.STREAM_CODEC).copyOnDeath().build());
-    public static final Supplier<AttachmentType<StoryProgress>> STORY_PROGRESS = ATTACHMENT_TYPES.register("story_progress", () -> AttachmentType.builder(() -> StoryProgress.DEFAULT).serialize(StoryProgress.CODEC).sync(StoryProgress.STREAM_CODEC).copyOnDeath().build());
-    public static final Supplier<AttachmentType<JioAnimationData>> JIO_ANIMATION = ATTACHMENT_TYPES.register("jio_animation", () -> AttachmentType.builder(() -> JioAnimationData.DEFAULT).serialize(JioAnimationData.CODEC).sync(JioAnimationData.STREAM_CODEC).build());
-    public static final Supplier<AttachmentType<KikakogouState>> KIKAKOGOU_STATE = ATTACHMENT_TYPES.register("kikakogou_state", () -> AttachmentType.builder(() -> KikakogouState.DEFAULT).serialize(KikakogouState.CODEC).sync(KikakogouState.STREAM_CODEC).copyOnDeath().build());
-    public static final Supplier<AttachmentType<ClanData>> CLAN_DATA = ATTACHMENT_TYPES.register("clan_data", () -> AttachmentType.builder(() -> ClanData.DEFAULT).serialize(ClanData.CODEC).sync(ClanData.STREAM_CODEC).copyOnDeath().build());
-    public static final Supplier<AttachmentType<SpiritualState>> SPIRITUAL_STATE = ATTACHMENT_TYPES.register("spiritual_state", () -> AttachmentType.builder(() -> SpiritualState.DEFAULT).serialize(SpiritualState.CODEC).sync(SpiritualState.STREAM_CODEC).copyOnDeath().build());
-    public static final Supplier<AttachmentType<TalentData>> TALENT_DATA = ATTACHMENT_TYPES.register("talent_data", () -> AttachmentType.builder(() -> TalentData.DEFAULT).serialize(TalentData.CODEC).sync(TalentData.STREAM_CODEC).copyOnDeath().build());
-    public static final Supplier<AttachmentType<ArfMissionData>> ARF_MISSION = ATTACHMENT_TYPES.register("arf_mission", () -> AttachmentType.builder(() -> ArfMissionData.DEFAULT).serialize(ArfMissionData.CODEC).sync(ArfMissionData.STREAM_CODEC).copyOnDeath().build());
+/** Persistent ARF mission progression, separate from the official investigator class. */
+public record ArfMissionData(
+        int missionId,
+        boolean active,
+        int completedMissions,
+        int reputation
+) {
+    public static final ArfMissionData DEFAULT = new ArfMissionData(0, false, 0, 0);
+
+    public static final Codec<ArfMissionData> CODEC = RecordCodecBuilder.create(i -> i.group(
+            Codec.INT.optionalFieldOf("missionId", 0).forGetter(ArfMissionData::missionId),
+            Codec.BOOL.optionalFieldOf("active", false).forGetter(ArfMissionData::active),
+            Codec.INT.optionalFieldOf("completedMissions", 0).forGetter(ArfMissionData::completedMissions),
+            Codec.INT.optionalFieldOf("reputation", 0).forGetter(ArfMissionData::reputation)
+    ).apply(i, ArfMissionData::new));
+
+    public static final StreamCodec<RegistryFriendlyByteBuf, ArfMissionData> STREAM_CODEC =
+            StreamCodec.of(
+                    (buf, value) -> {
+                        buf.writeVarInt(value.missionId());
+                        buf.writeBoolean(value.active());
+                        buf.writeVarInt(value.completedMissions());
+                        buf.writeVarInt(value.reputation());
+                    },
+                    buf -> new ArfMissionData(
+                            buf.readVarInt(),
+                            buf.readBoolean(),
+                            buf.readVarInt(),
+                            buf.readVarInt()
+                    )
+            );
+
+    public boolean mission1Completed() {
+        return completedMissions >= 1;
+    }
+
+    public String rankName() {
+        if (completedMissions >= 2) return "Mestre";
+        if (completedMissions >= 1) return "Aprendiz";
+        return "Estagiário";
+    }
+
+    public ArfMissionData startMission1() {
+        if (active || mission1Completed()) return this;
+        return new ArfMissionData(1, true, completedMissions, reputation);
+    }
+
+    public ArfMissionData completeMission1() {
+        if (!active || missionId != 1) return this;
+        return new ArfMissionData(0, false, Math.max(1, completedMissions), reputation + 100);
+    }
 }
