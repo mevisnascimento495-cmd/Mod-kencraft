@@ -27,6 +27,7 @@ public final class KenCraftEntityRenderers {
     @SubscribeEvent public static void registerRenderers(EntityRenderersEvent.RegisterRenderers e) {
         e.registerEntityRenderer(KenCraftEntities.RINKA.get(), RinkaRenderer::new);
         e.registerEntityRenderer(KenCraftEntities.RANK_C_RINKA.get(), RankCRinkaRenderer::new);
+        e.registerEntityRenderer(KenCraftEntities.RINKA_HUNGRY.get(), RinkaHungryRenderer::new);
         e.registerEntityRenderer(KenCraftEntities.RISHIN.get(), RishinRenderer::new);
         e.registerEntityRenderer(KenCraftEntities.AODAI.get(), AodaiRenderer::new);
         e.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfRenderer::new);
@@ -44,6 +45,37 @@ public final class KenCraftEntityRenderers {
     private static HumanoidModel<InteriorSpiritEntity> spiritModel(EntityRendererProvider.Context c){ return new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)); }
     private static final class RinkaRenderer extends HumanoidMobRenderer<RinkaEntity,HumanoidModel<RinkaEntity>> { RinkaRenderer(EntityRendererProvider.Context c){super(c,playerModel(c),0.5F);} public ResourceLocation getTextureLocation(RinkaEntity e){return RINKA_TEXTURE;} }
     private static final class RankCRinkaRenderer extends HumanoidMobRenderer<RankCRinkaEntity,HumanoidModel<RankCRinkaEntity>> { RankCRinkaRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F);} public ResourceLocation getTextureLocation(RankCRinkaEntity e){return RINKA_TEXTURE;} }
+    private static final class RinkaHungryRenderer extends HumanoidMobRenderer<RinkaHungryEntity,HumanoidModel<RinkaHungryEntity>> {
+        RinkaHungryRenderer(EntityRendererProvider.Context c) {
+            super(c, new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)), 0.5F);
+            addLayer(new RinkaHungryKikanLayer(this, c.getModelSet()));
+        }
+        public ResourceLocation getTextureLocation(RinkaHungryEntity e) {
+            return ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "textures/entity/rinka_hungry.png");
+        }
+    }
+    private static final class RinkaHungryKikanLayer extends net.minecraft.client.renderer.entity.layers.RenderLayer<RinkaHungryEntity,HumanoidModel<RinkaHungryEntity>> {
+        private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID, "textures/entity/kikan.png");
+        private final KikanModel model;
+        RinkaHungryKikanLayer(net.minecraft.client.renderer.entity.RenderLayerParent<RinkaHungryEntity,HumanoidModel<RinkaHungryEntity>> parent, net.minecraft.client.model.geom.EntityModelSet set) {
+            super(parent);
+            this.model = new KikanModel(set.bakeLayer(KIKAN_LAYER));
+        }
+        @Override
+        public void render(com.mojang.blaze3d.vertex.PoseStack poseStack, net.minecraft.client.renderer.MultiBufferSource buffer, int light,
+                           RinkaHungryEntity entity, float limbSwing, float limbSwingAmount, float partialTick,
+                           float ageInTicks, float netHeadYaw, float headPitch) {
+            if (!entity.isKikanActive()) return;
+            model.setKikakogouActive(false);
+            model.setType(entity.getKikanType());
+            model.animate(entity.getKikanAnimationProgress(partialTick), true, entity.getKikanAttackKey());
+            poseStack.pushPose();
+            poseStack.translate(0.0D, 0.72D, 0.24D);
+            model.renderToBuffer(poseStack, buffer.getBuffer(net.minecraft.client.renderer.RenderType.entityCutoutNoCull(TEXTURE)),
+                    light, net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY, 0xFFFFFFFF);
+            poseStack.popPose();
+        }
+    }
     private static final class RishinRenderer extends HumanoidMobRenderer<RishinEntity,HumanoidModel<RishinEntity>> { RishinRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F); this.model.hat.visible=false;} public ResourceLocation getTextureLocation(RishinEntity e){return RISHIN_TEXTURE;} }
     private static final class AodaiRenderer extends HumanoidMobRenderer<AodaiEntity,HumanoidModel<AodaiEntity>> { AodaiRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F); this.model.hat.visible=false; addLayer(new AodaiSnakeLayer(this,c));} public ResourceLocation getTextureLocation(AodaiEntity e){return AODAI_TEXTURE;} }
     private static final class ArfRenderer extends HumanoidMobRenderer<ArfInvestigatorEntity,HumanoidModel<ArfInvestigatorEntity>> { ArfRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),0.5F);} public ResourceLocation getTextureLocation(ArfInvestigatorEntity e){return ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/arf.png");} }

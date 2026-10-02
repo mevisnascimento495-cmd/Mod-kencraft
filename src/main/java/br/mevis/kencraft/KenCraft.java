@@ -8,6 +8,7 @@ import br.mevis.kencraft.event.KenCraftNpcSpawn;
 import br.mevis.kencraft.event.KenCraftEffects;
 import br.mevis.kencraft.item.KenCraftItems;
 import br.mevis.kencraft.world.MinamoriStructureGenerator;
+import br.mevis.kencraft.world.AbandonedHospitalStructureGenerator;
 import com.mojang.brigadier.Command;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -42,6 +43,7 @@ public class KenCraft {
         @SubscribeEvent public static void createAttributes(EntityAttributeCreationEvent event) {
             event.put(KenCraftEntities.RINKA.get(), RinkaEntity.createAttributes().build());
             event.put(KenCraftEntities.RANK_C_RINKA.get(), RankCRinkaEntity.createAttributes().build());
+            event.put(KenCraftEntities.RINKA_HUNGRY.get(), RinkaHungryEntity.createAttributes().build());
             event.put(KenCraftEntities.RISHIN.get(), RishinEntity.createAttributes().build());
             event.put(KenCraftEntities.AODAI.get(), AodaiEntity.createAttributes().build());
             event.put(KenCraftEntities.ARF_INVESTIGATOR.get(), ArfInvestigatorEntity.createAttributes().build());
@@ -83,8 +85,33 @@ public class KenCraft {
                     .then(Commands.literal("locate")
                         .then(Commands.literal("minamori")
                             .executes(ctx -> locateMinamori(ctx.getSource().getPlayerOrException())))
+                        .then(Commands.literal("hospital")
+                            .executes(ctx -> locateHospital(ctx.getSource().getPlayerOrException())))
                     )
             );
+        }
+
+        private static int locateHospital(ServerPlayer player) {
+            ServerLevel level = player.serverLevel();
+            int cx = player.chunkPosition().x, cz = player.chunkPosition().z;
+            for (int radius=0; radius<=64; radius++) {
+                for (int dx=-radius; dx<=radius; dx++) {
+                    for (int dz=-radius; dz<=radius; dz++) {
+                        int x=cx+dx, z=cz+dz;
+                        if (Math.floorMod(AbandonedHospitalStructureGenerator.hashForChunk(level.getSeed(),x,z), AbandonedHospitalStructureGenerator.CHANCE_DENOMINATOR()) != 0) continue;
+                        level.getChunk(x,z);
+                        int px=x*16+8, pz=z*16+8;
+                        int y=level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,px,pz)-1;
+                        if (AbandonedHospitalStructureGenerator.generateAt(level,px,pz)) {
+                            player.teleportTo(level,px+0.5D,y+3.0D,pz+0.5D,player.getYRot(),player.getXRot());
+                            player.sendSystemMessage(Component.literal("§aTeletransportado para um hospital abandonado."));
+                            return Command.SINGLE_SUCCESS;
+                        }
+                    }
+                }
+            }
+            player.sendSystemMessage(Component.literal("§cNão foi possível encontrar um hospital abandonado próximo."));
+            return 0;
         }
 
         private static int locateMinamori(ServerPlayer player) {

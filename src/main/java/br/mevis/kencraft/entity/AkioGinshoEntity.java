@@ -5,6 +5,7 @@ import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
 import br.mevis.kencraft.event.ClanSystem;
+import br.mevis.kencraft.event.ArfMissionSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -37,6 +38,7 @@ public class AkioGinshoEntity extends ArfGeneralEntity {
         ClanData clan = player.getData(ModAttachments.CLAN_DATA);
         if (clan.hasClan()) {
             player.sendSystemMessage(Component.literal("Akio Ginshō: Seu clã já foi revelado. Você pertence ao clã " + ClanSystem.displayName(clan.clan()) + "."));
+            ArfMissionSystem.openMissionMenu((net.minecraft.server.level.ServerPlayer) player);
             return InteractionResult.CONSUME;
         }
 
