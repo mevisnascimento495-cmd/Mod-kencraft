@@ -45,6 +45,10 @@ public final class KenCraftClientEvents {
                 minecraft.player.connection.sendCommand("kencraft kikakogou toggle");
                 return;
             }
+            if (minecraft.player.isAlive() && KenCraftClient.KIKAN_C.consumeClick() && data.race() == Race.HUMAN) {
+                minecraft.player.connection.sendCommand("kencraft talent use");
+                return;
+            }
             if (KenCraftClient.KIKAN_Z.isDown() && canJio) {
                 if (++jioChargeTicker >= 5) {
                     jioChargeTicker = 0;
