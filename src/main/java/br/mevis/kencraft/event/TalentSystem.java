@@ -33,6 +33,18 @@ public final class TalentSystem {
 
     public static void showTalentOptions(ServerPlayer player) {
         if (!canRoll(player)) return;
+        ArfMissionData mission = player.getData(ModAttachments.ARF_MISSION);
+        if (mission.reputation() < 100) {
+            player.sendSystemMessage(Component.literal("§cVocê precisa de 100 pontos de reputação para girar a Roleta de Talentos."));
+            return;
+        }
+
+        // Cada giro custa 100 pontos de reputação.
+        player.setData(ModAttachments.ARF_MISSION, new ArfMissionData(
+                mission.missionId(), mission.active(), mission.completedMissions(),
+                mission.reputation() - 100, mission.trainingStage()
+        ));
+
         TalentData current = player.getData(ModAttachments.TALENT_DATA);
         int roll = player.getRandom().nextInt(100);
 
