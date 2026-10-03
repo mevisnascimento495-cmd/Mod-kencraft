@@ -1,0 +1,88 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "sheath": "kencraft:item/katana_comum_handle",
+    "gold": "kencraft:item/katana_comum_gold"
+  },
+  "elements": [
+    {
+      "from": [7.38, 4.65, 7.70],
+      "to": [8.62, 15.55, 8.30],
+      "faces": {
+        "down": {"texture": "#sheath"},
+        "up": {"texture": "#sheath"},
+        "north": {"texture": "#sheath"},
+        "south": {"texture": "#sheath"},
+        "west": {"texture": "#sheath"},
+        "east": {"texture": "#sheath"}
+      }
+    },
+    {
+      "from": [7.28, 4.45, 7.62],
+      "to": [8.72, 4.78, 8.38],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "from": [7.28, 14.95, 7.62],
+      "to": [8.72, 15.28, 8.38],
+      "faces": {
+        "down": {"texture": "#gold"},
+        "up": {"texture": "#gold"},
+        "north": {"texture": "#gold"},
+        "south": {"texture": "#gold"},
+        "west": {"texture": "#gold"},
+        "east": {"texture": "#gold"}
+      }
+    },
+    {
+      "from": [7.20, 15.28, 7.55],
+      "to": [8.80, 15.72, 8.45],
+      "faces": {
+        "down": {"texture": "#sheath"},
+        "up": {"texture": "#sheath"},
+        "north": {"texture": "#sheath"},
+        "south": {"texture": "#sheath"},
+        "west": {"texture": "#sheath"},
+        "east": {"texture": "#sheath"}
+      }
+    }
+  ],
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [0, 0, 0],
+      "translation": [0, -1, 1],
+      "scale": [1.25, 1.25, 1.25]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [0, 0, 0],
+      "translation": [0, -1, 1],
+      "scale": [1.25, 1.25, 1.25]
+    },
+    "firstperson_righthand": {
+      "rotation": [0, -90, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.72, 0.72, 0.72]
+    },
+    "firstperson_lefthand": {
+      "rotation": [0, -90, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.72, 0.72, 0.72]
+    },
+    "gui": {
+      "rotation": [0, 0, 0],
+      "translation": [0, 0, 0],
+      "scale": [0.75, 0.75, 0.75]
+    },
+    "ground": {
+      "translation": [0, 2, 0],
+      "scale": [0.65, 0.65, 0.65]
+    }
+  }
+}
