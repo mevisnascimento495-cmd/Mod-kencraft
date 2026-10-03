@@ -101,6 +101,7 @@ public final class ArfBaseStructureGenerator {
         spawnAkio(level, origin.offset(11, 1, 14));
         spawn(level, origin.offset(5, 1, 3), KenCraftEntities.ARF_INVESTIGATOR.get());
         spawn(level, origin.offset(17, 1, 3), KenCraftEntities.ARF_INVESTIGATOR.get());
+        MerchantStructureSpawner.trySpawn(level, centerX, centerZ, groundY, WIDTH, DEPTH);
         return true;
     }
 
