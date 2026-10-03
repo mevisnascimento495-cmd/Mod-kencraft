@@ -59,7 +59,7 @@ public final class AbandonedHospitalStructureGenerator {
     public static boolean generateAt(ServerLevel level, int centerX, int centerZ) {
         if (!footprintLoaded(level, centerX, centerZ)) return false;
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
-        if (groundY < level.getMinBuildHeight() + 4 || groundY > level.getMaxBuildHeight() - HEIGHT - 3) return false;
+        if (groundY < level.getMinBuildHeight() || groundY > level.getMaxBuildHeight() - HEIGHT - 3) return false;
 
         int minSurface = Integer.MAX_VALUE;
         int maxSurface = Integer.MIN_VALUE;
