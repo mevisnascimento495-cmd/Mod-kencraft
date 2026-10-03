@@ -26,6 +26,7 @@ public final class AkioDialogueScreen extends AbstractContainerScreen<AkioDialog
  }
  private void press(int id){Minecraft mc=Minecraft.getInstance();if(mc.gameMode!=null)mc.gameMode.handleInventoryButtonClick(menu.containerId,id);}
  @Override protected void renderBg(GuiGraphics g,float partial,int mx,int my){
+  ArfMissionData mission=Minecraft.getInstance().player.getData(ModAttachments.ARF_MISSION);
   int left=(width-WIDTH)/2,top=(height-HEIGHT)/2;
   g.fill(0,0,width,height,0x99000000);g.fill(left,top,left+WIDTH,top+HEIGHT,0xF01B1B22);
   g.fill(left+10,top+10,left+WIDTH-10,top+48,0xFF303642);g.fill(left+10,top+58,left+WIDTH-10,top+152,0xCC11141A);

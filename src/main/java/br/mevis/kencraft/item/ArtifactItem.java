@@ -3,7 +3,7 @@ package br.mevis.kencraft.item;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
-import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.player.Player;
@@ -23,7 +23,8 @@ public final class ArtifactItem extends Item {
     }
 
     @Override
-    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide) {
             switch (type) {
                 case SPIRIT_NECKLACE -> player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 160, 0));
@@ -36,7 +37,7 @@ public final class ArtifactItem extends Item {
             }
             player.getCooldowns().addCooldown(this, 200);
         }
-        return InteractionResult.SUCCESS;
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
 
     @Override
