@@ -8,5 +8,8 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 @EventBusSubscriber(modid=KenCraft.MOD_ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class KenCraftMenuScreens{
  private KenCraftMenuScreens(){}
- @SubscribeEvent public static void register(RegisterMenuScreensEvent event){event.register(KenCraftMenus.AKIO_DIALOGUE.get(),AkioDialogueScreen::new);}
+ @SubscribeEvent public static void register(RegisterMenuScreensEvent event){
+  event.register(KenCraftMenus.AKIO_DIALOGUE.get(),AkioDialogueScreen::new);
+  event.register(KenCraftMenus.ARTIFACT_SHOP.get(),ArtifactShopScreen::new);
+ }
 }

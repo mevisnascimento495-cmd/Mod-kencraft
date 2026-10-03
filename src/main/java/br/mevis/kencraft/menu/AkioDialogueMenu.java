@@ -1,6 +1,7 @@
 package br.mevis.kencraft.menu;
-import br.mevis.kencraft.event.ArfMissionSystem;
 import br.mevis.kencraft.entity.AkioGinshoEntity;
+import br.mevis.kencraft.event.ArfMissionSystem;
+import br.mevis.kencraft.event.TalentSelectionSystem;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -15,7 +16,8 @@ public final class AkioDialogueMenu extends AbstractContainerMenu{
   if(!(player instanceof net.minecraft.server.level.ServerPlayer sp))return false;
   if(id==0){ArfMissionSystem.acceptOrShowMission(sp);return true;}
   if(id==1){AkioGinshoEntity.handleClanDialogue(sp);return true;}
-  if(id==2){sp.closeContainer();return true;}
+  if(id==2){TalentSelectionSystem.showTalentOptions(sp);return true;}
+  if(id==3){sp.closeContainer();return true;}
   return false;
  }
 }

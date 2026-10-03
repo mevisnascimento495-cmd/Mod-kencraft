@@ -21,6 +21,10 @@ public final class KenCraftItems{
  public static final DeferredHolder<Item,JinsuikakuRankCItem> JINSUIKAKU_RANK_C=ITEMS.register("jinsuikaku_rank_c",()->new JinsuikakuRankCItem(new Item.Properties().stacksTo(16).food(new FoodProperties.Builder().nutrition(6).saturationModifier(.6F).alwaysEdible().build())));
  public static final DeferredHolder<Item,Item> AODAI_HEART=ITEMS.register("aodai_heart",()->new Item(new Item.Properties().stacksTo(1)));
  public static final DeferredHolder<Item,Item> AKIO_GINSHO_HEART=ITEMS.register("akio_ginsho_heart",()->new Item(new Item.Properties().stacksTo(1)));
+ public static final DeferredHolder<Item,ArtifactItem> SPIRIT_NECKLACE=ITEMS.register("spirit_necklace",()->new ArtifactItem(ArtifactItem.Type.SPIRIT_NECKLACE,new Item.Properties().stacksTo(1)));
+ public static final DeferredHolder<Item,ArtifactItem> VITALITY_RING=ITEMS.register("vitality_ring",()->new ArtifactItem(ArtifactItem.Type.VITALITY_RING,new Item.Properties().stacksTo(1)));
+ public static final DeferredHolder<Item,ArtifactItem> PERCEPTION_AMULET=ITEMS.register("perception_amulet",()->new ArtifactItem(ArtifactItem.Type.PERCEPTION_AMULET,new Item.Properties().stacksTo(1)));
+ public static final DeferredHolder<Item,ArtifactItem> PARADISE_FRAGMENT=ITEMS.register("paradise_fragment",()->new ArtifactItem(ArtifactItem.Type.PARADISE_FRAGMENT,new Item.Properties().stacksTo(1)));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RINKA_SPAWN_EGG=ITEMS.register("rinka_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RINKA,0x241C1C,0x8B1E2D,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RANK_C_RINKA_SPAWN_EGG=ITEMS.register("rank_c_rinka_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RANK_C_RINKA,0x160D16,0xB52B3B,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RISHIN_SPAWN_EGG=ITEMS.register("rishin_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RISHIN,0x15151A,0x9B1825,new Item.Properties()));
@@ -33,5 +37,6 @@ public final class KenCraftItems{
  public static final DeferredHolder<Item,DeferredSpawnEggItem> ONOKI_SPAWN_EGG=ITEMS.register("onoki_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.ONOKI,0x777777,0x2455A4,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RINKA_HUNGRY_SPAWN_EGG=ITEMS.register("rinka_hungry_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RINKA_HUNGRY,0xF2F2F2,0x1E5A8A,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> INTERIOR_SPIRIT_SPAWN_EGG=ITEMS.register("interior_spirit_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.INTERIOR_SPIRIT,0x6E7BFF,0xB9C8FF,new Item.Properties()));
+ public static final DeferredHolder<Item,DeferredSpawnEggItem> ARTIFACT_SHOP_SPAWN_EGG=ITEMS.register("artifact_shop_npc_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.ARTIFACT_SHOP,0x5B4636,0xD9B45B,new Item.Properties()));
  private KenCraftItems(){}
 }
