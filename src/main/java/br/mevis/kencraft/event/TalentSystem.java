@@ -16,10 +16,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-
 import java.util.Comparator;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
@@ -31,25 +31,20 @@ public final class TalentSystem {
 
     private TalentSystem() {}
 
-    /** Opens the roulette from Akio's Talents button. */
     public static void showTalentOptions(ServerPlayer player) {
         if (!canRoll(player)) return;
-
         TalentData current = player.getData(ModAttachments.TALENT_DATA);
         int roll = player.getRandom().nextInt(100);
 
         if (roll < 73) {
             String[] talents = {"FORCA", "VELOCIDADE", "DEFESA", "REGENERACAO"};
             String selected = talents[player.getRandom().nextInt(talents.length)];
-            TalentData result = current.withTalent(selected).withStrengthTier(0).withActiveTicks(0);
-            player.setData(ModAttachments.TALENT_DATA, result);
-
+            player.setData(ModAttachments.TALENT_DATA, current.withTalent(selected).withStrengthTier(0).withActiveTicks(0));
             player.sendSystemMessage(Component.literal("§6══ ROLETA DE TALENTOS ══"));
             player.sendSystemMessage(Component.literal("§eResultado: §f" + displayName(selected)));
             player.sendSystemMessage(Component.literal("§aVocê recebeu o talento §f" + displayName(selected) + "§a."));
             return;
         }
-
         if (roll < 96) {
             player.setData(ModAttachments.TALENT_DATA, current.addClanReroll());
             player.sendSystemMessage(Component.literal("§6══ ROLETA DE TALENTOS ══"));
@@ -57,7 +52,6 @@ public final class TalentSystem {
             player.sendSystemMessage(Component.literal("§aRerolls de Clã disponíveis: §f" + (current.clanRerolls() + 1)));
             return;
         }
-
         player.setData(ModAttachments.TALENT_DATA, current.addTechniqueReroll());
         player.sendSystemMessage(Component.literal("§6══ ROLETA DE TALENTOS ══"));
         player.sendSystemMessage(Component.literal("§dResultado: §fReroll extra de Técnica"));
@@ -67,7 +61,6 @@ public final class TalentSystem {
     private static boolean canRoll(ServerPlayer player) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         ArfMissionData mission = player.getData(ModAttachments.ARF_MISSION);
-
         if (data.race() != Race.HUMAN) {
             player.sendSystemMessage(Component.literal("§cOs talentos da ARF são exclusivos para investigadores humanos."));
             return false;
@@ -85,13 +78,11 @@ public final class TalentSystem {
 
     public static void use(ServerPlayer player) {
         if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.HUMAN) return;
-
         TalentData talent = player.getData(ModAttachments.TALENT_DATA);
         if (!talent.hasTalent()) {
             player.sendSystemMessage(Component.literal("§cVocê ainda não possui um talento. Fale com Akio e use a opção Talentos para girar a roleta."));
             return;
         }
-
         switch (talent.talent()) {
             case "FORCA" -> activateStrength(player);
             case "VELOCIDADE" -> activateSpeed(player);
@@ -106,13 +97,11 @@ public final class TalentSystem {
         int tier = Math.min(5, Math.max(1, data.strengthTier() + 1));
         int multiplier = tier + 1;
         int durationSeconds = 35 + ((tier - 1) * 3);
-
         removeStrengthModifiers(player);
         addMultiplier(player, Attributes.ATTACK_DAMAGE, STRENGTH_DAMAGE, multiplier);
         addMultiplier(player, Attributes.ARMOR, STRENGTH_ARMOR, multiplier);
         addMultiplier(player, Attributes.MAX_HEALTH, STRENGTH_HEALTH, multiplier);
         addMultiplier(player, Attributes.MOVEMENT_SPEED, STRENGTH_SPEED, multiplier);
-
         player.setData(ModAttachments.TALENT_DATA, data.withStrengthTier(tier).withActiveTicks(durationSeconds * 20));
         player.setHealth(Math.min(player.getMaxHealth(), player.getHealth() * multiplier));
         player.sendSystemMessage(Component.literal("§eForça — Faixa " + tier + " | x" + multiplier + " | " + durationSeconds + "s"));
@@ -139,7 +128,6 @@ public final class TalentSystem {
             player.sendSystemMessage(Component.literal("§cNenhum alvo próximo para o Dreno Vital."));
             return;
         }
-
         int ticks = 100;
         player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(ticks));
         target.getPersistentData().putInt("kencraft_talent_drain_owner", player.getId());
@@ -152,7 +140,6 @@ public final class TalentSystem {
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.HUMAN) return;
-
         TalentData talent = player.getData(ModAttachments.TALENT_DATA);
         if (talent.activeTicks() <= 0) return;
 
@@ -163,11 +150,7 @@ public final class TalentSystem {
             if (remaining == 0) removeStrengthModifiers(player);
             return;
         }
-
-        if ("REGENERACAO".equals(talent.talent())) {
-            updateLifeDrain(player, remaining);
-        }
-
+        if ("REGENERACAO".equals(talent.talent())) updateLifeDrain(player, remaining);
         if ("VELOCIDADE".equals(talent.talent()) && remaining == 0) {
             LivingEntity target = findNearestTarget(player, 4.0D);
             if (target != null) {
@@ -182,27 +165,27 @@ public final class TalentSystem {
         if (targetId <= 0) return;
 
         net.minecraft.world.entity.Entity entity = player.level().getEntity(targetId);
-        if (!(entity instanceof LivingEntity target) || !target.isAlive() || remaining <= 0) {
+        if (!(entity instanceof LivingEntity)) {
+            player.getPersistentData().remove("kencraft_talent_drain_target");
+            return;
+        }
+        LivingEntity target = (LivingEntity) entity;
+        if (!target.isAlive() || remaining <= 0) {
             clearLifeDrain(player, target);
             return;
         }
 
         target.getPersistentData().putInt("kencraft_talent_drain_ticks", remaining);
-        var hold = player.position().add(player.getLookAngle().scale(1.55D)).add(0.0D, 0.45D, 0.0D);
+        Vec3 hold = player.position().add(player.getLookAngle().scale(1.55D)).add(0.0D, 0.45D, 0.0D);
         target.teleportTo(hold.x, hold.y, hold.z);
-        target.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        target.setDeltaMovement(Vec3.ZERO);
         target.hurtMarked = true;
 
         if (player.tickCount % 20 == 0) {
             float amount = Math.min(4.0F, target.getHealth());
-            if (amount > 0.0F && target.hurt(player.damageSources().playerAttack(player), amount)) {
-                player.heal(amount);
-            }
+            if (amount > 0.0F && target.hurt(player.damageSources().playerAttack(player), amount)) player.heal(amount);
         }
-
-        if (remaining == 1) {
-            clearLifeDrain(player, target);
-        }
+        if (remaining == 1) clearLifeDrain(player, target);
     }
 
     private static void clearLifeDrain(ServerPlayer player, LivingEntity target) {
@@ -224,16 +207,13 @@ public final class TalentSystem {
     }
 
     private static LivingEntity findNearestTarget(ServerPlayer player, double radius) {
-        return player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(radius),
-                entity -> entity != player && entity.isAlive())
+        return player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(radius), entity -> entity != player && entity.isAlive())
                 .stream().min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);
     }
 
     private static void addMultiplier(ServerPlayer player, Holder<Attribute> attribute, ResourceLocation id, int multiplier) {
         var instance = player.getAttribute(attribute);
-        if (instance != null) {
-            instance.addOrUpdateTransientModifier(new AttributeModifier(id, multiplier - 1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-        }
+        if (instance != null) instance.addOrUpdateTransientModifier(new AttributeModifier(id, multiplier - 1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
     }
 
     private static void removeStrengthModifiers(ServerPlayer player) {
