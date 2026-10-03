@@ -1,6 +1,5 @@
 package br.mevis.kencraft.event;
 
-import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.data.ArfMissionData;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
@@ -8,10 +7,7 @@ import br.mevis.kencraft.data.Race;
 import br.mevis.kencraft.data.TalentData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
 
-@EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class TalentSelectionSystem {
     private TalentSelectionSystem() {}
 
