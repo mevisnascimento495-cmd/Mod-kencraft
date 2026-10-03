@@ -1,6 +1,7 @@
 package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.KenCraft;
+import br.mevis.kencraft.data.ArfMissionData;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
@@ -30,9 +31,29 @@ public final class TalentSystem {
 
     private TalentSystem() {}
 
-    public static void use(ServerPlayer player) {
+    public static void showTalentOptions(ServerPlayer player) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HUMAN) return;
+        ArfMissionData mission = player.getData(ModAttachments.ARF_MISSION);
+
+        if (data.race() != Race.HUMAN) {
+            player.sendSystemMessage(Component.literal("§cOs talentos da ARF são exclusivos para investigadores humanos."));
+            return;
+        }
+        if (!mission.mission1Completed()) {
+            player.sendSystemMessage(Component.literal("§cComplete a primeira missão da ARF para desbloquear a Roleta de Talentos."));
+            return;
+        }
+
+        TalentData talent = player.getData(ModAttachments.TALENT_DATA);
+        player.sendSystemMessage(Component.literal("§eAKIO — SISTEMA DE TALENTOS"));
+        player.sendSystemMessage(Component.literal("Talento atual: §f" + displayName(talent.talent())));
+        player.sendSystemMessage(Component.literal("§7Força • Velocidade • Defesa • Regeneração"));
+        player.sendSystemMessage(Component.literal("§7Use §f/kencraft talent use §7para ativar seu talento."));
+        player.sendSystemMessage(Component.literal("§7Reputação: §f" + mission.reputation() + "/200"));
+    }
+
+    public static void use(ServerPlayer player) {
+        if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.HUMAN) return;
 
         TalentData talent = player.getData(ModAttachments.TALENT_DATA);
         if (!talent.hasTalent()) {
@@ -53,7 +74,7 @@ public final class TalentSystem {
         TalentData data = player.getData(ModAttachments.TALENT_DATA);
         int tier = Math.min(5, Math.max(1, data.strengthTier() + 1));
         int multiplier = tier + 1;
-        int durationSeconds = tier == 5 ? 47 : tier * 3;
+        int durationSeconds = 35 + ((tier - 1) * 3);
 
         removeStrengthModifiers(player);
         addMultiplier(player, Attributes.ATTACK_DAMAGE, STRENGTH_DAMAGE, multiplier);
@@ -61,22 +82,24 @@ public final class TalentSystem {
         addMultiplier(player, Attributes.MAX_HEALTH, STRENGTH_HEALTH, multiplier);
         addMultiplier(player, Attributes.MOVEMENT_SPEED, STRENGTH_SPEED, multiplier);
 
-        player.setHealth((float) Math.min(player.getMaxHealth(), player.getHealth() * multiplier));
         player.setData(ModAttachments.TALENT_DATA, data.withStrengthTier(tier).withActiveTicks(durationSeconds * 20));
-        player.sendSystemMessage(Component.literal("§eTalento de Força — Faixa " + tier + " (x" + multiplier + ") por " + durationSeconds + "s."));
+        player.setHealth(Math.min(player.getMaxHealth(), player.getHealth() * multiplier));
+        player.sendSystemMessage(Component.literal("§eForça — Faixa " + tier + " | x" + multiplier + " | " + durationSeconds + "s"));
     }
 
     private static void activateSpeed(ServerPlayer player) {
-        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 100, 0, false, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100, 2, false, true, true));
-        player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(100));
-        player.sendSystemMessage(Component.literal("§bPasso Relâmpago ativado."));
+        int ticks = 100;
+        player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, ticks, 0, false, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, ticks, 2, false, true, true));
+        player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(ticks));
+        player.sendSystemMessage(Component.literal("§bPasso Relâmpago ativado por 5 segundos."));
     }
 
     private static void activateDefense(ServerPlayer player) {
-        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 200, 4, false, true, true));
-        player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(200));
-        player.sendSystemMessage(Component.literal("§7Camada Defensiva ativada."));
+        int ticks = 200;
+        player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, ticks, 4, false, true, true));
+        player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(ticks));
+        player.sendSystemMessage(Component.literal("§7Camada Defensiva ativada por 10 segundos."));
     }
 
     private static void activateRegeneration(ServerPlayer player) {
@@ -85,16 +108,17 @@ public final class TalentSystem {
             player.sendSystemMessage(Component.literal("§cNenhum alvo próximo para o Dreno Vital."));
             return;
         }
-        player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(100));
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 100, 255, false, true, true));
-        player.sendSystemMessage(Component.literal("§dDreno Vital ativado."));
+
+        int ticks = 100;
+        player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(ticks));
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, 255, false, true, true));
+        player.sendSystemMessage(Component.literal("§dDreno Vital prendeu o alvo por 5 segundos."));
     }
 
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
-        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-        if (data.race() != Race.HUMAN) return;
+        if (player.getData(ModAttachments.PLAYER_DATA).race() != Race.HUMAN) return;
 
         TalentData talent = player.getData(ModAttachments.TALENT_DATA);
         if (talent.activeTicks() <= 0) return;
@@ -127,6 +151,16 @@ public final class TalentSystem {
         }
     }
 
+    private static String displayName(String talent) {
+        return switch (talent) {
+            case "FORCA" -> "Força";
+            case "VELOCIDADE" -> "Velocidade";
+            case "DEFESA" -> "Defesa";
+            case "REGENERACAO" -> "Regeneração";
+            default -> "Nenhum";
+        };
+    }
+
     private static LivingEntity findNearestTarget(ServerPlayer player, double radius) {
         return player.level().getEntitiesOfClass(LivingEntity.class, player.getBoundingBox().inflate(radius),
                 entity -> entity != player && entity.isAlive())
@@ -135,8 +169,9 @@ public final class TalentSystem {
 
     private static void addMultiplier(ServerPlayer player, Holder<Attribute> attribute, ResourceLocation id, int multiplier) {
         var instance = player.getAttribute(attribute);
-        if (instance == null) return;
-        instance.addOrUpdateTransientModifier(new AttributeModifier(id, multiplier - 1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        if (instance != null) {
+            instance.addOrUpdateTransientModifier(new AttributeModifier(id, multiplier - 1.0D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+        }
     }
 
     private static void removeStrengthModifiers(ServerPlayer player) {
