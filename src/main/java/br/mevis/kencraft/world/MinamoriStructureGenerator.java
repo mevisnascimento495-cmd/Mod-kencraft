@@ -117,6 +117,7 @@ public final class MinamoriStructureGenerator {
         buildCafe(level, origin);
         spawn(level, origin.offset(12, 1, 6), KenCraftEntities.SHIN_HOMARE.get());
         spawn(level, origin.offset(10, 1, 4), KenCraftEntities.KAORI_HOMARE.get());
+        MerchantStructureSpawner.trySpawn(level, centerX, centerZ, groundY, WIDTH, DEPTH);
         return true;
     }
 
