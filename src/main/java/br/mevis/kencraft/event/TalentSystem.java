@@ -31,25 +31,56 @@ public final class TalentSystem {
 
     private TalentSystem() {}
 
+    /** Opens the roulette from Akio's Talents button. */
     public static void showTalentOptions(ServerPlayer player) {
+        if (!canRoll(player)) return;
+
+        TalentData current = player.getData(ModAttachments.TALENT_DATA);
+        int roll = player.getRandom().nextInt(100);
+
+        if (roll < 73) {
+            String[] talents = {"FORCA", "VELOCIDADE", "DEFESA", "REGENERACAO"};
+            String selected = talents[player.getRandom().nextInt(talents.length)];
+            TalentData result = current.withTalent(selected).withStrengthTier(0).withActiveTicks(0);
+            player.setData(ModAttachments.TALENT_DATA, result);
+
+            player.sendSystemMessage(Component.literal("§6══ ROLETA DE TALENTOS ══"));
+            player.sendSystemMessage(Component.literal("§eResultado: §f" + displayName(selected)));
+            player.sendSystemMessage(Component.literal("§aVocê recebeu o talento §f" + displayName(selected) + "§a."));
+            return;
+        }
+
+        if (roll < 96) {
+            player.setData(ModAttachments.TALENT_DATA, current.addClanReroll());
+            player.sendSystemMessage(Component.literal("§6══ ROLETA DE TALENTOS ══"));
+            player.sendSystemMessage(Component.literal("§bResultado: §fReroll extra de Clã"));
+            player.sendSystemMessage(Component.literal("§aRerolls de Clã disponíveis: §f" + (current.clanRerolls() + 1)));
+            return;
+        }
+
+        player.setData(ModAttachments.TALENT_DATA, current.addTechniqueReroll());
+        player.sendSystemMessage(Component.literal("§6══ ROLETA DE TALENTOS ══"));
+        player.sendSystemMessage(Component.literal("§dResultado: §fReroll extra de Técnica"));
+        player.sendSystemMessage(Component.literal("§aRerolls de Técnica disponíveis: §f" + (current.techniqueRerolls() + 1)));
+    }
+
+    private static boolean canRoll(ServerPlayer player) {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         ArfMissionData mission = player.getData(ModAttachments.ARF_MISSION);
 
         if (data.race() != Race.HUMAN) {
             player.sendSystemMessage(Component.literal("§cOs talentos da ARF são exclusivos para investigadores humanos."));
-            return;
+            return false;
+        }
+        if (data.arfClass() == 0) {
+            player.sendSystemMessage(Component.literal("§cVocê precisa pertencer à ARF para usar a roleta."));
+            return false;
         }
         if (!mission.mission1Completed()) {
             player.sendSystemMessage(Component.literal("§cComplete a primeira missão da ARF para desbloquear a Roleta de Talentos."));
-            return;
+            return false;
         }
-
-        TalentData talent = player.getData(ModAttachments.TALENT_DATA);
-        player.sendSystemMessage(Component.literal("§eAKIO — SISTEMA DE TALENTOS"));
-        player.sendSystemMessage(Component.literal("Talento atual: §f" + displayName(talent.talent())));
-        player.sendSystemMessage(Component.literal("§7Força • Velocidade • Defesa • Regeneração"));
-        player.sendSystemMessage(Component.literal("§7Use §f/kencraft talent use §7para ativar seu talento."));
-        player.sendSystemMessage(Component.literal("§7Reputação: §f" + mission.reputation() + "/200"));
+        return true;
     }
 
     public static void use(ServerPlayer player) {
@@ -57,7 +88,7 @@ public final class TalentSystem {
 
         TalentData talent = player.getData(ModAttachments.TALENT_DATA);
         if (!talent.hasTalent()) {
-            player.sendSystemMessage(Component.literal("§cVocê ainda não possui um talento."));
+            player.sendSystemMessage(Component.literal("§cVocê ainda não possui um talento. Fale com Akio e use a opção Talentos para girar a roleta."));
             return;
         }
 
@@ -111,7 +142,9 @@ public final class TalentSystem {
 
         int ticks = 100;
         player.setData(ModAttachments.TALENT_DATA, player.getData(ModAttachments.TALENT_DATA).withActiveTicks(ticks));
-        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, 255, false, true, true));
+        target.getPersistentData().putInt("kencraft_talent_drain_owner", player.getId());
+        target.getPersistentData().putInt("kencraft_talent_drain_ticks", ticks);
+        player.getPersistentData().putInt("kencraft_talent_drain_target", target.getId());
         player.sendSystemMessage(Component.literal("§dDreno Vital prendeu o alvo por 5 segundos."));
     }
 
@@ -131,15 +164,8 @@ public final class TalentSystem {
             return;
         }
 
-        if ("REGENERACAO".equals(talent.talent()) && player.tickCount % 20 == 0) {
-            LivingEntity target = findNearestTarget(player, 6.0D);
-            if (target != null && target.isAlive()) {
-                float amount = Math.min(4.0F, target.getHealth());
-                if (target.hurt(player.damageSources().playerAttack(player), amount)) {
-                    player.heal(amount);
-                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Math.max(1, remaining), 255, false, true, true));
-                }
-            }
+        if ("REGENERACAO".equals(talent.talent())) {
+            updateLifeDrain(player, remaining);
         }
 
         if ("VELOCIDADE".equals(talent.talent()) && remaining == 0) {
@@ -149,6 +175,42 @@ public final class TalentSystem {
                 target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 60, 1, false, true, true));
             }
         }
+    }
+
+    private static void updateLifeDrain(ServerPlayer player, int remaining) {
+        int targetId = player.getPersistentData().getInt("kencraft_talent_drain_target");
+        if (targetId <= 0) return;
+
+        net.minecraft.world.entity.Entity entity = player.level().getEntity(targetId);
+        if (!(entity instanceof LivingEntity target) || !target.isAlive() || remaining <= 0) {
+            clearLifeDrain(player, target);
+            return;
+        }
+
+        target.getPersistentData().putInt("kencraft_talent_drain_ticks", remaining);
+        var hold = player.position().add(player.getLookAngle().scale(1.55D)).add(0.0D, 0.45D, 0.0D);
+        target.teleportTo(hold.x, hold.y, hold.z);
+        target.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        target.hurtMarked = true;
+
+        if (player.tickCount % 20 == 0) {
+            float amount = Math.min(4.0F, target.getHealth());
+            if (amount > 0.0F && target.hurt(player.damageSources().playerAttack(player), amount)) {
+                player.heal(amount);
+            }
+        }
+
+        if (remaining == 1) {
+            clearLifeDrain(player, target);
+        }
+    }
+
+    private static void clearLifeDrain(ServerPlayer player, LivingEntity target) {
+        if (target != null) {
+            target.getPersistentData().remove("kencraft_talent_drain_owner");
+            target.getPersistentData().remove("kencraft_talent_drain_ticks");
+        }
+        player.getPersistentData().remove("kencraft_talent_drain_target");
     }
 
     private static String displayName(String talent) {
