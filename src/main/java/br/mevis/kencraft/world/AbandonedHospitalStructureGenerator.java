@@ -80,6 +80,7 @@ public final class AbandonedHospitalStructureGenerator {
         build(level, o);
         level.setBlock(marker, Blocks.LODESTONE.defaultBlockState(), 3);
         spawnBoss(level, new BlockPos(centerX, groundY + 2, centerZ + 4));
+        MerchantStructureSpawner.trySpawn(level, centerX, centerZ, groundY, WIDTH, DEPTH);
         return true;
     }
 
