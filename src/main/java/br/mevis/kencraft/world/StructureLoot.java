@@ -7,6 +7,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemLike;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.util.RandomSource;
 
 public final class StructureLoot {
     private StructureLoot() {}
@@ -19,7 +20,8 @@ public final class StructureLoot {
         for (int i=0;i<containers.length;i++) fill(level,containers[i],
                 stack(Items.IRON_INGOT,3+i*2), stack(Items.ARROW,8+i*4),
                 stack(KenCraftItems.JINSUIKAKU_RANK_C.get(),i==0?1:0),
-                stack(KenCraftItems.ARF_UNIFORM_CHESTPLATE.get(),i==0?1:0));
+                stack(KenCraftItems.ARF_UNIFORM_CHESTPLATE.get(),i==0?1:0),
+                stack(KenCraftItems.KATANA_COMUM.get(),i==0 && RandomSource.create().nextFloat() < 0.30F ? 1 : 0));
     }
     public static void minamori(ServerLevel level, BlockPos... containers) {
         for (int i=0;i<containers.length;i++) fill(level,containers[i],
