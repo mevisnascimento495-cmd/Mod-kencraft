@@ -69,7 +69,7 @@ public class ArfInvestigatorEntity extends PathfinderMob {
             }
             for (ArfGeneralEntity general : level().getEntitiesOfClass(
                     ArfGeneralEntity.class, getBoundingBox().inflate(16.0D),
-                    entity -> entity != this && entity.isAlive())) {
+                    entity -> entity.isAlive())) {
                 general.setTarget(target);
             }
         }
