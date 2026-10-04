@@ -58,6 +58,7 @@ public final class AbandonedHospitalStructureGenerator {
 
     public static boolean generateAt(ServerLevel level, int centerX, int centerZ) {
         if (!footprintLoaded(level, centerX, centerZ)) return false;
+        if (!StructurePlacementRules.isFarEnough(level, centerX, centerZ)) return false;
         int groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
         if (groundY < level.getMinBuildHeight() || groundY > level.getMaxBuildHeight() - HEIGHT - 3) return false;
 
@@ -78,9 +79,11 @@ public final class AbandonedHospitalStructureGenerator {
         BlockPos o = new BlockPos(centerX - 15, groundY, centerZ - 12);
         prepareGround(level, o, groundY);
         build(level, o);
+        StructureDecoration.addEntrance(level, o, WIDTH);
         level.setBlock(marker, Blocks.LODESTONE.defaultBlockState(), 3);
         spawnBoss(level, new BlockPos(centerX, groundY + 2, centerZ + 4));
         MerchantStructureSpawner.trySpawn(level, centerX, centerZ, groundY, WIDTH, DEPTH);
+        StructureLoot.hospital(level, o.offset(8, 2, 4), o.offset(19, 2, 4), o.offset(8, 2, 18), o.offset(19, 2, 18));
         return true;
     }
 

@@ -84,6 +84,7 @@ public final class MinamoriStructureGenerator {
 
     public static boolean generateAt(ServerLevel level, int centerX, int centerZ) {
         if (!footprintLoaded(level, centerX, centerZ)) return false;
+        if (!StructurePlacementRules.isFarEnough(level, centerX, centerZ)) return false;
         return placeMinamori(level, centerX, centerZ);
     }
 
@@ -115,9 +116,11 @@ public final class MinamoriStructureGenerator {
         }
         BlockPos origin = new BlockPos(centerX - 12, groundY + 1, centerZ - 7);
         buildCafe(level, origin);
+        StructureDecoration.addEntrance(level, origin, WIDTH);
         spawn(level, origin.offset(12, 1, 6), KenCraftEntities.SHIN_HOMARE.get());
         spawn(level, origin.offset(10, 1, 4), KenCraftEntities.KAORI_HOMARE.get());
         MerchantStructureSpawner.trySpawn(level, centerX, centerZ, groundY, WIDTH, DEPTH);
+        StructureLoot.minamori(level, origin.offset(21, 3, 4), origin.offset(21, 3, 6), origin.offset(21, 3, 8));
         return true;
     }
 

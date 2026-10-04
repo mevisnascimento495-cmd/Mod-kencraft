@@ -70,6 +70,7 @@ public final class ArfBaseStructureGenerator {
 
     public static boolean generateAt(ServerLevel level, int centerX, int centerZ) {
         if (!footprintLoaded(level, centerX, centerZ)) return false;
+        if (!StructurePlacementRules.isFarEnough(level, centerX, centerZ)) return false;
         return placeBase(level, centerX, centerZ);
     }
 
@@ -98,10 +99,12 @@ public final class ArfBaseStructureGenerator {
 
         BlockPos origin = new BlockPos(centerX - 11, groundY + 1, centerZ - 9);
         buildBase(level, origin);
+        StructureDecoration.addEntrance(level, origin, WIDTH);
         spawnAkio(level, origin.offset(11, 1, 14));
         spawn(level, origin.offset(5, 1, 3), KenCraftEntities.ARF_INVESTIGATOR.get());
         spawn(level, origin.offset(17, 1, 3), KenCraftEntities.ARF_INVESTIGATOR.get());
         MerchantStructureSpawner.trySpawn(level, centerX, centerZ, groundY, WIDTH, DEPTH);
+        StructureLoot.arf(level, origin.offset(19, 2, 4), origin.offset(19, 2, 6), origin.offset(19, 2, 8));
         return true;
     }
 

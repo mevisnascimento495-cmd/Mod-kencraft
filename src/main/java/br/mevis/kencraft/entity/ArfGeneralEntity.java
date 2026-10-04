@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -16,10 +17,10 @@ import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
 import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-/** Generic ARF general. Special named generals (such as Akio Ginsho) use their own entity type. */
 public class ArfGeneralEntity extends PathfinderMob {
     public ArfGeneralEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -41,7 +42,39 @@ public class ArfGeneralEntity extends PathfinderMob {
         this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 0.95D, true));
         this.goalSelector.addGoal(7, new RandomStrollGoal(this, 0.6D));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+
+        // Generals actively defend the ARF's mission area by prioritizing Rinkas.
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, RinkaEntity.class, true));
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (level().isClientSide) return;
+
+        LivingEntity target = getTarget();
+        if (target == null) return;
+
+        if (!target.isAlive() || target.isRemoved()) {
+            setTarget(null);
+            return;
+        }
+
+        double followRange = getAttributeValue(Attributes.FOLLOW_RANGE);
+        if (distanceToSqr(target) > followRange * followRange * 2.25D) {
+            setTarget(null);
+            return;
+        }
+
+        // A general coordinates nearby ARF members around an active Rinka threat.
+        if (target instanceof RinkaEntity && tickCount % 10 == 0) {
+            for (ArfInvestigatorEntity investigator : level().getEntitiesOfClass(
+                    ArfInvestigatorEntity.class, getBoundingBox().inflate(16.0D),
+                    entity -> entity.isAlive())) {
+                investigator.setTarget(target);
+            }
+        }
     }
 
     @Override

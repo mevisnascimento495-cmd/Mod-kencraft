@@ -2,6 +2,8 @@ package br.mevis.kencraft.event;
 
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
+import br.mevis.kencraft.item.KenCraftItems;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.server.level.ServerPlayer;
@@ -38,6 +40,11 @@ public final class PlayerLoginHandler {
         send(player, "Olá jogador(a)! Você entrou no KenCraft.");
         send(player, "Para escolher sua raça, digite Rinka ou Humano no chat.");
         send(player, "Pressione R para abrir o menu do KenCraft.");
+        ItemStack guide = new ItemStack(KenCraftItems.KENCRAFT_GUIDE.get());
+        if (!player.getInventory().contains(guide)) {
+            player.getInventory().add(guide);
+            send(player, "Você recebeu o Livro do KenCraft. Use-o para entender como começar sua jornada.");
+        }
     }
 
     /**

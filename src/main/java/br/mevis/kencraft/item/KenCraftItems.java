@@ -26,6 +26,7 @@ public final class KenCraftItems{
  public static final DeferredHolder<Item,ArtifactItem> PERCEPTION_AMULET=ITEMS.register("perception_amulet",()->new ArtifactItem(ArtifactItem.Type.PERCEPTION_AMULET,new Item.Properties().stacksTo(1)));
  public static final DeferredHolder<Item,ArtifactItem> PARADISE_FRAGMENT=ITEMS.register("paradise_fragment",()->new ArtifactItem(ArtifactItem.Type.PARADISE_FRAGMENT,new Item.Properties().stacksTo(1)));
  public static final DeferredHolder<Item,KatanaComumItem> KATANA_COMUM=ITEMS.register("katana_comum",()->new KatanaComumItem(new Item.Properties().stacksTo(1).durability(250)));
+ public static final DeferredHolder<Item,KenCraftGuideBookItem> KENCRAFT_GUIDE=ITEMS.register("kencraft_guide",()->new KenCraftGuideBookItem(new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RINKA_SPAWN_EGG=ITEMS.register("rinka_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RINKA,0x241C1C,0x8B1E2D,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RANK_C_RINKA_SPAWN_EGG=ITEMS.register("rank_c_rinka_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RANK_C_RINKA,0x160D16,0xB52B3B,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RISHIN_SPAWN_EGG=ITEMS.register("rishin_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RISHIN,0x15151A,0x9B1825,new Item.Properties()));

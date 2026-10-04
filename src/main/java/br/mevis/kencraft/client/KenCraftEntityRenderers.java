@@ -43,7 +43,7 @@ public final class KenCraftEntityRenderers {
  @SubscribeEvent public static void addPlayerLayers(EntityRenderersEvent.AddLayers e){
   for(PlayerSkin.Model skin:e.getSkins())if(e.getSkin(skin) instanceof PlayerRenderer pr){pr.addLayer(new KikanLayer(pr,e.getEntityModels()));pr.addLayer(new JioAuraLayer(pr,e.getEntityModels()));}
  }
- private static HumanoidModel<RinkaEntity> playerModel(EntityRendererProvider.Context c){return new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER));}
+ private static HumanoidModel<RinkaEntity> playerModel(EntityRendererProvider.Context c){return new NaturalHumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER));}
  private static HumanoidModel<InteriorSpiritEntity> spiritModel(EntityRendererProvider.Context c){return new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER));}
  private static final class RinkaRenderer extends HumanoidMobRenderer<RinkaEntity,HumanoidModel<RinkaEntity>>{RinkaRenderer(EntityRendererProvider.Context c){super(c,playerModel(c),.5F);}public ResourceLocation getTextureLocation(RinkaEntity e){return RINKA_TEXTURE;}}
  private static final class RankCRinkaRenderer extends HumanoidMobRenderer<RankCRinkaEntity,HumanoidModel<RankCRinkaEntity>>{RankCRinkaRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);}public ResourceLocation getTextureLocation(RankCRinkaEntity e){return RINKA_TEXTURE;}}

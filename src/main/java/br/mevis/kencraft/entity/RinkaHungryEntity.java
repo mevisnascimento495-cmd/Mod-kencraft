@@ -73,6 +73,12 @@ public class RinkaHungryEntity extends RinkaEntity {
         }
     }
 
+    private boolean canUseKikan(net.minecraft.world.entity.LivingEntity target, double rangeSqr) {
+        return target.isAlive() && !target.isRemoved()
+                && distanceToSqr(target) <= rangeSqr
+                && hasLineOfSight(target);
+    }
+
     private void activateKikan(String key) {
         kikanActive = true;
         attackKey = key;
@@ -82,7 +88,7 @@ public class RinkaHungryEntity extends RinkaEntity {
     }
 
     private void useScorpionSting(net.minecraft.world.entity.LivingEntity target) {
-        if (distanceToSqr(target) > 30.0D) return;
+        if (!canUseKikan(target, 30.0D)) return;
         activateKikan("z");
         target.hurt(damageSources().mobAttack(this), 8.0F);
         target.addEffect(new MobEffectInstance(MobEffects.POISON, 100, 1));
@@ -91,7 +97,7 @@ public class RinkaHungryEntity extends RinkaEntity {
     }
 
     private void useScorpionHallucination(net.minecraft.world.entity.LivingEntity target) {
-        if (distanceToSqr(target) > 100.0D) return;
+        if (!canUseKikan(target, 100.0D)) return;
         activateKikan("c");
         target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 160, 0));
         target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 80, 0));
@@ -100,7 +106,7 @@ public class RinkaHungryEntity extends RinkaEntity {
     }
 
     private void useGrabPunch(net.minecraft.world.entity.LivingEntity target) {
-        if (distanceToSqr(target) > 14.0D) return;
+        if (!canUseKikan(target, 14.0D)) return;
         activateKikan("c");
         getPersistentData().putInt(GRAB_TARGET, target.getId());
         getPersistentData().putInt(GRAB_TICKS, 10);
