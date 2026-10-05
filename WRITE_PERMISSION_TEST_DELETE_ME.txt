@@ -1,2 +1,0 @@
-KenCraft GitHub write-permission test.
-This file is intended to be deleted immediately after confirming write access.
