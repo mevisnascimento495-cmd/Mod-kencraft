@@ -3,10 +3,13 @@ package br.mevis.kencraft.item;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.Filterable;
-import net.minecraft.world.item.Item;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.WrittenBookItem;
 import net.minecraft.world.item.component.WrittenBookContent;
+import net.minecraft.world.level.Level;
 
 import java.util.List;
 
@@ -15,8 +18,22 @@ public final class KenCraftGuideBookItem extends WrittenBookItem {
         super(properties.stacksTo(1));
     }
 
+    @Override
+    public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        if (!stack.has(DataComponents.WRITTEN_BOOK_CONTENT)) {
+            stack.set(DataComponents.WRITTEN_BOOK_CONTENT, guideContent());
+        }
+        return super.use(level, player, hand);
+    }
+
     public static ItemStack createGuideBook() {
         ItemStack stack = new ItemStack(KenCraftItems.KENCRAFT_GUIDE.get());
+        stack.set(DataComponents.WRITTEN_BOOK_CONTENT, guideContent());
+        return stack;
+    }
+
+    private static WrittenBookContent guideContent() {
         List<Filterable<Component>> pages = List.of(
             page("§lKENCRAFT\n\n§0Bem-vindo ao mundo de KenCraft!\n\nEste livro é o guia oficial do mod. Aqui você encontra os principais sistemas, controles, entidades, estruturas, itens e formas de explorar o conteúdo."),
             page("§lCOMEÇANDO\n\n§0Ao entrar pela primeira vez, escolha sua raça pelo sistema de seleção. Depois, pressione §lR§r para abrir o menu principal do KenCraft.\n\nO menu reúne informações e sistemas disponíveis para o jogador."),
@@ -32,16 +49,14 @@ public final class KenCraftGuideBookItem extends WrittenBookItem {
             page("§lDICAS DE EXPLORAÇÃO\n\n§0Converse com NPCs, observe as estruturas, experimente os sistemas do menu e acompanhe sua progressão.\n\nAlguns conteúdos estão ligados à história e podem ser descobertos conforme você explora o mundo."),
             page("§lATUALIZAÇÕES\n\n§0Este manual faz parte do próprio KenCraft. Conforme novos sistemas, entidades, estruturas e mecânicas forem adicionados ao mod, o conteúdo do guia poderá ser expandido.\n\n§lBoa jornada!\n\n§0— Equipe KenCraft")
         );
-        stack.set(DataComponents.WRITTEN_BOOK_CONTENT,
-            new WrittenBookContent(
-                Filterable.passThrough("Manual do KenCraft"),
-                "KenCraft",
-                0,
-                pages,
-                true
-            )
+
+        return new WrittenBookContent(
+            Filterable.passThrough("Manual do KenCraft"),
+            "KenCraft",
+            0,
+            pages,
+            true
         );
-        return stack;
     }
 
     private static Filterable<Component> page(String text) {
