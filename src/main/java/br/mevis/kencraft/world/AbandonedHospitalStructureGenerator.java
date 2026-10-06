@@ -22,7 +22,7 @@ public final class AbandonedHospitalStructureGenerator {
     private static final int CHANCE_DENOMINATOR = 128;
     private static final int WIDTH = 31;
     private static final int DEPTH = 25;
-    private static final int HEIGHT = 11;
+    private static final int HEIGHT = 15;
     private static final int MAX_TERRAIN_VARIATION = 6;
     private static final int MAX_PENDING = 8;
     private static final Deque<PendingGeneration> PENDING = new ArrayDeque<>();
@@ -218,6 +218,57 @@ public final class AbandonedHospitalStructureGenerator {
         }
     }
 
+
+        // REWORK HOSPITAL: segundo piso, observação e ala de isolamento
+        for (int y = 11; y <= 14; y++) {
+            for (int x = 4; x <= 26; x++) {
+                set(level, o.offset(x, y, 4), Blocks.MOSSY_STONE_BRICKS);
+                set(level, o.offset(x, y, 20), Blocks.MOSSY_STONE_BRICKS);
+            }
+            for (int z = 4; z <= 20; z++) {
+                set(level, o.offset(4, y, z), Blocks.MOSSY_STONE_BRICKS);
+                set(level, o.offset(26, y, z), Blocks.MOSSY_STONE_BRICKS);
+            }
+        }
+        for (int x = 5; x <= 25; x++) for (int z = 5; z <= 19; z++)
+            if ((x + z) % 3 == 0) set(level, o.offset(x, 11, z), Blocks.POLISHED_ANDESITE);
+        for (int x = 6; x <= 24; x += 3) {
+            for (int y = 12; y <= 13; y++) {
+                set(level, o.offset(x, y, 4), Blocks.GLASS_PANE);
+                set(level, o.offset(x, y, 20), Blocks.GLASS_PANE);
+            }
+        }
+        for (int z = 6; z <= 18; z += 3) {
+            for (int y = 12; y <= 13; y++) {
+                set(level, o.offset(4, y, z), Blocks.GLASS_PANE);
+                set(level, o.offset(26, y, z), Blocks.GLASS_PANE);
+            }
+        }
+        for (int x = 9; x <= 21; x++) {
+            set(level, o.offset(x, 12, 12), Blocks.IRON_BARS);
+            set(level, o.offset(x, 13, 12), Blocks.IRON_BARS);
+        }
+        for (int x = 11; x <= 19; x++) {
+            set(level, o.offset(x, 12, 11), Blocks.RED_CONCRETE);
+            set(level, o.offset(x, 13, 11), Blocks.WHITE_CONCRETE);
+        }
+        for (int x = 6; x <= 24; x++) {
+            set(level, o.offset(x, 14, 4), Blocks.DEEPSLATE_TILES);
+            set(level, o.offset(x, 14, 20), Blocks.DEEPSLATE_TILES);
+        }
+        for (int z = 5; z <= 19; z++) {
+            set(level, o.offset(4, 14, z), Blocks.DEEPSLATE_TILES);
+            set(level, o.offset(26, 14, z), Blocks.DEEPSLATE_TILES);
+        }
+        // Anexo de isolamento visível pela fachada lateral.
+        for (int x = 27; x <= 29; x++) for (int y = 2; y <= 6; y++)
+            set(level, o.offset(x, y, 7), Blocks.IRON_BARS);
+        for (int x = 27; x <= 29; x++) {
+            set(level, o.offset(x, 1, 6), Blocks.POLISHED_ANDESITE);
+            set(level, o.offset(x, 1, 8), Blocks.POLISHED_ANDESITE);
+        }
+        set(level, o.offset(28, 2, 7), Blocks.REDSTONE_LAMP);
+        set(level, o.offset(28, 3, 7), Blocks.RED_CONCRETE);
     private static void bed(ServerLevel level, BlockPos o, int x, int z, boolean hasIV) {
         set(level, o.offset(x, 1, z), Blocks.RED_BED);
         set(level, o.offset(x + 1, 1, z), Blocks.RED_BED);

@@ -27,7 +27,7 @@ public final class ArfBaseStructureGenerator {
     private static final int CHANCE_DENOMINATOR = 160;
     private static final int WIDTH = 23;
     private static final int DEPTH = 19;
-    private static final int HEIGHT = 10;
+    private static final int HEIGHT = 14;
     private static final int MAX_PENDING = 6;
     private static final int GENERATION_INTERVAL_TICKS = 20;
     private static final Deque<PendingGeneration> PENDING = new ArrayDeque<>();
@@ -201,6 +201,54 @@ public final class ArfBaseStructureGenerator {
         }
     }
 
+
+        // REWORK ARF: torre de comando, núcleo blindado e cobertura técnica
+        for (int y = 10; y <= 13; y++) {
+            for (int x = 5; x <= 17; x++) {
+                set(level, o.offset(x, y, 5), Blocks.DEEPSLATE_TILES);
+                set(level, o.offset(x, y, 13), Blocks.DEEPSLATE_TILES);
+            }
+            for (int z = 5; z <= 13; z++) {
+                set(level, o.offset(5, y, z), Blocks.DEEPSLATE_TILES);
+                set(level, o.offset(17, y, z), Blocks.DEEPSLATE_TILES);
+            }
+        }
+        for (int x = 6; x <= 16; x++) for (int z = 6; z <= 12; z++) {
+            if (x == 11 || z == 9) set(level, o.offset(x, 10, z), Blocks.IRON_BLOCK);
+        }
+        for (int x = 8; x <= 14; x++) for (int y = 11; y <= 12; y++)
+            set(level, o.offset(x, y, 9), Blocks.GLASS_PANE);
+        for (int z = 6; z <= 12; z += 2) {
+            set(level, o.offset(6, 11, z), Blocks.IRON_BARS);
+            set(level, o.offset(16, 11, z), Blocks.IRON_BARS);
+        }
+        for (int x = 4; x <= 18; x++) {
+            set(level, o.offset(x, 13, 5), Blocks.IRON_BLOCK);
+            set(level, o.offset(x, 13, 13), Blocks.IRON_BLOCK);
+        }
+        for (int z = 6; z <= 12; z++) {
+            set(level, o.offset(4, 13, z), Blocks.IRON_BLOCK);
+            set(level, o.offset(18, 13, z), Blocks.IRON_BLOCK);
+        }
+        set(level, o.offset(11, 11, 9), Blocks.BEACON);
+        set(level, o.offset(11, 12, 9), Blocks.BLACK_CONCRETE);
+
+        // Pórtico frontal alto: transforma a entrada em um acesso de quartel fortificado.
+        for (int y = 2; y <= 8; y++) {
+            set(level, o.offset(8, y, 0), Blocks.IRON_BLOCK);
+            set(level, o.offset(15, y, 0), Blocks.IRON_BLOCK);
+        }
+        for (int x = 8; x <= 15; x++) {
+            set(level, o.offset(x, 8, 0), Blocks.IRON_BLOCK);
+            set(level, o.offset(x, 9, 0), Blocks.DEEPSLATE_TILES);
+        }
+        for (int x = 10; x <= 13; x++) {
+            for (int y = 6; y <= 8; y++) set(level, o.offset(x, y, 0), Blocks.AIR);
+        }
+        for (int x = 7; x <= 16; x += 3) {
+            set(level, o.offset(x, 2, -1), Blocks.POLISHED_BLACKSTONE);
+            set(level, o.offset(x, 3, -1), Blocks.IRON_BARS);
+        }
     private static void drawArf(ServerLevel level, BlockPos base) {
         String[] glyphs = {
                 "11110/10001/10001/11110/10100/10010/10001",

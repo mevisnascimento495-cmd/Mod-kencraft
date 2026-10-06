@@ -6,6 +6,6 @@ public final class KenCraftGuideClient {
     private KenCraftGuideClient() {}
 
     public static void open() {
-        Minecraft.getInstance().setScreen(new KenCraftScreenV2());
+        Minecraft.getInstance().setScreen(new KenCraftGuideScreen());
     }
 }
