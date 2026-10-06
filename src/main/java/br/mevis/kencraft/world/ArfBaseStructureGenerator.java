@@ -111,95 +111,7 @@ public final class ArfBaseStructureGenerator {
     private static boolean validGround(ServerLevel level, int x, int y, int z) {
         BlockState state = level.getBlockState(new BlockPos(x, y, z));
         return !state.is(Blocks.WATER) && !state.is(Blocks.LAVA) && state.isSolid();
-    }
 
-    private static void buildBase(ServerLevel level, BlockPos o) {
-        for (int x = 0; x < WIDTH; x++) for (int z = 0; z < DEPTH; z++) {
-            set(level, o.offset(x, 0, z), Blocks.STONE_BRICKS);
-            set(level, o.offset(x, 1, z), Blocks.SMOOTH_STONE);
-        }
-
-        for (int y = 2; y <= 8; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                set(level, o.offset(x, y, 0), Blocks.SMOOTH_STONE);
-                set(level, o.offset(x, y, DEPTH - 1), Blocks.SMOOTH_STONE);
-            }
-            for (int z = 0; z < DEPTH; z++) {
-                set(level, o.offset(0, y, z), Blocks.SMOOTH_STONE);
-                set(level, o.offset(WIDTH - 1, y, z), Blocks.SMOOTH_STONE);
-            }
-        }
-
-        for (int x = 3; x <= 19; x += 2) {
-            set(level, o.offset(x, 4, 0), Blocks.IRON_BARS);
-            set(level, o.offset(x, 5, 0), Blocks.IRON_BARS);
-            set(level, o.offset(x, 6, 0), Blocks.IRON_BARS);
-        }
-
-        for (int x = 0; x < WIDTH; x++) for (int z = 0; z < DEPTH; z++) set(level, o.offset(x, 9, z), Blocks.DEEPSLATE_TILES);
-
-        // frontal ARF: entrada reforçada e fachada militar
-        for (int y = 2; y <= 5; y++) for (int x = 9; x <= 13; x++) set(level, o.offset(x, y, 0), Blocks.AIR);
-        for (int x = 2; x <= 6; x++) for (int y = 4; y <= 6; y++) set(level, o.offset(x, y, 0), Blocks.GLASS_PANE);
-        for (int x = 16; x <= 20; x++) for (int y = 4; y <= 6; y++) set(level, o.offset(x, y, 0), Blocks.GLASS_PANE);
-        for (int z = 4; z <= 14; z += 2) for (int y = 4; y <= 6; y++) set(level, o.offset(0, y, z), Blocks.GLASS_PANE);
-        for (int x = 2; x <= 20; x++) for (int z = 2; z <= 16; z++) set(level, o.offset(x, 6, z), Blocks.SMOOTH_STONE);
-        for (int x = 2; x <= 20; x++) for (int z = 2; z <= 16; z++) if ((x + z) % 7 == 0) set(level, o.offset(x, 6, z), Blocks.GRAY_CARPET);
-
-        // hall principal, escadas e posto de confronto
-        for (int z = 4; z <= 10; z++) {
-            set(level, o.offset(3, 2, z), Blocks.SPRUCE_STAIRS);
-            set(level, o.offset(3, 3, z), Blocks.SPRUCE_STAIRS);
-            set(level, o.offset(3, 4, z), Blocks.SPRUCE_STAIRS);
-            set(level, o.offset(3, 5, z), Blocks.SPRUCE_STAIRS);
-        }
-        for (int y = 2; y <= 5; y++) set(level, o.offset(3, y, 3), Blocks.AIR);
-
-        // área de comando
-        for (int x = 7; x <= 15; x++) set(level, o.offset(x, 2, 4), Blocks.DARK_OAK_PLANKS);
-        for (int x = 7; x <= 15; x++) set(level, o.offset(x, 3, 4), Blocks.SPRUCE_SLAB);
-        for (int x : new int[]{8, 10, 12, 14}) set(level, o.offset(x, 2, 5), Blocks.SPRUCE_FENCE);
-        set(level, o.offset(11, 2, 5), Blocks.LECTERN);
-        set(level, o.offset(13, 2, 5), Blocks.BELL);
-
-        for (int x = 6; x <= 16; x++) for (int z = 9; z <= 15; z++) if ((x + z) % 2 == 0) set(level, o.offset(x, 2, z), Blocks.RED_CARPET);
-        for (int x : new int[]{6, 16}) for (int z = 10; z <= 14; z += 2) set(level, o.offset(x, 3, z), Blocks.IRON_BARS);
-        for (int z = 3; z <= 15; z += 2) {
-            set(level, o.offset(20, 2, z), Blocks.BARREL);
-            set(level, o.offset(19, 2, z), Blocks.CHEST);
-        }
-        for (int y = 3; y <= 5; y++) for (int z = 3; z <= 15; z += 2) set(level, o.offset(20, y, z), Blocks.SPRUCE_TRAPDOOR);
-
-        // armamento e luz de vigia
-        for (int x : new int[]{7, 11, 15}) for (int z : new int[]{9, 13}) {
-            set(level, o.offset(x, 7, z), Blocks.DARK_OAK_PLANKS);
-            set(level, o.offset(x + 1, 7, z), Blocks.DARK_OAK_PLANKS);
-            set(level, o.offset(x, 8, z), Blocks.SPRUCE_SLAB);
-            set(level, o.offset(x + 1, 8, z), Blocks.SPRUCE_SLAB);
-        }
-        for (int x : new int[]{7, 11, 15}) set(level, o.offset(x, 8, 5), Blocks.BOOKSHELF);
-        for (int x : new int[]{5, 11, 17}) for (int z : new int[]{7, 15}) {
-            set(level, o.offset(x, 5, z), Blocks.CHAIN);
-            set(level, o.offset(x, 4, z), Blocks.LANTERN);
-        }
-
-        // sinal da ARF e base de comando
-        drawArf(level, o.offset(7, 3, -1));
-        drawArfPanel(level, o.offset(8, 6, 0));
-        set(level, o.offset(11, 1, 9), Blocks.LODESTONE);
-
-        // entrada reforçada da base: mantém o vão central totalmente livre
-        for (int y = 2; y <= 5; y++) {
-            set(level, o.offset(9, y, 0), Blocks.IRON_BLOCK);
-            set(level, o.offset(14, y, 0), Blocks.IRON_BLOCK);
-        }
-        // Reaplica o vão depois dos elementos da fachada para garantir a passagem.
-        for (int y = 2; y <= 5; y++) {
-            for (int x = 10; x <= 13; x++) {
-                set(level, o.offset(x, y, 0), Blocks.AIR);
-            }
-        }
-    }
 
 
         // REWORK ARF: torre de comando, núcleo blindado e cobertura técnica
@@ -249,6 +161,9 @@ public final class ArfBaseStructureGenerator {
             set(level, o.offset(x, 2, -1), Blocks.POLISHED_BLACKSTONE);
             set(level, o.offset(x, 3, -1), Blocks.IRON_BARS);
         }
+
+    }
+
     private static void drawArf(ServerLevel level, BlockPos base) {
         String[] glyphs = {
                 "11110/10001/10001/11110/10100/10010/10001",
