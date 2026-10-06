@@ -1,8 +1,6 @@
 package br.mevis.kencraft.item;
 
 import br.mevis.kencraft.client.KenCraftGuideClient;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.DistExecutor;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.Filterable;
@@ -30,8 +28,8 @@ public final class KenCraftGuideBookItem extends WrittenBookItem {
         }
 
         if (level.isClientSide) {
-            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> KenCraftGuideClient::open);
-            return InteractionResultHolder.sidedSuccess(stack);
+            KenCraftGuideClient.open();
+            return InteractionResultHolder.sidedSuccess(stack, true);
         }
 
         return InteractionResultHolder.consume(stack);

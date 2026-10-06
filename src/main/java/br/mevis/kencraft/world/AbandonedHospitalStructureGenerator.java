@@ -139,7 +139,7 @@ public final class AbandonedHospitalStructureGenerator {
 
         for (int x = 4; x <= 26; x++)
             for (int z = 11; z <= 13; z++)
-                set(level, o.offset(x, 2, z), (x + z) % 3 == 0 ? Blocks.DARK_GRAY_CONCRETE : Blocks.LIGHT_GRAY_CONCRETE);
+                set(level, o.offset(x, 2, z), (x + z) % 3 == 0 ? Blocks.GRAY_CONCRETE : Blocks.LIGHT_GRAY_CONCRETE);
 
         for (int x = 13; x <= 17; x++) set(level, o.offset(x, 2, 3), Blocks.QUARTZ_BLOCK);
 
