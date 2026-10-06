@@ -18,7 +18,7 @@ public final class KenCraftClient {
     public static final KeyMapping OPEN_MENU = new KeyMapping("key.kencraft.menu", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.kencraft");
     public static final KeyMapping KIKAN_Z = new KeyMapping("key.kencraft.kikan_z", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.kencraft");
     public static final KeyMapping KIKAN_C = new KeyMapping("key.kencraft.kikan_c", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, "key.categories.kencraft");
-    public static final KeyMapping TALENT_USE = new KeyMapping("key.kencraft.talent_use", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_N, "key.categories.kencraft");
+    public static final KeyMapping TALENT_USE = new KeyMapping("key.kencraft.talent_use", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.kencraft");
     public static final KeyMapping JIO_F = new KeyMapping("key.kencraft.jio_f", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F, "key.categories.kencraft");
     public static final KeyMapping JIO_G = new KeyMapping("key.kencraft.jio_g", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_G, "key.categories.kencraft");
     public static final KeyMapping SPIRITUAL_SUJO = new KeyMapping("key.kencraft.spiritual_sujo", KeyConflictContext.IN_GAME, KeyModifier.NONE, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.kencraft");
