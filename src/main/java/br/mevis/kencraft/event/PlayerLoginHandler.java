@@ -6,6 +6,7 @@ import br.mevis.kencraft.item.KenCraftItems;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
@@ -40,14 +41,7 @@ public final class PlayerLoginHandler {
         send(player, "Para escolher sua raça, digite Rinka ou Humano no chat.");
         send(player, "Pressione R para abrir o menu do KenCraft.");
 
-        ItemStack guide = KenCraftItems.KENCRAFT_GUIDE.get() == null
-                ? ItemStack.EMPTY
-                : KenCraftItems.KENCRAFT_GUIDE.get().getDefaultInstance();
-
-        guide = KenCraftItems.KENCRAFT_GUIDE.get() == null
-                ? ItemStack.EMPTY
-                : KenCraftItems.createGuideBook();
-
+        ItemStack guide = KenCraftItems.createGuideBook();
         if (!guide.isEmpty() && !player.getInventory().contains(guide)) {
             player.getInventory().add(guide);
             send(player, "Você recebeu o Manual do KenCraft. Abra o livro para conhecer os sistemas do mod.");
