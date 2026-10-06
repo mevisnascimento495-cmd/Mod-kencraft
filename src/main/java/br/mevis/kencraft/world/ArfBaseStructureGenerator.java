@@ -196,7 +196,6 @@ public final class ArfBaseStructureGenerator {
             set(level, o.offset(9, y, 0), Blocks.IRON_BLOCK);
             set(level, o.offset(14, y, 0), Blocks.IRON_BLOCK);
         }
-        set(level, o.offset(11, 3, 0), Blocks.IRON_BARS);
     }
 
     private static void drawArf(ServerLevel level, BlockPos base) {
