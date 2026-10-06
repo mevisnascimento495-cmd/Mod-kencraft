@@ -3,7 +3,6 @@ package br.mevis.kencraft.event;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.item.KenCraftItems;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.PlainTextContents;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,17 +39,21 @@ public final class PlayerLoginHandler {
         send(player, "Olá jogador(a)! Você entrou no KenCraft.");
         send(player, "Para escolher sua raça, digite Rinka ou Humano no chat.");
         send(player, "Pressione R para abrir o menu do KenCraft.");
-        ItemStack guide = new ItemStack(KenCraftItems.KENCRAFT_GUIDE.get());
-        if (!player.getInventory().contains(guide)) {
+
+        ItemStack guide = KenCraftItems.KENCRAFT_GUIDE.get() == null
+                ? ItemStack.EMPTY
+                : KenCraftItems.KENCRAFT_GUIDE.get().getDefaultInstance();
+
+        guide = KenCraftItems.KENCRAFT_GUIDE.get() == null
+                ? ItemStack.EMPTY
+                : KenCraftItems.createGuideBook();
+
+        if (!guide.isEmpty() && !player.getInventory().contains(guide)) {
             player.getInventory().add(guide);
-            send(player, "Você recebeu o Livro do KenCraft. Use-o para entender como começar sua jornada.");
+            send(player, "Você recebeu o Manual do KenCraft. Abra o livro para conhecer os sistemas do mod.");
         }
     }
 
-    /**
-     * Cria texto diretamente pelo conteúdo literal, evitando Component.literal().
-     * Isso também evita o IncompatibleClassChangeError observado no build 0.2.3.
-     */
     private static void send(ServerPlayer player, String text) {
         MutableComponent message = MutableComponent.create(new PlainTextContents.LiteralContents(text));
         player.sendSystemMessage(message);
