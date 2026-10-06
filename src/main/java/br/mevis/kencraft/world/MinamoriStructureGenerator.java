@@ -127,66 +127,127 @@ public final class MinamoriStructureGenerator {
     private static boolean validGround(ServerLevel level, int x, int y, int z) {
         BlockState s = level.getBlockState(new BlockPos(x, y, z));
         return !s.is(Blocks.WATER) && !s.is(Blocks.LAVA) && s.isSolid();
-
-
-
-        // REWORK MINAMORI: segundo pavimento, varanda e cobertura-jardim
-        for (int y = 8; y <= 11; y++) {
-            for (int x = 4; x <= 20; x++) {
-                set(level, o.offset(x, y, 3), Blocks.DARK_OAK_PLANKS);
-                set(level, o.offset(x, y, 11), Blocks.DARK_OAK_PLANKS);
-            }
-            for (int z = 3; z <= 11; z++) {
-                set(level, o.offset(4, y, z), Blocks.DARK_OAK_PLANKS);
-                set(level, o.offset(20, y, z), Blocks.DARK_OAK_PLANKS);
-            }
-        }
-        for (int x = 5; x <= 19; x++) for (int z = 4; z <= 10; z++)
-            if ((x + z) % 2 == 0) set(level, o.offset(x, 8, z), Blocks.SPRUCE_PLANKS);
-        for (int x = 6; x <= 18; x += 3) {
-            for (int y = 9; y <= 10; y++) {
-                set(level, o.offset(x, y, 3), Blocks.GLASS_PANE);
-                set(level, o.offset(x, y, 11), Blocks.GLASS_PANE);
-            }
-        }
-        for (int z = 5; z <= 9; z += 2) {
-            set(level, o.offset(4, 9, z), Blocks.GLASS_PANE);
-            set(level, o.offset(20, 9, z), Blocks.GLASS_PANE);
-        }
-        for (int x = 5; x <= 19; x++) {
-            set(level, o.offset(x, 11, 3), Blocks.DARK_OAK_SLAB);
-            set(level, o.offset(x, 11, 11), Blocks.DARK_OAK_SLAB);
-        }
-        for (int z = 4; z <= 10; z++) {
-            set(level, o.offset(4, 11, z), Blocks.DARK_OAK_SLAB);
-            set(level, o.offset(20, 11, z), Blocks.DARK_OAK_SLAB);
-        }
-
-        // Varanda elevada na fachada, com acesso visual ao pátio.
-        for (int x = 7; x <= 17; x++) {
-            set(level, o.offset(x, 7, -1), Blocks.DARK_OAK_PLANKS);
-            set(level, o.offset(x, 8, -1), Blocks.SPRUCE_FENCE);
-        }
-        for (int x : new int[]{7, 10, 13, 16}) {
-            set(level, o.offset(x, 7, -2), Blocks.SPRUCE_FENCE);
-            set(level, o.offset(x, 8, -2), Blocks.LANTERN);
-        }
-        for (int x = 5; x <= 19; x++) {
-            set(level, o.offset(x, 12, 5), Blocks.DARK_OAK_PLANKS);
-            set(level, o.offset(x, 12, 9), Blocks.DARK_OAK_PLANKS);
-        }
-        for (int z = 6; z <= 8; z++) {
-            set(level, o.offset(5, 12, z), Blocks.DARK_OAK_PLANKS);
-            set(level, o.offset(19, 12, z), Blocks.DARK_OAK_PLANKS);
-        }
-        for (int x : new int[]{8, 12, 16}) {
-            set(level, o.offset(x, 13, 7), Blocks.FLOWER_POT);
-            set(level, o.offset(x, 13, 8), Blocks.BAMBOO);
-        }
-
     }
 
-    private static void table(ServerLevel level, BlockPos o, int x, int z) {
+    private static void buildCafe(ServerLevel level, BlockPos o) {
+        for (int x = 0; x < WIDTH; x++) for (int z = 0; z < DEPTH; z++)
+            set(level, o.offset(x, 0, z), (x == 0 || x == WIDTH - 1 || z == 0 || z == DEPTH - 1) ? Blocks.SMOOTH_STONE : Blocks.SPRUCE_PLANKS);
+        set(level, o.offset(12, -1, 6), Blocks.LODESTONE);
+        for (int x = 2; x <= 22; x++) for (int z = 2; z <= 12; z++) {
+            if ((x + z) % 5 == 0) set(level, o.offset(x, 1, z), Blocks.BROWN_CARPET);
+        }
+
+        for (int y = 1; y <= 5; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                set(level, o.offset(x, y, 0), Blocks.WHITE_CONCRETE);
+                set(level, o.offset(x, y, DEPTH - 1), Blocks.WHITE_CONCRETE);
+            }
+            for (int z = 0; z < DEPTH; z++) {
+                set(level, o.offset(0, y, z), Blocks.WHITE_CONCRETE);
+                set(level, o.offset(WIDTH - 1, y, z), Blocks.WHITE_CONCRETE);
+            }
+        }
+        for (int x : new int[]{2, 22}) for (int y = 1; y <= 5; y++) set(level, o.offset(x, y, 0), Blocks.DARK_OAK_LOG);
+        for (int x = 3; x <= 21; x++) for (int y = 2; y <= 4; y++) set(level, o.offset(x, y, 0), Blocks.GLASS);
+        for (int x = 4; x <= 20; x += 4) set(level, o.offset(x, 5, 0), Blocks.DARK_OAK_PLANKS);
+        for (int x = 11; x <= 13; x++) for (int y = 1; y <= 3; y++) set(level, o.offset(x, y, 0), Blocks.AIR);
+
+        for (int x = -1; x <= WIDTH; x++) for (int z = -1; z <= DEPTH; z++) set(level, o.offset(x, 6, z), Blocks.DARK_OAK_SLAB);
+        for (int x = 0; x < WIDTH; x++) set(level, o.offset(x, 7, 0), Blocks.DARK_OAK_PLANKS);
+        for (int x = 3; x <= 21; x += 2) set(level, o.offset(x, 6, -1), Blocks.WHITE_CARPET);
+
+        drawMinamori(level, o.offset(3, 1, -1));
+
+        for (int x = 4; x <= 10; x++) set(level, o.offset(x, 2, 3), Blocks.DARK_OAK_PLANKS);
+        for (int x = 4; x <= 10; x++) set(level, o.offset(x, 3, 3), Blocks.SPRUCE_SLAB);
+        set(level, o.offset(5, 4, 3), Blocks.SMOKER);
+        set(level, o.offset(6, 4, 3), Blocks.BREWING_STAND);
+        set(level, o.offset(7, 4, 3), Blocks.CAULDRON);
+        set(level, o.offset(8, 4, 3), Blocks.COMPOSTER);
+        for (int x : new int[]{4, 6, 8, 10}) set(level, o.offset(x, 5, 2), Blocks.BARREL);
+
+        for (int z = 4; z <= 10; z += 2) {
+            set(level, o.offset(21, 3, z), Blocks.BARREL);
+            set(level, o.offset(21, 4, z), Blocks.SPRUCE_TRAPDOOR);
+        }
+        for (int z = 5; z <= 9; z += 2) set(level, o.offset(20, 2, z), Blocks.DARK_OAK_SLAB);
+        for (int y = 2; y <= 4; y++) set(level, o.offset(22, y, 11), Blocks.DARK_OAK_LOG);
+        for (int y = 1; y <= 3; y++) set(level, o.offset(22, y, 10), Blocks.AIR);
+
+        table(level, o, 6, 9);
+        table(level, o, 15, 9);
+        table(level, o, 6, 12);
+        booth(level, o, 14, 4);
+        booth(level, o, 18, 4);
+        booth(level, o, 14, 12);
+        booth(level, o, 18, 12);
+
+        for (int x : new int[]{6, 12, 18}) {
+            set(level, o.offset(x, 5, 6), Blocks.CHAIN);
+            set(level, o.offset(x, 4, 6), Blocks.LANTERN);
+        }
+        set(level, o.offset(12, 5, 10), Blocks.LANTERN);
+        set(level, o.offset(3, 3, 12), Blocks.FLOWER_POT);
+        set(level, o.offset(4, 3, 12), Blocks.FLOWER_POT);
+    
+
+        // REWORK MINAMORI: segundo pavimento, varanda e cobertura-jardim
+                for (int y = 8; y <= 11; y++) {
+                    for (int x = 4; x <= 20; x++) {
+                        set(level, o.offset(x, y, 3), Blocks.DARK_OAK_PLANKS);
+                        set(level, o.offset(x, y, 11), Blocks.DARK_OAK_PLANKS);
+                    }
+                    for (int z = 3; z <= 11; z++) {
+                        set(level, o.offset(4, y, z), Blocks.DARK_OAK_PLANKS);
+                        set(level, o.offset(20, y, z), Blocks.DARK_OAK_PLANKS);
+                    }
+                }
+                for (int x = 5; x <= 19; x++) for (int z = 4; z <= 10; z++)
+                    if ((x + z) % 2 == 0) set(level, o.offset(x, 8, z), Blocks.SPRUCE_PLANKS);
+                for (int x = 6; x <= 18; x += 3) {
+                    for (int y = 9; y <= 10; y++) {
+                        set(level, o.offset(x, y, 3), Blocks.GLASS_PANE);
+                        set(level, o.offset(x, y, 11), Blocks.GLASS_PANE);
+                    }
+                }
+                for (int z = 5; z <= 9; z += 2) {
+                    set(level, o.offset(4, 9, z), Blocks.GLASS_PANE);
+                    set(level, o.offset(20, 9, z), Blocks.GLASS_PANE);
+                }
+                for (int x = 5; x <= 19; x++) {
+                    set(level, o.offset(x, 11, 3), Blocks.DARK_OAK_SLAB);
+                    set(level, o.offset(x, 11, 11), Blocks.DARK_OAK_SLAB);
+                }
+                for (int z = 4; z <= 10; z++) {
+                    set(level, o.offset(4, 11, z), Blocks.DARK_OAK_SLAB);
+                    set(level, o.offset(20, 11, z), Blocks.DARK_OAK_SLAB);
+                }
+        
+                // Varanda elevada na fachada, com acesso visual ao pátio.
+                for (int x = 7; x <= 17; x++) {
+                    set(level, o.offset(x, 7, -1), Blocks.DARK_OAK_PLANKS);
+                    set(level, o.offset(x, 8, -1), Blocks.SPRUCE_FENCE);
+                }
+                for (int x : new int[]{7, 10, 13, 16}) {
+                    set(level, o.offset(x, 7, -2), Blocks.SPRUCE_FENCE);
+                    set(level, o.offset(x, 8, -2), Blocks.LANTERN);
+                }
+                for (int x = 5; x <= 19; x++) {
+                    set(level, o.offset(x, 12, 5), Blocks.DARK_OAK_PLANKS);
+                    set(level, o.offset(x, 12, 9), Blocks.DARK_OAK_PLANKS);
+                }
+                for (int z = 6; z <= 8; z++) {
+                    set(level, o.offset(5, 12, z), Blocks.DARK_OAK_PLANKS);
+                    set(level, o.offset(19, 12, z), Blocks.DARK_OAK_PLANKS);
+                }
+                for (int x : new int[]{8, 12, 16}) {
+                    set(level, o.offset(x, 13, 7), Blocks.FLOWER_POT);
+                    set(level, o.offset(x, 13, 8), Blocks.BAMBOO);
+                }
+}
+
+
+        private static void table(ServerLevel level, BlockPos o, int x, int z) {
         set(level, o.offset(x, 2, z), Blocks.SPRUCE_SLAB);
         set(level, o.offset(x + 1, 2, z), Blocks.SPRUCE_SLAB);
         set(level, o.offset(x, 1, z), Blocks.SPRUCE_FENCE);
