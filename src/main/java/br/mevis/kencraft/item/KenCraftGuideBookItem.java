@@ -30,7 +30,7 @@ public final class KenCraftGuideBookItem extends WrittenBookItem {
         }
 
         if (level.isClientSide) {
-            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> KenCraftGuideClient::open);
+            DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> KenCraftGuideClient::open);
             return InteractionResultHolder.sidedSuccess(stack);
         }
 
