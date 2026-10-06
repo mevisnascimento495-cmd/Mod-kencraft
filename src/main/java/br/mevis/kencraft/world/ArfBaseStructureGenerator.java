@@ -188,10 +188,16 @@ public final class ArfBaseStructureGenerator {
         drawArfPanel(level, o.offset(8, 6, 0));
         set(level, o.offset(11, 1, 9), Blocks.LODESTONE);
 
-        // entrada reforçada da base, mantendo o piso e o vão central livres
+        // entrada reforçada da base: mantém o vão central totalmente livre
         for (int y = 2; y <= 5; y++) {
             set(level, o.offset(9, y, 0), Blocks.IRON_BLOCK);
             set(level, o.offset(14, y, 0), Blocks.IRON_BLOCK);
+        }
+        // Reaplica o vão depois dos elementos da fachada para garantir a passagem.
+        for (int y = 2; y <= 5; y++) {
+            for (int x = 10; x <= 13; x++) {
+                set(level, o.offset(x, y, 0), Blocks.AIR);
+            }
         }
     }
 
