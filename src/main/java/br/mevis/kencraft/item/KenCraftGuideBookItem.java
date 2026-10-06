@@ -1,7 +1,8 @@
 package br.mevis.kencraft.item;
 
-import br.mevis.kencraft.client.KenCraftScreenV2;
-import net.minecraft.client.Minecraft;
+import br.mevis.kencraft.client.KenCraftGuideClient;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.DistExecutor;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.Filterable;
@@ -29,7 +30,7 @@ public final class KenCraftGuideBookItem extends WrittenBookItem {
         }
 
         if (level.isClientSide) {
-            Minecraft.getInstance().setScreen(new KenCraftScreenV2());
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> KenCraftGuideClient::open);
             return InteractionResultHolder.sidedSuccess(stack);
         }
 
