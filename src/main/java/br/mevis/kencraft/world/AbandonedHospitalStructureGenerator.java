@@ -117,13 +117,11 @@ public final class AbandonedHospitalStructureGenerator {
     }
 
     private static void build(ServerLevel level, BlockPos o) {
-        // Fundação com blocos degradados
         for (int x = 0; x < WIDTH; x++) for (int z = 0; z < DEPTH; z++) {
             set(level, o.offset(x, 0, z), Blocks.CRACKED_STONE_BRICKS);
             set(level, o.offset(x, 1, z), Blocks.POLISHED_ANDESITE);
         }
 
-        // Hospital de dois pavimentos com estrutura mais degradada
         for (int y = 2; y <= 10; y++) {
             for (int x = 0; x < WIDTH; x++) {
                 set(level, o.offset(x, y, 0), Blocks.LIGHT_GRAY_CONCRETE);
@@ -135,45 +133,37 @@ public final class AbandonedHospitalStructureGenerator {
             }
         }
 
-        // Laje do segundo pavimento com detalhes
         for (int x = 1; x < WIDTH - 1; x++)
             for (int z = 1; z < DEPTH - 1; z++)
                 set(level, o.offset(x, 5, z), (x + z) % 4 == 0 ? Blocks.MOSSY_STONE_BRICKS : Blocks.LIGHT_GRAY_CONCRETE);
 
-        // Corredor central do térreo com padrão hospitalar
         for (int x = 4; x <= 26; x++)
             for (int z = 11; z <= 13; z++)
                 set(level, o.offset(x, 2, z), (x + z) % 3 == 0 ? Blocks.DARK_GRAY_CONCRETE : Blocks.LIGHT_GRAY_CONCRETE);
 
-        // Recepção e salas médicas com estrutura mais hospitalaren
         for (int x = 13; x <= 17; x++) set(level, o.offset(x, 2, 3), Blocks.QUARTZ_BLOCK);
 
-        // Quartos com mobiliário médico
         bed(level, o, 5, 5, true);
         bed(level, o, 22, 5, true);
         bed(level, o, 5, 17, true);
         bed(level, o, 22, 17, true);
 
-        // Estações médicas
         for (int x : new int[]{8, 19}) {
             set(level, o.offset(x, 2, 4), Blocks.CHEST);
-            set(level, o.offset(x, 2, 5), Blocks.COMPOSTER); // Recipiente médico
+            set(level, o.offset(x, 2, 5), Blocks.BARREL);
             set(level, o.offset(x, 2, 18), Blocks.BARREL);
         }
 
-        // Abertura da escada com mais realismo
         for (int y = 2; y <= 4; y++)
             for (int x = 14; x <= 16; x++)
                 set(level, o.offset(x, y, 14), Blocks.AIR);
         for (int i = 0; i < 4; i++)
             set(level, o.offset(12 + i, 2 + i, 14), Blocks.OAK_STAIRS);
 
-        // Segundo pavimento com corredor médico
         for (int x = 4; x <= 26; x++)
             for (int z = 11; z <= 13; z++)
                 set(level, o.offset(x, 6, z), (x + z) % 2 == 0 ? Blocks.LIGHT_GRAY_CONCRETE : Blocks.POLISHED_ANDESITE);
 
-        // Janelas amplas com detalhes de abandono
         for (int x = 3; x <= 27; x += 4) {
             for (int y = 2; y <= 4; y++) {
                 set(level, o.offset(x, y, 0), Blocks.GLASS_PANE);
@@ -195,48 +185,35 @@ public final class AbandonedHospitalStructureGenerator {
             }
         }
 
-        // Entrada principal hospitalaren
         for (int y = 2; y <= 4; y++)
             for (int x = 12; x <= 18; x++)
                 set(level, o.offset(x, y, 0), Blocks.AIR);
         for (int x = 11; x <= 19; x++)
             set(level, o.offset(x, 5, 0), Blocks.IRON_BARS);
 
-        // Cobertura da entrada com estrutura de ferro
         for (int x = 10; x <= 20; x++) {
             set(level, o.offset(x, 2, -1), Blocks.IRON_BLOCK);
             set(level, o.offset(x, 3, -1), Blocks.IRON_BLOCK);
         }
 
-        // Símbolo hospitalar grande e visível - Cruz vermelha
         for (int y = 7; y <= 9; y++) set(level, o.offset(15, y, 0), Blocks.RED_CONCRETE);
         for (int x = 13; x <= 17; x++) set(level, o.offset(x, 8, 0), Blocks.RED_CONCRETE);
-        
-        // Detalhes adicionais da cruz
-        set(level, o.offset(15, 7, 0), Blocks.RED_CONCRETE_POWDER);
-        set(level, o.offset(15, 9, 0), Blocks.RED_CONCRETE_POWDER);
-        set(level, o.offset(13, 8, 0), Blocks.RED_CONCRETE_POWDER);
-        set(level, o.offset(17, 8, 0), Blocks.RED_CONCRETE_POWDER);
 
-        // Telhado degradado com sinais de abandono
         for (int x = 0; x < WIDTH; x++)
             for (int z = 0; z < DEPTH; z++)
                 set(level, o.offset(x, 10, z), Blocks.DEEPSLATE_TILES);
-        
-        // Telhado danificado
+
         for (int x = 2; x < WIDTH - 2; x += 3)
             for (int z = 2; z < DEPTH - 2; z += 3)
                 set(level, o.offset(x, 10, z), Blocks.AIR);
 
-        // Sinais de abandono e degradação
         for (int x : new int[]{3, 27})
             for (int z : new int[]{3, 21})
                 set(level, o.offset(x, 2, z), Blocks.COBWEB);
 
-        // Cômodo de isolamento com materiais específicos
         for (int x = 27; x <= 30; x++) {
             for (int y = 2; y <= 5; y++) {
-                set(level, o.offset(x, y, 5), Blocks.PURPUR_BLOCK);
+                set(level, o.offset(x, y, 5), Blocks.QUARTZ_BLOCK);
             }
         }
     }
@@ -246,7 +223,7 @@ public final class AbandonedHospitalStructureGenerator {
         set(level, o.offset(x + 1, 1, z), Blocks.RED_BED);
         set(level, o.offset(x, 1, z + 1), Blocks.BARREL);
         set(level, o.offset(x + 1, 1, z + 1), Blocks.BARREL);
-        
+
         if (hasIV) {
             set(level, o.offset(x - 1, 2, z), Blocks.CHAIN);
             set(level, o.offset(x - 1, 3, z), Blocks.LANTERN);
@@ -259,7 +236,7 @@ public final class AbandonedHospitalStructureGenerator {
         RinkaHungryEntity boss = KenCraftEntities.RINKA_HUNGRY.get().create(level);
         if (boss == null) return;
         boss.moveTo(pos.getX()+0.5D,pos.getY(),pos.getZ()+0.5D,180.0F,0.0F);
-        boss.setCustomName(net.minecraft.network.chat.Component.literal("§cRinka Faminta - Hospital Abandonado"));
+        boss.setCustomName(net.minecraft.network.chat.Component.literal("Rinka Faminta - Hospital Abandonado"));
         boss.setCustomNameVisible(true);
         level.addFreshEntity(boss);
     }
