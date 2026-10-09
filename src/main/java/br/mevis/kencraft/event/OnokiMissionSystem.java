@@ -96,7 +96,8 @@ public final class OnokiMissionSystem {
         event.setCanceled(true);
         if (message.equals("quero me tornar um jashin") || message.equals("jashin")) {
             if (!canChoose(player)) return;
-            player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("JASHIN"));
+            player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("JASHIN")
+                    .withOnokiJinsuikakuRankC(player.getData(ModAttachments.PLAYER_DATA).jinsuikakuRankCConsumed()));
             say(player, "Onoki: Bem... já que um Jashin foi o que você escolheu, você vai ter que sofrer um pouquinho.");
             say(player, "Onoki: Derrote 100 Rinkas Rank C e coma 20 Jinsuikaku Rank C para tornar seu corpo fácil de adaptar à mutação.");
             say(player, "Onoki: Logo depois, traga o coração de alguém com uma técnica, ou um Rinka com uma Kikan.");
@@ -106,7 +107,8 @@ public final class OnokiMissionSystem {
         }
         if (message.equals("quero me tornar um híbrido") || message.equals("híbrido") || message.equals("hibrido")) {
             if (!canChoose(player)) return;
-            player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("HYBRID"));
+            player.setData(ModAttachments.STORY_PROGRESS, progress.startOnokiPath("HYBRID")
+                    .withOnokiJinsuikakuRankC(player.getData(ModAttachments.PLAYER_DATA).jinsuikakuRankCConsumed()));
             say(player, "Onoki: HAHAHAHA! Sua ambiciosidade é algo que me assusta... mas vou te ajudar.");
             say(player, "Onoki: Se você quer tanto se tornar o auge da sua espécie, mate Akio Ginshō, o general mais forte da história da ARF.");
             say(player, "Onoki: Em força bruta ele é inferior a Tatsuo Yakumori, mas ainda é poderoso o suficiente. Traga o coração dele.");

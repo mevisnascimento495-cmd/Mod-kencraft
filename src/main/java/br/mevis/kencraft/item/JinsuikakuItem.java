@@ -3,6 +3,7 @@ package br.mevis.kencraft.item;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.event.KikakogouProgress;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -36,22 +37,27 @@ public class JinsuikakuItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player && !level.isClientSide) {
             PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-            if (canConsume(data.race()) && data.race() == Race.RINKA) {
+            if (canConsume(data.race())) {
                 int consumed = data.jinsuikakuConsumed() + 1;
-                String oldClass = data.rinkaClass();
-                String newClass = classForConsumed(consumed, oldClass);
-                player.setData(ModAttachments.PLAYER_DATA,
-                        data.withJinsuikakuConsumed(consumed).withRinkaClass(newClass));
-
-                if (!newClass.equals(oldClass)) {
-                    player.sendSystemMessage(Component.literal(
-                            "Você ganhou um aumento na sua classe, aumentando seu perigo, classe " + newClass));
+                if (data.race() == Race.RINKA) {
+                    String oldClass = data.rinkaClass();
+                    String newClass = classForConsumed(consumed, oldClass);
+                    player.setData(ModAttachments.PLAYER_DATA,
+                            data.withJinsuikakuConsumed(consumed).withRinkaClass(newClass));
+                    if (!newClass.equals(oldClass)) {
+                        player.sendSystemMessage(Component.literal(
+                                "Você ganhou um aumento na sua classe, aumentando seu perigo, classe " + newClass));
+                    } else {
+                        player.sendSystemMessage(Component.literal(
+                                "Jinsuikaku devorada: " + consumed + ". Classe atual: " + newClass));
+                    }
                 } else {
-                    player.sendSystemMessage(Component.literal(
-                            "Jinsuikaku devorada: " + consumed + ". Classe atual: " + newClass));
+                    player.setData(ModAttachments.PLAYER_DATA, data.withJinsuikakuConsumed(consumed));
+                    player.sendSystemMessage(Component.literal("Jinsuikaku devorada. Seu corpo absorveu os nutrientes."));
                 }
-            } else if (canConsume(data.race())) {
-                player.sendSystemMessage(Component.literal("Jinsuikaku devorada. Seu corpo absorveu os nutrientes."));
+                if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
+                    KikakogouProgress.tryUnlockFromConsumption(serverPlayer);
+                }
             }
         }
         return super.finishUsingItem(stack, level, entity);

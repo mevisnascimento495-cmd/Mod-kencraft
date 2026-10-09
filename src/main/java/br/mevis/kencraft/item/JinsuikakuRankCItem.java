@@ -3,6 +3,7 @@ package br.mevis.kencraft.item;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import br.mevis.kencraft.event.KikakogouProgress;
 import br.mevis.kencraft.event.OnokiMissionSystem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
@@ -36,27 +37,31 @@ public final class JinsuikakuRankCItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
         if (entity instanceof Player player && !level.isClientSide) {
             PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
-            if (canConsume(data.race()) && data.race() == Race.RINKA) {
+            if (canConsume(data.race())) {
                 int consumed = data.jinsuikakuRankCConsumed() + 1;
-                String oldClass = data.rinkaClass();
-                String newClass = rankClassForConsumed(consumed, oldClass);
-                player.setData(ModAttachments.PLAYER_DATA,
-                        data.withJinsuikakuRankCConsumed(consumed).withRinkaClass(newClass));
-                if (!newClass.equals(oldClass)) {
-                    player.sendSystemMessage(Component.literal(
-                            "Você ganhou um aumento na sua classe, aumentando seu perigo, classe " + newClass));
-                    if ("A".equals(newClass)) {
+                if (data.race() == Race.RINKA) {
+                    String oldClass = data.rinkaClass();
+                    String newClass = rankClassForConsumed(consumed, oldClass);
+                    player.setData(ModAttachments.PLAYER_DATA,
+                            data.withJinsuikakuRankCConsumed(consumed).withRinkaClass(newClass));
+                    if (!newClass.equals(oldClass)) {
                         player.sendSystemMessage(Component.literal(
-                                "Você atingiu a Classe A. Já pode evoluir sua Kikan para uma Kikakogou."));
+                                "Você ganhou um aumento na sua classe, aumentando seu perigo, classe " + newClass));
+                        if ("A".equals(newClass)) {
+                            player.sendSystemMessage(Component.literal(
+                                    "Você atingiu a Classe A. Já pode evoluir sua Kikan para uma Kikakogou."));
+                        }
+                    } else {
+                        player.sendSystemMessage(Component.literal("Jinsuikaku Rank C devorada: " + consumed + "."));
                     }
                 } else {
-                    player.sendSystemMessage(Component.literal("Jinsuikaku Rank C devorada: " + consumed + "."));
+                    player.setData(ModAttachments.PLAYER_DATA, data.withJinsuikakuRankCConsumed(consumed));
+                    player.sendSystemMessage(Component.literal("Jinsuikaku Rank C devorada. Seu corpo absorveu os nutrientes."));
                 }
-            } else if (canConsume(data.race())) {
-                player.sendSystemMessage(Component.literal("Jinsuikaku Rank C devorada. Seu corpo absorveu os nutrientes."));
             }
             if (player instanceof net.minecraft.server.level.ServerPlayer serverPlayer) {
                 OnokiMissionSystem.onRankCConsumed(serverPlayer);
+                KikakogouProgress.tryUnlockFromConsumption(serverPlayer);
             }
         }
         return super.finishUsingItem(stack, level, entity);
