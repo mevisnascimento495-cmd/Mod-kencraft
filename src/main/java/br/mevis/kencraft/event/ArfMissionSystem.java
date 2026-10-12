@@ -169,4 +169,76 @@ public final class ArfMissionSystem {
             player.sendSystemMessage(Component.literal("Você concluiu a Investigação da Rishin. Volte a falar com Akio para receber a próxima missão."));
         }
     }
+
+    @SubscribeEvent
+    public static void trackCovenEntryAndExit(ServerTickEvent.Post event) {
+        if (event.getServer().getTickCount() % 5 != 0) return;
+        for (ServerLevel level : event.getServer().getAllLevels()) {
+            for (ServerPlayer player : level.players()) {
+                ArfMissionData mission = player.getData(ModAttachments.ARF_MISSION);
+                if (!mission.active() || mission.missionId() < 2 || mission.missionId() > 4) continue;
+                if (!mission.rishinCovenEntered()) {
+                    BlockPos hatch = findHatch(level, player);
+                    if (hatch != null && player.getY() < hatch.getY() + 0.5D) {
+                        player.setData(ModAttachments.ARF_MISSION,
+                                mission.enteredRishinCoven(hatch.getX(), hatch.getY(), hatch.getZ()));
+                    }
+                    continue;
+                }
+                boolean atHatch = Math.abs(player.getX() - mission.covenEntryX() - 0.5D) < 1.5D
+                        && Math.abs(player.getZ() - mission.covenEntryZ() - 0.5D) < 1.5D;
+                if (!atHatch || player.getY() < mission.covenEntryY() + 1.0D) continue;
+                if (mission.missionId() == 4 && !mission.mitsoEventTriggered()) {
+                    spawnMitsoAmbush(level, player);
+                    player.setData(ModAttachments.ARF_MISSION,
+                            mission.exitedRishinCoven().withMitsoEventTriggered(true));
+                } else {
+                    player.setData(ModAttachments.ARF_MISSION, mission.exitedRishinCoven());
+                }
+            }
+        }
+    }
+
+    private static BlockPos findHatch(ServerLevel level, ServerPlayer player) {
+        int px = player.blockPosition().getX();
+        int pz = player.blockPosition().getZ();
+        int minY = Math.max(level.getMinBuildHeight(), player.blockPosition().getY() + 1);
+        int maxY = Math.min(level.getMaxBuildHeight() - 1, player.blockPosition().getY() + 64);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int y = minY; y <= maxY; y++) {
+                    BlockPos pos = new BlockPos(px + dx, y, pz + dz);
+                    if (level.getBlockState(pos).is(Blocks.CRIMSON_TRAPDOOR)) return pos;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static void spawnMitsoAmbush(ServerLevel level, ServerPlayer player) {
+        player.sendSystemMessage(Component.literal(
+                "Mitso: VOCÊ, VOCÊ ACHOU NOSSO ESCONDERIJO, DERROTOU MEUS SUBORDINADOS, E ACHA QUE VAI IR EMBORA AGORA?!"));
+        for (int i = 0; i < 10; i++) {
+            double angle = Math.PI * 2.0D * i / 10.0D;
+            int x = player.blockPosition().getX() + (int) Math.round(Math.cos(angle) * (5 + i % 2));
+            int z = player.blockPosition().getZ() + (int) Math.round(Math.sin(angle) * (5 + i % 2));
+            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+            Entity mob = KenCraftEntities.RISHIN.get().create(level);
+            if (mob == null) continue;
+            mob.moveTo(x + 0.5D, y, z + 0.5D, i * 36.0F, 0.0F);
+            mob.getPersistentData().putBoolean("kencraft_mitso_event_minion", true);
+            if (level.noCollision(mob)) level.addFreshEntity(mob);
+        }
+        Entity mitso = KenCraftEntities.MITSO.get().create(level);
+        if (mitso != null) {
+            mitso.moveTo(player.getX() + 2.5D, player.getY(), player.getZ() + 2.5D,
+                    player.getYRot(), 0.0F);
+            mitso.setCustomName(Component.literal("Mitso"));
+            mitso.setCustomNameVisible(true);
+            mitso.getPersistentData().putBoolean("kencraft_mitso_event", true);
+            mitso.getPersistentData().putString("kencraft_mitso_owner", player.getUUID().toString());
+            if (level.noCollision(mitso)) level.addFreshEntity(mitso);
+        }
+    }
+
 }
