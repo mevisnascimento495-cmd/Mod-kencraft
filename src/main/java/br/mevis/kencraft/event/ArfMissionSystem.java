@@ -74,7 +74,10 @@ public final class ArfMissionSystem {
         } else if (started.missionId() == 5) {
             player.sendSystemMessage(Component.literal("Missão 5 — O desafio de Aodai."));
             player.sendSystemMessage(Component.literal("Akio Ginshō: Você concluiu as missões anteriores. Agora prove sua força enfrentando Aodai!"));
-            spawnAodaiChallenge(player);
+            if (!spawnAodaiChallenge(player)) {
+                player.setData(ModAttachments.ARF_MISSION, mission);
+                return;
+            }
         } else {
             player.sendSystemMessage(Component.literal("ARF — Missão " + started.missionId() + " do estágio " + started.stage() + "."));
             player.sendSystemMessage(Component.literal("Objetivo desta missão ainda não foi definido no projeto."));
@@ -180,12 +183,12 @@ public final class ArfMissionSystem {
         }
     }
 
-    private static void spawnAodaiChallenge(ServerPlayer player) {
+    private static boolean spawnAodaiChallenge(ServerPlayer player) {
         ServerLevel level = player.serverLevel();
         Entity aodai = KenCraftEntities.AODAI.get().create(level);
         if (aodai == null) {
             player.sendSystemMessage(Component.literal("Não foi possível iniciar o desafio de Aodai. Tente falar com Akio novamente."));
-            return;
+            return false;
         }
         aodai.moveTo(player.getX() + 3.5D, player.getY(), player.getZ() + 0.5D, player.getYRot(), 0.0F);
         aodai.setCustomName(Component.literal("Aodai — Desafio da ARF"));
@@ -194,10 +197,11 @@ public final class ArfMissionSystem {
         aodai.getPersistentData().putString("kencraft_aodai_owner", player.getUUID().toString());
         if (level.noCollision(aodai) && level.addFreshEntity(aodai)) {
             player.sendSystemMessage(Component.literal("Aodai foi convocado para o desafio. Prepare-se para lutar!"));
+            return true;
         } else {
             aodai.discard();
             player.sendSystemMessage(Component.literal("Não foi possível posicionar Aodai com segurança. Afaste-se de paredes e tente novamente com Akio."));
-            player.setData(ModAttachments.ARF_MISSION, player.getData(ModAttachments.ARF_MISSION).completeCurrentTask());
+            return false;
         }
     }
 
