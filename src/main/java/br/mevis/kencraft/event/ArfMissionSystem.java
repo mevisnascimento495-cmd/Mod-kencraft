@@ -7,6 +7,15 @@ import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
 import br.mevis.kencraft.data.TalentData;
 import br.mevis.kencraft.entity.RinkaHungryEntity;
+import br.mevis.kencraft.entity.RishinEntity;
+import br.mevis.kencraft.entity.KenkiSenkoEntity;
+import br.mevis.kencraft.entity.MitsoEntity;
+import br.mevis.kencraft.entity.KenCraftEntities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -55,10 +64,15 @@ public final class ArfMissionSystem {
             player.sendSystemMessage(Component.literal("Missão 1 — Distrito 7 → Distrito 1"));
             player.sendSystemMessage(Component.literal("Derrote o Rinka do distrito 7 que veio para o 1°. Ele está em um hospital abandonado."));
             player.sendSystemMessage(Component.literal("Alvo: Rinka Hungry. Recompensa: 100 de reputação."));
+        } else if (started.missionId() == 2) {
+            player.sendSystemMessage(Component.literal("Missão 2 — Investigação da Rishin: encontre o alçapão, explore o covil subterrâneo e derrote os três Rishin da sala central."));
+        } else if (started.missionId() == 3) {
+            player.sendSystemMessage(Component.literal("Missão 3 — Investigação da Rishin: encontre a sala de Kenki Senkō e derrote o membro superior de manto vermelho."));
+        } else if (started.missionId() == 4) {
+            player.sendSystemMessage(Component.literal("Missão 4 — Investigação da Rishin: depois de derrotar Kenki, saia do covil e enfrente Mitso e a emboscada."));
         } else {
             player.sendSystemMessage(Component.literal("ARF — Missão " + started.missionId() + " do estágio " + started.stage() + "."));
             player.sendSystemMessage(Component.literal("Objetivo desta missão ainda não foi definido no projeto."));
-            player.sendSystemMessage(Component.literal("A estrutura de 10 missões por estágio já está preparada para receber os objetivos."));
         }
         player.sendSystemMessage(Component.literal("Patente de missão: " + started.rankName() + " | Reputação: " + started.reputation() + "/200."));
     }
