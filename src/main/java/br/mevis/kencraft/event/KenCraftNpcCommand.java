@@ -41,7 +41,10 @@ public final class KenCraftNpcCommand {
     @SubscribeEvent
     public static void register(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+        // These commands can create NPCs, grant items, or directly alter progression/combat.
+        // Keep the entire administrative/debug command tree restricted to server operators.
         dispatcher.register(Commands.literal("kencraft")
+                .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("npcs").executes(context -> spawnNpcs(context.getSource())))
                 .then(Commands.literal("give").then(Commands.literal("jinsuikaku").executes(context -> giveJinsuikaku(context.getSource()))))
                 .then(Commands.literal("jio").then(Commands.literal("charge").executes(context -> chargeJio(context.getSource()))).then(Commands.literal("random").executes(context -> randomJioTechnique(context.getSource()))))
@@ -100,7 +103,7 @@ public final class KenCraftNpcCommand {
         if ("LIZARD_CROCODILE_TAIL".equals(data.kikanType())) { if("z".equals(attackKey))return lizardExplosion(player); LivingEntity target=nearestTarget(player,4.5D); if(target==null)return 0; target.hurt(player.damageSources().playerAttack(player),14.0F+Math.max(0,data.strength()-1)*0.5F); target.addEffect(new net.minecraft.world.effect.MobEffectInstance(KenCraftEffects.QUEBRA_DE_MEMBROS,30*20,0,false,true)); player.swing(net.minecraft.world.InteractionHand.MAIN_HAND); return 1; }
         List<LivingEntity> targets=player.serverLevel().getEntitiesOfClass(LivingEntity.class,player.getBoundingBox().inflate(4.0D),entity->entity!=player&&entity.isAlive()); LivingEntity target=targets.stream().min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null); if(target==null)return 0;
         float damage=attackKey.equals("z")?6.0F:9.0F; target.hurt(player.damageSources().playerAttack(player),damage);
-        switch(data.kikanType()){case "TENTACLE"->target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,60,attackKey.equals("c")?1:0));case "SCORPION_TAIL"->target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON,attackKey.equals("c")?100:60,0));case "CROCODILE_TAIL"->target.setDeltaMovement(target.getDeltaMovement().add(player.getLookAngle().scale(0.45D)));default->{}}
+        switch(data.kikanType()){case "TENTACLE"->target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,60,attackKey.equals("c")?1:0));case "SCORPION_TAIL"->target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON,attackKey.equals("c")?100:60,0));case "CROCODILE_TAIL"->target.setDeltaMovement(target.getDeltaMovement().add(player.getLookAngle().scale(0.45D)));default->{ }}
         player.swing(net.minecraft.world.InteractionHand.MAIN_HAND); return 1;
     }
 
