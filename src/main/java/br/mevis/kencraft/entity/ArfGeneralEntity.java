@@ -178,10 +178,10 @@ public class ArfGeneralEntity extends PathfinderMob {
         var victim = event.getEntity();
         var key = BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType());
         String path = key == null ? "" : key.getPath().toLowerCase(java.util.Locale.ROOT);
-        boolean rankBRinka = key != null
+        boolean rankBRinka = victim instanceof RinkaRankBAkiraEntity || (key != null
                 && KenCraft.MOD_ID.equals(key.getNamespace())
                 && path.contains("rinka")
-                && (path.contains("rank_b") || path.contains("rankb") || path.contains("rank-b"));
+                && (path.contains("rank_b") || path.contains("rankb") || path.contains("rank-b")));
 
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         if (data.race() != Race.HUMAN || data.arfMissionKills() < 0) return;

@@ -29,6 +29,7 @@ public final class KenCraftEntityRenderers {
   e.registerEntityRenderer(KenCraftEntities.RINKA.get(),RinkaRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.RANK_C_RINKA.get(),RankCRinkaRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.RINKA_HUNGRY.get(),RinkaHungryRenderer::new);
+  e.registerEntityRenderer(KenCraftEntities.RINKA_RANK_B_AKIRA.get(),RinkaRankBAkiraRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.RISHIN.get(),RishinRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.AODAI.get(),AodaiRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(),ArfRenderer::new);
@@ -58,6 +59,20 @@ public final class KenCraftEntityRenderers {
   @Override public void render(com.mojang.blaze3d.vertex.PoseStack poseStack,net.minecraft.client.renderer.MultiBufferSource buffer,int light,RinkaHungryEntity entity,float limbSwing,float limbSwingAmount,float partialTick,float ageInTicks,float netHeadYaw,float headPitch){
    if(!entity.isKikanActive())return;
    model.setKikakogouActive(false);model.setType(entity.getKikanType());model.animate(entity.getKikanAnimationProgress(partialTick),true,entity.getKikanAttackKey());
+   poseStack.pushPose();poseStack.translate(0,.72D,.24D);model.renderToBuffer(poseStack,buffer.getBuffer(net.minecraft.client.renderer.RenderType.entityCutoutNoCull(TEXTURE)),light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,0xFFFFFFFF);poseStack.popPose();
+  }
+ }
+ private static final class RinkaRankBAkiraRenderer extends HumanoidMobRenderer<RinkaRankBAkiraEntity,HumanoidModel<RinkaRankBAkiraEntity>>{
+  RinkaRankBAkiraRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);addLayer(new AkiraCrocodileTailLayer(this,c.getModelSet()));}
+  public ResourceLocation getTextureLocation(RinkaRankBAkiraEntity e){return ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/rinka_rank_b_akira.png");}
+ }
+ private static final class AkiraCrocodileTailLayer extends net.minecraft.client.renderer.entity.layers.RenderLayer<RinkaRankBAkiraEntity,HumanoidModel<RinkaRankBAkiraEntity>>{
+  private static final ResourceLocation TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/kikan.png");
+  private final KikanModel model;
+  AkiraCrocodileTailLayer(net.minecraft.client.renderer.entity.RenderLayerParent<RinkaRankBAkiraEntity,HumanoidModel<RinkaRankBAkiraEntity>> parent,net.minecraft.client.model.geom.EntityModelSet set){super(parent);model=new KikanModel(set.bakeLayer(KIKAN_LAYER));}
+  @Override public void render(com.mojang.blaze3d.vertex.PoseStack poseStack,net.minecraft.client.renderer.MultiBufferSource buffer,int light,RinkaRankBAkiraEntity entity,float limbSwing,float limbSwingAmount,float partialTick,float ageInTicks,float netHeadYaw,float headPitch){
+   model.setKikakogouActive(false);model.setType("CROCODILE_TAIL");
+   if(entity.getKikanAnimationTicks()>0)model.animate(entity.getKikanAnimationProgress(partialTick),true,entity.getKikanAttackKey());else model.resetPose();
    poseStack.pushPose();poseStack.translate(0,.72D,.24D);model.renderToBuffer(poseStack,buffer.getBuffer(net.minecraft.client.renderer.RenderType.entityCutoutNoCull(TEXTURE)),light,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,0xFFFFFFFF);poseStack.popPose();
   }
  }

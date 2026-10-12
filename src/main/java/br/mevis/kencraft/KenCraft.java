@@ -41,6 +41,7 @@ public class KenCraft {
    event.put(KenCraftEntities.RINKA.get(),RinkaEntity.createAttributes().build());
    event.put(KenCraftEntities.RANK_C_RINKA.get(),RankCRinkaEntity.createAttributes().build());
    event.put(KenCraftEntities.RINKA_HUNGRY.get(),RinkaHungryEntity.createAttributes().build());
+   event.put(KenCraftEntities.RINKA_RANK_B_AKIRA.get(),RinkaRankBAkiraEntity.createAttributes().build());
    event.put(KenCraftEntities.RISHIN.get(),RishinEntity.createAttributes().build());
    event.put(KenCraftEntities.AODAI.get(),AodaiEntity.createAttributes().build());
    event.put(KenCraftEntities.ARF_INVESTIGATOR.get(),ArfInvestigatorEntity.createAttributes().build());
@@ -55,7 +56,7 @@ public class KenCraft {
   @SubscribeEvent public static void buildCreativeTab(BuildCreativeModeTabContentsEvent event){
    if(CreativeModeTabs.INGREDIENTS.equals(event.getTabKey())){event.accept(KenCraftItems.JINSUIKAKU.get());event.accept(KenCraftItems.JINSUIKAKU_RANK_C.get());}
    if(CreativeModeTabs.SPAWN_EGGS.equals(event.getTabKey())){
-    event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());event.accept(KenCraftItems.RANK_C_RINKA_SPAWN_EGG.get());event.accept(KenCraftItems.RISHIN_SPAWN_EGG.get());event.accept(KenCraftItems.AODAI_SPAWN_EGG.get());event.accept(KenCraftItems.ARF_INVESTIGATOR_SPAWN_EGG.get());event.accept(KenCraftItems.ARF_GENERAL_SPAWN_EGG.get());event.accept(KenCraftItems.SHIN_HOMARE_SPAWN_EGG.get());event.accept(KenCraftItems.KAORI_HOMARE_SPAWN_EGG.get());event.accept(KenCraftItems.AKIO_GINSHO_SPAWN_EGG.get());event.accept(KenCraftItems.ONOKI_SPAWN_EGG.get());event.accept(KenCraftItems.RINKA_HUNGRY_SPAWN_EGG.get());event.accept(KenCraftItems.INTERIOR_SPIRIT_SPAWN_EGG.get());event.accept(KenCraftItems.ARTIFACT_SHOP_SPAWN_EGG.get());
+    event.accept(KenCraftItems.RINKA_SPAWN_EGG.get());event.accept(KenCraftItems.RANK_C_RINKA_SPAWN_EGG.get());event.accept(KenCraftItems.RISHIN_SPAWN_EGG.get());event.accept(KenCraftItems.AODAI_SPAWN_EGG.get());event.accept(KenCraftItems.ARF_INVESTIGATOR_SPAWN_EGG.get());event.accept(KenCraftItems.ARF_GENERAL_SPAWN_EGG.get());event.accept(KenCraftItems.SHIN_HOMARE_SPAWN_EGG.get());event.accept(KenCraftItems.KAORI_HOMARE_SPAWN_EGG.get());event.accept(KenCraftItems.AKIO_GINSHO_SPAWN_EGG.get());event.accept(KenCraftItems.ONOKI_SPAWN_EGG.get());event.accept(KenCraftItems.RINKA_HUNGRY_SPAWN_EGG.get());event.accept(KenCraftItems.RINKA_RANK_B_AKIRA_SPAWN_EGG.get());event.accept(KenCraftItems.INTERIOR_SPIRIT_SPAWN_EGG.get());event.accept(KenCraftItems.ARTIFACT_SHOP_SPAWN_EGG.get());
    }
    if(CreativeModeTabs.INGREDIENTS.equals(event.getTabKey())){event.accept(KenCraftItems.SPIRIT_NECKLACE.get());event.accept(KenCraftItems.VITALITY_RING.get());event.accept(KenCraftItems.PERCEPTION_AMULET.get());event.accept(KenCraftItems.PARADISE_FRAGMENT.get());}
    if(CreativeModeTabs.COMBAT.equals(event.getTabKey())){event.accept(KenCraftItems.ARF_UNIFORM_CHESTPLATE.get());event.accept(KenCraftItems.ARF_UNIFORM_LEGGINGS.get());}

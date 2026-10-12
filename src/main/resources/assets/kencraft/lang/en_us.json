@@ -32,5 +32,7 @@
   "entity.kencraft.aodai": "Aodai",
   "entity.kencraft.shin_homare": "Shin Homare",
   "entity.kencraft.kaori_homare": "Kaori Homare",
-  "effect.kencraft.sufoco": "Suffocation"
+  "effect.kencraft.sufoco": "Suffocation",
+  "item.kencraft.rinka_rank_b_akira_spawn_egg": "Rank B Rinka — Akira Spawn Egg",
+  "entity.kencraft.rinka_rank_b_akira": "Rank B Rinka — Akira"
 }

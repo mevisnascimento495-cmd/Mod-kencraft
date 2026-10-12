@@ -248,7 +248,7 @@ public final class KikanModel extends HierarchicalModel<AbstractClientPlayer> {
         }
     }
 
-    private void resetPose() {
+    public void resetPose() {
         reset(crocodile1); reset(crocodile2); reset(crocodile3);
         reset(tentacle1); reset(tentacle2); reset(tentacle3); reset(tentacle4);
         reset(tentacle5); reset(tentacle6); reset(tentacle7); reset(tentacle8);

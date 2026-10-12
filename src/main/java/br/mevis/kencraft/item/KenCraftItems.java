@@ -38,6 +38,7 @@ public final class KenCraftItems{
  public static final DeferredHolder<Item,DeferredSpawnEggItem> AKIO_GINSHO_SPAWN_EGG=ITEMS.register("akio_ginsho_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.AKIO_GINSHO,0xE8E8E8,0x303030,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> ONOKI_SPAWN_EGG=ITEMS.register("onoki_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.ONOKI,0x777777,0x2455A4,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> RINKA_HUNGRY_SPAWN_EGG=ITEMS.register("rinka_hungry_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RINKA_HUNGRY,0xF2F2F2,0x1E5A8A,new Item.Properties()));
+ public static final DeferredHolder<Item,DeferredSpawnEggItem> RINKA_RANK_B_AKIRA_SPAWN_EGG=ITEMS.register("rinka_rank_b_akira_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.RINKA_RANK_B_AKIRA,0x241C1C,0xA42B37,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> INTERIOR_SPIRIT_SPAWN_EGG=ITEMS.register("interior_spirit_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.INTERIOR_SPIRIT,0x6E7BFF,0xB9C8FF,new Item.Properties()));
  public static final DeferredHolder<Item,DeferredSpawnEggItem> ARTIFACT_SHOP_SPAWN_EGG=ITEMS.register("artifact_shop_npc_spawn_egg",()->new DeferredSpawnEggItem(KenCraftEntities.ARTIFACT_SHOP,0x5B4636,0xD9B45B,new Item.Properties()));
  private KenCraftItems(){}
