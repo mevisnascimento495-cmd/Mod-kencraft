@@ -62,6 +62,8 @@ jobs:
           test -f src/main/resources/assets/kencraft/textures/entity/arf.png
           test -f src/main/resources/assets/kencraft/textures/entity/shin_homare.png
           test -f src/main/resources/assets/kencraft/textures/entity/kaori_homare.png
+          test -f src/main/skins/kenki_senko.png.b64
+          test -f src/main/skins/mitso.png.b64
           if grep -q "RegisterCommandsEvent" src/main/java/br/mevis/kencraft/event/KenCraftJioCommand.java; then exit 1; fi
       - name: Build KenCraft mod
         run: gradle clean build --no-daemon --stacktrace --refresh-dependencies
