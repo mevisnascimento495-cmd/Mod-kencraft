@@ -42,7 +42,7 @@ public class RinkaHungryEntity extends RinkaEntity {
                 .add(Attributes.MOVEMENT_SPEED, 0.32D)
                 .add(Attributes.ATTACK_DAMAGE, 12.0D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(Attributes.ARMOR, 10.0D)
+                .add(Attributes.ARMOR, 15.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.45D);
     }
 
