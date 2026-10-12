@@ -16,6 +16,15 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import br.mevis.kencraft.entity.RishinEntity;
+import br.mevis.kencraft.entity.KenkiSenkoEntity;
+import br.mevis.kencraft.entity.MitsoEntity;
+import br.mevis.kencraft.entity.KenCraftEntities;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.levelgen.Heightmap;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -81,6 +90,14 @@ public final class ArfMissionSystem {
         if (mission.missionId() == 1) {
             player.sendSystemMessage(Component.literal("ARF — Missão 1 ativa."));
             player.sendSystemMessage(Component.literal("Derrote o Rinka do distrito 7 que veio para o 1°. Ele está em um hospital abandonado."));
+        } else if (mission.missionId() == 2) {
+            player.sendSystemMessage(Component.literal("Missão 2 ativa: encontre o covil subterrâneo e derrote os três Rishin da sala central."));
+            player.sendSystemMessage(Component.literal("Progresso: " + mission.rishinCentralKills() + "/3."));
+        } else if (mission.missionId() == 3) {
+            player.sendSystemMessage(Component.literal("Missão 3 ativa: encontre Kenki Senkō no canto do covil e derrote-o."));
+        } else if (mission.missionId() == 4) {
+            player.sendSystemMessage(Component.literal("Missão 4 ativa: saia do covil para iniciar a emboscada de Mitso."));
+            if (mission.mitsoEventTriggered()) player.sendSystemMessage(Component.literal("Emboscada ativa: derrote Mitso."));
         } else if (mission.missionId() == 11 || mission.missionId() == 22) {
             player.sendSystemMessage(Component.literal("ARF — MISSÃO DE RANK UP " + mission.missionId() + " ativa."));
             player.sendSystemMessage(Component.literal("Objetivo específico do Rank UP ainda não foi definido."));
