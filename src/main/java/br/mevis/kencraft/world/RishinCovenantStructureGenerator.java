@@ -195,7 +195,11 @@ public final class RishinCovenantStructureGenerator {
     }
 
     private static void set(ServerLevel level, BlockPos pos, Block block) {
-        level.setBlock(pos, block.defaultBlockState(), 3);
+        set(level, pos, block.defaultBlockState());
+    }
+
+    private static void set(ServerLevel level, BlockPos pos, BlockState state) {
+        level.setBlock(pos, state, 3);
     }
 
     private record Pending(ServerLevel level, int x, int z) {}
