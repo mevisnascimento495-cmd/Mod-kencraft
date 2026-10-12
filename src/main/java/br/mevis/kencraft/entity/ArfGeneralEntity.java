@@ -1,8 +1,10 @@
 package br.mevis.kencraft.entity;
 
+import br.mevis.kencraft.KenCraft;
 import br.mevis.kencraft.data.ModAttachments;
 import br.mevis.kencraft.data.PlayerData;
 import br.mevis.kencraft.data.Race;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -20,7 +22,11 @@ import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
+@EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public class ArfGeneralEntity extends PathfinderMob {
     public ArfGeneralEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
@@ -105,20 +111,44 @@ public class ArfGeneralEntity extends PathfinderMob {
             return InteractionResult.CONSUME;
         }
 
-        int required = requiredRankCRinkas(data.arfClass());
-        if (data.arfClass() > 1 && data.arfMissionKills() >= required) {
-            int newRank = data.arfClass() - 1;
-            player.setData(ModAttachments.PLAYER_DATA, data.withArfClass(newRank).withArfMissionKills(0));
-            player.sendSystemMessage(Component.literal("Parabéns! Você foi promovido para Investigador de " + rankName(newRank) + "."));
-            if (newRank > 1) {
-                player.sendSystemMessage(Component.literal("Próxima missão: elimine " + requiredRankCRinkas(newRank) + " Rinkas Rank C e volte ao General."));
+        // Mission 5: the First Class investigator must defeat one Rank B Rinka.
+        if (data.arfClass() == 1) {
+            if (data.arfMissionKills() >= 1) {
+                player.sendSystemMessage(Component.literal("Missão 5/5 concluída! Você derrotou o Rinka Rank B."));
+                player.sendSystemMessage(Component.literal("Você concluiu as cinco missões do General da ARF e mantém a patente de Primeira Classe."));
             } else {
-                player.sendSystemMessage(Component.literal("Você alcançou o Rank 1 da ARF. Novas missões especiais serão desbloqueadas em breve."));
+                player.sendSystemMessage(Component.literal("Missão 5/5 — Primeira Classe: derrote 1 Rinka Rank B e volte ao General."));
+                player.sendSystemMessage(Component.literal("Progresso: " + Math.max(0, data.arfMissionKills()) + "/1 Rinka Rank B."));
             }
             return InteractionResult.CONSUME;
         }
 
-        player.sendSystemMessage(Component.literal("General ARF: Você já está na ARF. Continue suas missões."));
+        int required = requiredRankCRinkas(data.arfClass());
+        if (required > 0 && data.arfMissionKills() >= required) {
+            int newRank = data.arfClass() - 1;
+            player.setData(ModAttachments.PLAYER_DATA, data.withArfClass(newRank).withArfMissionKills(0));
+            player.sendSystemMessage(Component.literal("Missão concluída! Promoção para Investigador de " + rankName(newRank) + "."));
+            if (newRank == 3) {
+                player.sendSystemMessage(Component.literal("Missão 3/5 — Terceira Classe: derrote 6 Rinkas Rank C e volte ao General."));
+                player.sendSystemMessage(Component.literal("Progresso da próxima missão: 0/6."));
+            } else if (newRank == 2) {
+                player.sendSystemMessage(Component.literal("Missão 4/5 — Segunda Classe: derrote 10 Rinkas Rank C e volte ao General."));
+                player.sendSystemMessage(Component.literal("Progresso da próxima missão: 0/10."));
+            } else if (newRank == 1) {
+                player.sendSystemMessage(Component.literal("Missão 5/5 — Primeira Classe: derrote 1 Rinka Rank B e volte ao General."));
+                player.sendSystemMessage(Component.literal("Progresso da próxima missão: 0/1."));
+            }
+            return InteractionResult.CONSUME;
+        }
+
+        if (required > 0) {
+            player.sendSystemMessage(Component.literal("Missão " + missionNumber(data.arfClass()) + "/5 — " + rankName(data.arfClass())));
+            player.sendSystemMessage(Component.literal("Derrote " + required + " Rinkas Rank C e volte ao General."));
+            player.sendSystemMessage(Component.literal("Progresso: " + Math.max(0, data.arfMissionKills()) + "/" + required + " Rinkas Rank C."));
+            return InteractionResult.CONSUME;
+        }
+
+        player.sendSystemMessage(Component.literal("General ARF: não foi possível identificar sua missão atual. Fale novamente comigo."));
         return InteractionResult.CONSUME;
     }
 
@@ -129,6 +159,52 @@ public class ArfGeneralEntity extends PathfinderMob {
             case 2 -> 10;
             default -> 0;
         };
+    }
+
+    private static int missionNumber(int arfClass) {
+        return switch (arfClass) {
+            case 4 -> 2;
+            case 3 -> 3;
+            case 2 -> 4;
+            case 1 -> 5;
+            default -> 1;
+        };
+    }
+
+    @SubscribeEvent
+    public static void onHigherRankArfMissionKill(LivingDeathEvent event) {
+        if (!(event.getSource().getEntity() instanceof net.minecraft.server.level.ServerPlayer player)) return;
+
+        var victim = event.getEntity();
+        var key = BuiltInRegistries.ENTITY_TYPE.getKey(victim.getType());
+        String path = key == null ? "" : key.getPath().toLowerCase(java.util.Locale.ROOT);
+        boolean rankBRinka = key != null
+                && KenCraft.MOD_ID.equals(key.getNamespace())
+                && path.contains("rinka")
+                && (path.contains("rank_b") || path.contains("rankb") || path.contains("rank-b"));
+
+        PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
+        if (data.race() != Race.HUMAN || data.arfMissionKills() < 0) return;
+
+        if (rankBRinka && data.arfClass() == 1 && data.arfMissionKills() < 1) {
+            player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(1));
+            player.sendSystemMessage(Component.literal("Missão ARF 5/5: Rinka Rank B derrotado! Volte ao General para concluir."));
+            return;
+        }
+
+        // KenCraftNpcRewards already counts Rank C kills for Fourth Class.
+        // This handler completes the missing Third and Second Class tracking.
+        if (victim instanceof RankCRinkaEntity && (data.arfClass() == 3 || data.arfClass() == 2)) {
+            int required = requiredRankCRinkas(data.arfClass());
+            if (data.arfMissionKills() >= required) return;
+            int kills = data.arfMissionKills() + 1;
+            player.setData(ModAttachments.PLAYER_DATA, data.withArfMissionKills(kills));
+            player.sendSystemMessage(Component.literal("Missão ARF " + missionNumber(data.arfClass())
+                    + "/5: Rinkas Rank C derrotados " + kills + "/" + required + "."));
+            if (kills >= required) {
+                player.sendSystemMessage(Component.literal("Missão concluída! Volte ao General da ARF para receber sua promoção."));
+            }
+        }
     }
 
     public static String rankName(int rank) {
