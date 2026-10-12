@@ -20,6 +20,8 @@ public final class KenCraftEntityRenderers {
  public static final ModelLayerLocation KIKAN_LAYER=new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"kikan"),"main");
  private static final ResourceLocation RINKA_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/rinka.png");
  private static final ResourceLocation RISHIN_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/rishin_generated.png");
+ private static final ResourceLocation KENKI_SENKO_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/kenki_senko.png");
+ private static final ResourceLocation MITSO_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/mitso.png");
  private static final ResourceLocation AODAI_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/aodai.png");
  private static final ResourceLocation SHOP_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/arf.png");
  private static final ResourceLocation INTERIOR_SPIRIT_PARADISE_TEXTURE=ResourceLocation.fromNamespaceAndPath(KenCraft.MOD_ID,"textures/entity/interior_spirit_paradise.png");
@@ -31,6 +33,8 @@ public final class KenCraftEntityRenderers {
   e.registerEntityRenderer(KenCraftEntities.RINKA_HUNGRY.get(),RinkaHungryRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.RINKA_RANK_B_AKIRA.get(),RinkaRankBAkiraRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.RISHIN.get(),RishinRenderer::new);
+  e.registerEntityRenderer(KenCraftEntities.KENKI_SENKO.get(),KenkiSenkoRenderer::new);
+  e.registerEntityRenderer(KenCraftEntities.MITSO.get(),MitsoRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.AODAI.get(),AodaiRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.ARF_INVESTIGATOR.get(),ArfRenderer::new);
   e.registerEntityRenderer(KenCraftEntities.ARF_GENERAL.get(),GeneralRenderer::new);
@@ -77,6 +81,8 @@ public final class KenCraftEntityRenderers {
   }
  }
  private static final class RishinRenderer extends HumanoidMobRenderer<RishinEntity,HumanoidModel<RishinEntity>>{RishinRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);this.model.hat.visible=false;}public ResourceLocation getTextureLocation(RishinEntity e){return RISHIN_TEXTURE;}}
+ private static final class KenkiSenkoRenderer extends HumanoidMobRenderer<KenkiSenkoEntity,HumanoidModel<KenkiSenkoEntity>>{KenkiSenkoRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);}public ResourceLocation getTextureLocation(KenkiSenkoEntity e){return KENKI_SENKO_TEXTURE;}}
+ private static final class MitsoRenderer extends HumanoidMobRenderer<MitsoEntity,HumanoidModel<MitsoEntity>>{MitsoRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);}public ResourceLocation getTextureLocation(MitsoEntity e){return MITSO_TEXTURE;}}
  private static final class AodaiRenderer extends HumanoidMobRenderer<AodaiEntity,HumanoidModel<AodaiEntity>>{AodaiRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);this.model.hat.visible=false;addLayer(new AodaiSnakeLayer(this,c));}public ResourceLocation getTextureLocation(AodaiEntity e){return AODAI_TEXTURE;}}
  private static final class ArfRenderer extends HumanoidMobRenderer<ArfInvestigatorEntity,HumanoidModel<ArfInvestigatorEntity>>{ArfRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);}public ResourceLocation getTextureLocation(ArfInvestigatorEntity e){return SHOP_TEXTURE;}}
  private static final class GeneralRenderer extends HumanoidMobRenderer<ArfGeneralEntity,HumanoidModel<ArfGeneralEntity>>{GeneralRenderer(EntityRendererProvider.Context c){super(c,new HumanoidModel<>(c.bakeLayer(net.minecraft.client.model.geom.ModelLayers.PLAYER)),.5F);}public ResourceLocation getTextureLocation(ArfGeneralEntity e){return SHOP_TEXTURE;}}

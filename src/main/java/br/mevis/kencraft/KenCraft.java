@@ -44,6 +44,8 @@ public class KenCraft {
    event.put(KenCraftEntities.RINKA_HUNGRY.get(),RinkaHungryEntity.createAttributes().build());
    event.put(KenCraftEntities.RINKA_RANK_B_AKIRA.get(),RinkaRankBAkiraEntity.createAttributes().build());
    event.put(KenCraftEntities.RISHIN.get(),RishinEntity.createAttributes().build());
+   event.put(KenCraftEntities.KENKI_SENKO.get(),KenkiSenkoEntity.createAttributes().build());
+   event.put(KenCraftEntities.MITSO.get(),MitsoEntity.createAttributes().build());
    event.put(KenCraftEntities.AODAI.get(),AodaiEntity.createAttributes().build());
    event.put(KenCraftEntities.ARF_INVESTIGATOR.get(),ArfInvestigatorEntity.createAttributes().build());
    event.put(KenCraftEntities.ARF_GENERAL.get(),ArfGeneralEntity.createAttributes().build());
