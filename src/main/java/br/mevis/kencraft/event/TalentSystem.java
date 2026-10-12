@@ -42,7 +42,10 @@ public final class TalentSystem {
         // Cada giro custa 100 pontos de reputação.
         player.setData(ModAttachments.ARF_MISSION, new ArfMissionData(
                 mission.missionId(), mission.active(), mission.completedMissions(),
-                mission.reputation() - 100, mission.trainingStage()
+                mission.reputation() - 100, mission.trainingStage(),
+                mission.rishinCentralKills(), mission.rishinCovenEntered(),
+                mission.covenEntryX(), mission.covenEntryY(), mission.covenEntryZ(),
+                mission.mitsoEventTriggered()
         ));
 
         TalentData current = player.getData(ModAttachments.TALENT_DATA);
