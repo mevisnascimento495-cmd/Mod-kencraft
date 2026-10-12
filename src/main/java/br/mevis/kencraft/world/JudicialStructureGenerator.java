@@ -145,7 +145,7 @@ public final class JudicialStructureGenerator {
         for(int x : new int[]{3,7,19,23}) for(int z : new int[]{9,13,17}) {set(level,o.offset(x,9,z),Blocks.CHAIN);set(level,o.offset(x,8,z),Blocks.LANTERN);}
         // Roof, trim and a strong institutional silhouette.
         for(int x=0;x<WIDTH;x++) for(int z=0;z<DEPTH;z++) set(level,o.offset(x,12,z),Blocks.DEEPSLATE_TILES);
-        for(int x=0;x<WIDTH;x+=2){set(level,o.offset(x,13,0),Blocks.BLACKSTONE_BRICKS);set(level,o.offset(x,13,DEPTH-1),Blocks.BLACKSTONE_BRICKS);}
+        for(int x=0;x<WIDTH;x+=2){set(level,o.offset(x,13,0),Blocks.POLISHED_BLACKSTONE_BRICKS);set(level,o.offset(x,13,DEPTH-1),Blocks.BLACKSTONE_BRICKS);}
         for(int z=0;z<DEPTH;z+=2){set(level,o.offset(0,13,z),Blocks.BLACKSTONE_BRICKS);set(level,o.offset(WIDTH-1,13,z),Blocks.BLACKSTONE_BRICKS);}
         // Mark the structure to prevent duplicates and leave the court's central floor open.
         set(level,o.offset(13,-1,11),Blocks.LODESTONE);
