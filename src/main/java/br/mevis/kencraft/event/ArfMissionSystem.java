@@ -209,7 +209,7 @@ public final class ArfMissionSystem {
             for (int dz = -1; dz <= 1; dz++) {
                 for (int y = minY; y <= maxY; y++) {
                     BlockPos pos = new BlockPos(px + dx, y, pz + dz);
-                    if (level.getBlockState(pos).is(Blocks.CRIMSON_TRAPDOOR)) return pos;
+                    if (level.getBlockState(pos).is(Blocks.CRIMSON_TRAPDOOR)) return pos.offset(0, 0, -1);
                 }
             }
         }
