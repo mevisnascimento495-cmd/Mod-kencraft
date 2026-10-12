@@ -71,6 +71,13 @@ public final class ArfMissionSystem {
             player.sendSystemMessage(Component.literal("Missão 3 — Investigação da Rishin: encontre a sala de Kenki Senkō e derrote o membro superior de manto vermelho."));
         } else if (started.missionId() == 4) {
             player.sendSystemMessage(Component.literal("Missão 4 — Investigação da Rishin: depois de derrotar Kenki, saia do covil e enfrente Mitso e a emboscada."));
+        } else if (started.missionId() == 5) {
+            player.sendSystemMessage(Component.literal("Missão 5 — O desafio de Aodai."));
+            player.sendSystemMessage(Component.literal("Akio Ginshō: Você concluiu as missões anteriores. Agora prove sua força enfrentando Aodai!"));
+            if (!spawnAodaiChallenge(player)) {
+                player.setData(ModAttachments.ARF_MISSION, mission);
+                return;
+            }
         } else {
             player.sendSystemMessage(Component.literal("ARF — Missão " + started.missionId() + " do estágio " + started.stage() + "."));
             player.sendSystemMessage(Component.literal("Objetivo desta missão ainda não foi definido no projeto."));
@@ -90,6 +97,8 @@ public final class ArfMissionSystem {
         } else if (mission.missionId() == 4) {
             player.sendSystemMessage(Component.literal("Missão 4 ativa: saia do covil para iniciar a emboscada de Mitso."));
             if (mission.mitsoEventTriggered()) player.sendSystemMessage(Component.literal("Emboscada ativa: derrote Mitso."));
+        } else if (mission.missionId() == 5) {
+            player.sendSystemMessage(Component.literal("Missão 5 ativa: enfrente e derrote Aodai."));
         } else if (mission.missionId() == 11 || mission.missionId() == 22) {
             player.sendSystemMessage(Component.literal("ARF — MISSÃO DE RANK UP " + mission.missionId() + " ativa."));
             player.sendSystemMessage(Component.literal("Objetivo específico do Rank UP ainda não foi definido."));
@@ -159,6 +168,40 @@ public final class ArfMissionSystem {
             player.setData(ModAttachments.ARF_MISSION, mission.completeCurrentTask().clearRishinInvestigation());
             player.sendSystemMessage(Component.literal("Missão 4 concluída! Mitso foi derrotado e a emboscada terminou."));
             player.sendSystemMessage(Component.literal("Você concluiu a Investigação da Rishin. Volte a falar com Akio para receber a próxima missão."));
+            return;
+        }
+
+        if (victim instanceof br.mevis.kencraft.entity.AodaiEntity
+                && victim.getPersistentData().getBoolean("kencraft_akio_mission_aodai")
+                && mission.missionId() == 5
+                && player.getUUID().toString().equals(victim.getPersistentData().getString("kencraft_aodai_owner"))) {
+            ArfMissionData done = mission.completeCurrentTask();
+            player.setData(ModAttachments.ARF_MISSION, done);
+            player.sendSystemMessage(Component.literal("Missão 5 concluída! Você derrotou Aodai."));
+            player.sendSystemMessage(Component.literal("Recompensa recebida: +" + Math.max(0, done.reputation() - mission.reputation()) + " de reputação."));
+            player.sendSystemMessage(Component.literal("Volte a falar com Akio para continuar sua carreira na ARF."));
+        }
+    }
+
+    private static boolean spawnAodaiChallenge(ServerPlayer player) {
+        ServerLevel level = player.serverLevel();
+        Entity aodai = KenCraftEntities.AODAI.get().create(level);
+        if (aodai == null) {
+            player.sendSystemMessage(Component.literal("Não foi possível iniciar o desafio de Aodai. Tente falar com Akio novamente."));
+            return false;
+        }
+        aodai.moveTo(player.getX() + 3.5D, player.getY(), player.getZ() + 0.5D, player.getYRot(), 0.0F);
+        aodai.setCustomName(Component.literal("Aodai — Desafio da ARF"));
+        aodai.setCustomNameVisible(true);
+        aodai.getPersistentData().putBoolean("kencraft_akio_mission_aodai", true);
+        aodai.getPersistentData().putString("kencraft_aodai_owner", player.getUUID().toString());
+        if (level.noCollision(aodai) && level.addFreshEntity(aodai)) {
+            player.sendSystemMessage(Component.literal("Aodai foi convocado para o desafio. Prepare-se para lutar!"));
+            return true;
+        } else {
+            aodai.discard();
+            player.sendSystemMessage(Component.literal("Não foi possível posicionar Aodai com segurança. Afaste-se de paredes e tente novamente com Akio."));
+            return false;
         }
     }
 
