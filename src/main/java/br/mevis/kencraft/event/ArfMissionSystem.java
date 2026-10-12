@@ -121,19 +121,52 @@ public final class ArfMissionSystem {
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
-        if (!(event.getEntity() instanceof RinkaHungryEntity)) return;
         if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
-
+        Entity victim = event.getEntity();
         ArfMissionData mission = player.getData(ModAttachments.ARF_MISSION);
-        if (!mission.active() || mission.missionId() != 1) return;
+        if (!mission.active()) return;
 
-        player.setData(ModAttachments.ARF_MISSION, mission.completeCurrentTask());
-        ArfMissionData done = player.getData(ModAttachments.ARF_MISSION);
+        if (victim instanceof RinkaHungryEntity && mission.missionId() == 1) {
+            ArfMissionData done = mission.completeCurrentTask();
+            player.setData(ModAttachments.ARF_MISSION, done);
+            player.sendSystemMessage(Component.literal("Missão 1 concluída! Você derrotou Rinka Hungry."));
+            player.sendSystemMessage(Component.literal("Recompensa recebida: +100 de reputação."));
+            player.sendSystemMessage(Component.literal("Reputação atual: " + done.reputation() + "/200."));
+            player.sendSystemMessage(Component.literal("Patente de missão da ARF: " + done.rankName() + "."));
+            completeTalentUnlockCheck(player);
+            return;
+        }
 
-        player.sendSystemMessage(Component.literal("Missão 1 concluída! Você derrotou Rinka Hungry."));
-        player.sendSystemMessage(Component.literal("Recompensa recebida: +100 de reputação."));
-        player.sendSystemMessage(Component.literal("Reputação atual: " + done.reputation() + "/200."));
-        player.sendSystemMessage(Component.literal("Patente de missão da ARF: " + done.rankName() + "."));
-        completeTalentUnlockCheck(player);
+        if (victim instanceof RishinEntity && victim.getPersistentData().getBoolean("kencraft_rishin_coven_central")
+                && mission.missionId() == 2) {
+            int kills = mission.rishinCentralKills() + 1;
+            ArfMissionData updated = mission.withRishinCentralKills(kills);
+            if (kills >= 3) {
+                updated = updated.completeCurrentTask().withRishinCentralKills(0).startNextTask();
+                player.sendSystemMessage(Component.literal("Missão 2 concluída! A sala central está limpa."));
+                player.sendSystemMessage(Component.literal("Missão 3 iniciada: encontre e derrote Kenki Senkō."));
+            } else {
+                player.sendSystemMessage(Component.literal("Rishin centrais derrotados: " + kills + "/3."));
+            }
+            player.setData(ModAttachments.ARF_MISSION, updated);
+            return;
+        }
+
+        if (victim instanceof KenkiSenkoEntity
+                && victim.getPersistentData().getBoolean("kencraft_rishin_coven_kenki") && mission.missionId() == 3) {
+            ArfMissionData next = mission.completeCurrentTask().startNextTask();
+            player.setData(ModAttachments.ARF_MISSION, next);
+            player.sendSystemMessage(Component.literal("Missão 3 concluída! Kenki Senkō foi derrotado."));
+            player.sendSystemMessage(Component.literal("Missão 4 iniciada: saia do covil para enfrentar Mitso."));
+            return;
+        }
+
+        if (victim instanceof MitsoEntity && victim.getPersistentData().getBoolean("kencraft_mitso_event")
+                && mission.missionId() == 4
+                && player.getUUID().toString().equals(victim.getPersistentData().getString("kencraft_mitso_owner"))) {
+            player.setData(ModAttachments.ARF_MISSION, mission.completeCurrentTask().clearRishinInvestigation());
+            player.sendSystemMessage(Component.literal("Missão 4 concluída! Mitso foi derrotado e a emboscada terminou."));
+            player.sendSystemMessage(Component.literal("Você concluiu a Investigação da Rishin. Volte a falar com Akio para receber a próxima missão."));
+        }
     }
 }
