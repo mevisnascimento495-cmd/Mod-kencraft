@@ -38,13 +38,33 @@ neoForge {
     }
 }
 
+def kenCraftSkinSourceDir = file('src/main/skins')
+def kenCraftDecodedSkinResources = layout.buildDirectory.dir('generated/ken-craft-skins')
+
+tasks.register('decodeKenCraftSkins') {
+    inputs.dir(kenCraftSkinSourceDir)
+    outputs.dir(kenCraftDecodedSkinResources)
+    doLast {
+        def outputDir = kenCraftDecodedSkinResources.get().asFile
+        delete(outputDir)
+        fileTree(kenCraftSkinSourceDir).matching { include '*.png.b64' }.files.each { source ->
+            def imageName = source.name.substring(0, source.name.length() - 4)
+            def target = new File(outputDir, "assets/kencraft/textures/entity/${imageName}")
+            target.parentFile.mkdirs()
+            target.bytes = java.util.Base64.getMimeDecoder().decode(source.text)
+        }
+    }
+}
+
 sourceSets.main.resources {
     srcDirs += 'src/main/generated'
+    srcDirs += kenCraftDecodedSkinResources
 }
 
 // Replace the ${...} placeholders in neoforge.mods.toml with the
 // values from gradle.properties before the resources are packed into the JAR.
 tasks.named('processResources', ProcessResources).configure {
+    dependsOn tasks.named('decodeKenCraftSkins')
     filesMatching('META-INF/neoforge.mods.toml') {
         expand(
             loader_version: loader_version,
