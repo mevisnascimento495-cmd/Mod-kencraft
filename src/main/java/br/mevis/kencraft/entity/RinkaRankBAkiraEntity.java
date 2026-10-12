@@ -2,6 +2,9 @@ package br.mevis.kencraft.entity;
 
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.world.BossEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -25,6 +28,8 @@ public class RinkaRankBAkiraEntity extends RinkaEntity {
     private int cAttackCooldown;
     private int specialAttackLock;
     private boolean nextAttackIsZ = true;
+    private final ServerBossEvent bossEvent = new ServerBossEvent(
+            net.minecraft.network.chat.Component.literal("Rinka Rank B — Akira"), BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.PROGRESS);
 
     public RinkaRankBAkiraEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -66,6 +71,14 @@ public class RinkaRankBAkiraEntity extends RinkaEntity {
     public void tick() {
         super.tick();
         if (level().isClientSide) return;
+        bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
+        java.util.Set<ServerPlayer> nearby = new java.util.HashSet<>();
+        for (ServerPlayer player : ((ServerLevel) level()).players()) {
+            if (player.distanceToSqr(this) <= 64.0D * 64.0D) { nearby.add(player); bossEvent.addPlayer(player); }
+        }
+        for (ServerPlayer tracked : new java.util.ArrayList<>(bossEvent.getPlayers())) {
+            if (!nearby.contains(tracked)) bossEvent.removePlayer(tracked);
+        }
 
         int animationTicks = getKikanAnimationTicks();
         if (animationTicks > 0) entityData.set(KIKAN_ANIMATION_TICKS, animationTicks - 1);
@@ -99,6 +112,12 @@ public class RinkaRankBAkiraEntity extends RinkaEntity {
             specialAttackLock = 15;
             nextAttackIsZ = true;
         }
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        bossEvent.removeAllPlayers();
+        super.remove(reason);
     }
 
     private void useCrocodileTailAttack(LivingEntity target, String key) {
