@@ -3,6 +3,10 @@ package br.mevis.kencraft.entity;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.world.BossEvent;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -22,6 +26,8 @@ public class RinkaHungryEntity extends RinkaEntity {
     private int attackAnimationTicks;
     private String attackKey = "z";
     private boolean kikanActive;
+    private final ServerBossEvent bossEvent = new ServerBossEvent(
+            net.minecraft.network.chat.Component.literal("Rinka Hungry"), BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.PROGRESS);
 
     public RinkaHungryEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
@@ -36,7 +42,7 @@ public class RinkaHungryEntity extends RinkaEntity {
                 .add(Attributes.MOVEMENT_SPEED, 0.32D)
                 .add(Attributes.ATTACK_DAMAGE, 12.0D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
-                .add(Attributes.ARMOR, 10.0D)
+                .add(Attributes.ARMOR, 15.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 0.45D);
     }
 
@@ -61,6 +67,7 @@ public class RinkaHungryEntity extends RinkaEntity {
         super.tick();
         if (attackAnimationTicks > 0) attackAnimationTicks--;
         if (!level().isClientSide) {
+            updateBossBar();
             updateGrab();
             if (getTarget() != null && getTarget().isAlive()) {
                 kikanActive = true;
@@ -71,6 +78,27 @@ public class RinkaHungryEntity extends RinkaEntity {
                 kikanActive = false;
             }
         }
+    }
+
+    private void updateBossBar() {
+        if (!(level() instanceof ServerLevel server)) return;
+        bossEvent.setProgress(Math.max(0.0F, Math.min(1.0F, getHealth() / getMaxHealth())));
+        java.util.Set<ServerPlayer> nearby = new java.util.HashSet<>();
+        for (ServerPlayer player : server.players()) {
+            if (player.distanceToSqr(this) <= 64.0D * 64.0D) {
+                nearby.add(player);
+                bossEvent.addPlayer(player);
+            }
+        }
+        for (ServerPlayer tracked : new java.util.ArrayList<>(bossEvent.getPlayers())) {
+            if (!nearby.contains(tracked)) bossEvent.removePlayer(tracked);
+        }
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        bossEvent.removeAllPlayers();
+        super.remove(reason);
     }
 
     private boolean canUseKikan(net.minecraft.world.entity.LivingEntity target, double rangeSqr) {
