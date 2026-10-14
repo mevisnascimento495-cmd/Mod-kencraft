@@ -19,6 +19,8 @@ public final class KikanSpecialSystem {
     private static final String HALLUCINATION_TICKS = "kencraft_butterfly_hallucination_ticks";
     private static final String HALLUCINATION_TARGET = "kencraft_butterfly_hallucination_target";
     private static final String FLIGHT_GRANTED = "kencraft_butterfly_flight_granted";
+    private static final String FLIGHT_PREVIOUS_MAYFLY = "kencraft_butterfly_previous_mayfly";
+    private static final String FLIGHT_PREVIOUS_FLYING = "kencraft_butterfly_previous_flying";
 
     private KikanSpecialSystem() {}
 
@@ -36,17 +38,30 @@ public final class KikanSpecialSystem {
         PlayerData data = player.getData(ModAttachments.PLAYER_DATA);
         boolean butterfly = data.race() == Race.RINKA && "BUTTERFLY_TENTACLE".equals(data.kikanType());
 
+        var persistent = player.getPersistentData();
         if (butterfly && !player.isCreative() && !player.isSpectator()) {
-            if (!player.getPersistentData().getBoolean(FLIGHT_GRANTED)) {
+            if (!persistent.getBoolean(FLIGHT_GRANTED)) {
+                persistent.putBoolean(FLIGHT_PREVIOUS_MAYFLY, player.getAbilities().mayfly);
+                persistent.putBoolean(FLIGHT_PREVIOUS_FLYING, player.getAbilities().flying);
+                persistent.putBoolean(FLIGHT_GRANTED, true);
+            }
+            // Do not trust the marker alone: death, respawn and other ability resets can clear mayfly.
+            if (!player.getAbilities().mayfly) {
                 player.getAbilities().mayfly = true;
                 player.onUpdateAbilities();
-                player.getPersistentData().putBoolean(FLIGHT_GRANTED, true);
             }
-        } else if (player.getPersistentData().getBoolean(FLIGHT_GRANTED)) {
-            player.getAbilities().flying = false;
-            player.getAbilities().mayfly = false;
-            player.onUpdateAbilities();
-            player.getPersistentData().putBoolean(FLIGHT_GRANTED, false);
+        } else if (!butterfly && persistent.getBoolean(FLIGHT_GRANTED)) {
+            // Creative/spectator flight belongs to Minecraft, so never revoke it here.
+            if (!player.isCreative() && !player.isSpectator()) {
+                boolean previousMayfly = persistent.getBoolean(FLIGHT_PREVIOUS_MAYFLY);
+                boolean previousFlying = persistent.getBoolean(FLIGHT_PREVIOUS_FLYING);
+                player.getAbilities().mayfly = previousMayfly;
+                player.getAbilities().flying = previousMayfly && previousFlying;
+                player.onUpdateAbilities();
+            }
+            persistent.remove(FLIGHT_GRANTED);
+            persistent.remove(FLIGHT_PREVIOUS_MAYFLY);
+            persistent.remove(FLIGHT_PREVIOUS_FLYING);
         }
 
         int ticks = player.getPersistentData().getInt(HALLUCINATION_TICKS);

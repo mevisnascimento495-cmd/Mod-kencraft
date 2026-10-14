@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,8 +24,8 @@ import java.util.Deque;
 /** Two-storey courthouse where Akira waits in the defendant's central hearing area. */
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class JudicialStructureGenerator {
-    private static final int CHANCE_DENOMINATOR = 192;
-    private static final int WIDTH = 27, DEPTH = 23, HEIGHT = 14, MAX_PENDING = 6;
+    private static final int CHANCE_DENOMINATOR = 48;
+    private static final int WIDTH = 27, DEPTH = 23, HEIGHT = 14, MAX_PENDING = 48;
     private static final Deque<Pending> PENDING = new ArrayDeque<>();
     private static int cooldown;
     public static int CHANCE_DENOMINATOR() { return CHANCE_DENOMINATOR; }
@@ -32,10 +33,15 @@ public final class JudicialStructureGenerator {
 
     @SubscribeEvent public static void onNewChunk(ChunkEvent.Load event) {
         if (!event.isNewChunk() || !(event.getLevel() instanceof ServerLevel level)) return;
+        if (level.dimension() != Level.OVERWORLD) return;
         ChunkAccess chunk = event.getChunk();
         if (Math.floorMod(hashForChunk(level.getSeed(), chunk.getPos().x, chunk.getPos().z), CHANCE_DENOMINATOR) != 0) return;
         Pending p = new Pending(level, chunk.getPos().getMiddleBlockX(), chunk.getPos().getMiddleBlockZ());
-        if (!PENDING.contains(p) && PENDING.size() < MAX_PENDING) PENDING.addLast(p);
+        if (!PENDING.contains(p)) {
+            // Prefer recent candidates: queued chunks are more likely to remain loaded around active players.
+            while (PENDING.size() >= MAX_PENDING) PENDING.pollFirst();
+            PENDING.addLast(p);
+        }
     }
 
     @SubscribeEvent public static void onServerTick(ServerTickEvent.Post event) {
@@ -43,12 +49,8 @@ public final class JudicialStructureGenerator {
         if (PENDING.isEmpty() || event.getServer().getTickCount() % 20 != 0) return;
         Pending p = PENDING.pollFirst();
         if (p == null || p.level().getServer() != event.getServer()) return;
-        for (ServerPlayer player : p.level().players()) {
-            if (player.isSprinting() && player.distanceToSqr(p.x(), player.getY(), p.z()) < 160.0D * 160.0D) {
-                PENDING.addLast(p); return;
-            }
-        }
-        if (!footprintLoaded(p.level(), p.x(), p.z())) { PENDING.addLast(p); return; }
+        // Do not retain stale candidates forever when exploration has already unloaded their chunks.
+        if (!footprintLoaded(p.level(), p.x(), p.z())) return;
         if (generateAt(p.level(), p.x(), p.z())) cooldown = 20;
     }
 
@@ -58,7 +60,8 @@ public final class JudicialStructureGenerator {
     }
 
     public static boolean generateAt(ServerLevel level, int centerX, int centerZ) {
-        if (!footprintLoaded(level, centerX, centerZ) || !StructurePlacementRules.isFarEnough(level, centerX, centerZ)) return false;
+        if (level.dimension() != Level.OVERWORLD || !footprintLoaded(level, centerX, centerZ)
+                || !StructurePlacementRules.isFarEnough(level, centerX, centerZ)) return false;
         int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerX, centerZ) - 1;
         if (y < level.getMinBuildHeight() + 3 || y > level.getMaxBuildHeight() - HEIGHT - 2) return false;
         int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;

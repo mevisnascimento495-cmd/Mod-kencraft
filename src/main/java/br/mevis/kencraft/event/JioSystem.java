@@ -43,6 +43,10 @@ public final class JioSystem {
     private static final String SUJO_AUX2 = "kencraft_sujo_aux2";
     private static final String INTANGIBLE_OLD_NO_PHYSICS = "kencraft_sujo_old_nophysics";
     private static final String INTANGIBLE_OLD_INVULNERABLE = "kencraft_sujo_old_invulnerable";
+    private static final String INTANGIBLE_OLD_MAYFLY = "kencraft_sujo_old_mayfly";
+    private static final String INTANGIBLE_OLD_FLYING = "kencraft_sujo_old_flying";
+    private static final String INTANGIBLE_ACTIVE = "kencraft_sujo_intangible_active";
+    private static final String INTANGIBLE_TICKS = "kencraft_sujo_intangible_ticks";
     private JioSystem() {}
 
     @SubscribeEvent public static void register(RegisterCommandsEvent event) {
@@ -141,7 +145,7 @@ public final class JioSystem {
             case 0 -> {
                 if(slot==0) { player.getPersistentData().putInt(SUJO_ATTACK,200); player.sendSystemMessage(Component.literal("Seishin dan — Metralhadora de Jio por 10s.")); }
                 else if(slot==1) { player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE,200,255,false,true)); player.addEffect(new MobEffectInstance(MobEffects.REGENERATION,200,255,false,true)); player.sendSystemMessage(Component.literal("Seishin dan — Imortalidade por 10s.")); }
-                else { player.getPersistentData().putInt(SUJO_ATTACK,100); player.getPersistentData().putBoolean(INTANGIBLE_OLD_NO_PHYSICS,player.noPhysics); player.getPersistentData().putBoolean(INTANGIBLE_OLD_INVULNERABLE,player.isInvulnerable()); player.noPhysics=true; player.setInvulnerable(true); player.getAbilities().mayfly=true; player.getAbilities().flying=true; player.onUpdateAbilities(); player.sendSystemMessage(Component.literal("Seishin dan — intangibilidade e voo por 5s.")); }
+                else { player.getPersistentData().putInt(SUJO_ATTACK,100); startIntangible(player); player.sendSystemMessage(Component.literal("Seishin dan — intangibilidade e voo por 5s.")); }
             }
             case 1 -> {
                 if(slot==0) { player.getPersistentData().putInt(SUJO_ATTACK,60); player.sendSystemMessage(Component.literal("Hakai satsu Totetsu: Seimei kui — barragem explosiva.")); }
@@ -190,7 +194,85 @@ public final class JioSystem {
     private static void hakaiBarrage70(ServerPlayer player){LivingEntity target=findNearestLivingTarget(player,6);if(target!=null){target.hurt(player.damageSources().playerAttack(player),70.0F);Vec3 away=target.position().subtract(player.position());if(away.lengthSqr()>0.001)away=away.normalize().scale(1.0);target.setDeltaMovement(away.x,0.45,away.z);target.hurtMarked=true;}}
     private static void jioMachineGunTick(ServerPlayer player){AABB area=player.getBoundingBox().inflate(20);List<LivingEntity> targets=player.level().getEntitiesOfClass(LivingEntity.class,area,e->e!=player&&e.isAlive());if(!targets.isEmpty()){LivingEntity target=targets.get(player.getRandom().nextInt(targets.size()));target.hurt(player.damageSources().playerAttack(player),10.0F);player.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.END_ROD,player.getX(),player.getY()+1.4,player.getZ(),3,0.2,0.2,0.2,0.03);}}
     private static void kingMassacreTick(ServerPlayer player){for(LivingEntity target:player.level().getEntitiesOfClass(LivingEntity.class,player.getBoundingBox().inflate(4),e->e!=player&&e.isAlive()))target.hurt(player.damageSources().playerAttack(player),62.0F);player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED,25,4,false,true));}
-    private static void restoreIntangible(ServerPlayer player){boolean oldNo=player.getPersistentData().getBoolean(INTANGIBLE_OLD_NO_PHYSICS);boolean oldInv=player.getPersistentData().getBoolean(INTANGIBLE_OLD_INVULNERABLE);player.noPhysics=oldNo;player.setInvulnerable(oldInv);player.getAbilities().mayfly=false;player.getAbilities().flying=false;player.onUpdateAbilities();player.getPersistentData().remove(INTANGIBLE_OLD_NO_PHYSICS);player.getPersistentData().remove(INTANGIBLE_OLD_INVULNERABLE);}
+    private static void startIntangible(ServerPlayer player) {
+        var persistent = player.getPersistentData();
+        boolean hasPreviousState = persistent.contains(INTANGIBLE_OLD_NO_PHYSICS)
+                || persistent.contains(INTANGIBLE_OLD_INVULNERABLE)
+                || persistent.contains(INTANGIBLE_OLD_MAYFLY)
+                || persistent.contains(INTANGIBLE_OLD_FLYING);
+        if (!hasPreviousState) {
+            persistent.putBoolean(INTANGIBLE_OLD_NO_PHYSICS, player.noPhysics);
+            persistent.putBoolean(INTANGIBLE_OLD_INVULNERABLE, player.isInvulnerable());
+            persistent.putBoolean(INTANGIBLE_OLD_MAYFLY, player.getAbilities().mayfly);
+            persistent.putBoolean(INTANGIBLE_OLD_FLYING, player.getAbilities().flying);
+        }
+        persistent.putBoolean(INTANGIBLE_ACTIVE, true);
+        persistent.putInt(INTANGIBLE_TICKS, 100);
+        player.noPhysics = true;
+        player.setInvulnerable(true);
+        player.getAbilities().mayfly = true;
+        player.getAbilities().flying = true;
+        player.onUpdateAbilities();
+    }
+
+    private static void tickIntangible(ServerPlayer player) {
+        var persistent = player.getPersistentData();
+        boolean active = persistent.getBoolean(INTANGIBLE_ACTIVE);
+        boolean legacyState = persistent.contains(INTANGIBLE_OLD_NO_PHYSICS)
+                || persistent.contains(INTANGIBLE_OLD_INVULNERABLE);
+        if (!active && !legacyState) return;
+        int remaining = persistent.getInt(INTANGIBLE_TICKS);
+        if (!active || remaining <= 0) {
+            restoreIntangible(player);
+            return;
+        }
+
+        // Keep the temporary effect coherent if another event resets player abilities mid-flight.
+        player.noPhysics = true;
+        player.setInvulnerable(true);
+        boolean abilitiesChanged = false;
+        if (!player.getAbilities().mayfly) {
+            player.getAbilities().mayfly = true;
+            abilitiesChanged = true;
+        }
+        if (!player.getAbilities().flying) {
+            player.getAbilities().flying = true;
+            abilitiesChanged = true;
+        }
+        if (abilitiesChanged) player.onUpdateAbilities();
+
+        if (remaining <= 1) restoreIntangible(player);
+        else persistent.putInt(INTANGIBLE_TICKS, remaining - 1);
+    }
+
+    private static void restoreIntangible(ServerPlayer player) {
+        var persistent = player.getPersistentData();
+        boolean hasSavedState = persistent.getBoolean(INTANGIBLE_ACTIVE)
+                || persistent.contains(INTANGIBLE_OLD_NO_PHYSICS)
+                || persistent.contains(INTANGIBLE_OLD_INVULNERABLE)
+                || persistent.contains(INTANGIBLE_OLD_MAYFLY)
+                || persistent.contains(INTANGIBLE_OLD_FLYING);
+        if (!hasSavedState) return;
+
+        player.noPhysics = persistent.contains(INTANGIBLE_OLD_NO_PHYSICS)
+                && persistent.getBoolean(INTANGIBLE_OLD_NO_PHYSICS);
+        player.setInvulnerable(persistent.contains(INTANGIBLE_OLD_INVULNERABLE)
+                && persistent.getBoolean(INTANGIBLE_OLD_INVULNERABLE));
+        boolean oldMayfly = persistent.contains(INTANGIBLE_OLD_MAYFLY)
+                && persistent.getBoolean(INTANGIBLE_OLD_MAYFLY);
+        boolean oldFlying = persistent.contains(INTANGIBLE_OLD_FLYING)
+                && persistent.getBoolean(INTANGIBLE_OLD_FLYING);
+        player.getAbilities().mayfly = oldMayfly;
+        player.getAbilities().flying = oldFlying && oldMayfly;
+        player.onUpdateAbilities();
+
+        persistent.remove(INTANGIBLE_OLD_NO_PHYSICS);
+        persistent.remove(INTANGIBLE_OLD_INVULNERABLE);
+        persistent.remove(INTANGIBLE_OLD_MAYFLY);
+        persistent.remove(INTANGIBLE_OLD_FLYING);
+        persistent.remove(INTANGIBLE_ACTIVE);
+        persistent.remove(INTANGIBLE_TICKS);
+    }
 
     private static void useKingOfLies(ServerPlayer player,int slot){switch(slot){case 0->{player.sendSystemMessage(Component.literal("Você é forte demais"));player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST,120,9,false,true));}case 1->{player.sendSystemMessage(Component.literal("Seus órgãos podem explodir"));LivingEntity target=findNearestLivingTarget(player,30.0D);if(target!=null){ServerLevel level=player.serverLevel();level.explode(player,target.getX(),target.getY(),target.getZ(),2.0F,false,net.minecraft.world.level.Level.ExplosionInteraction.NONE);target.kill();}}case 2->{player.sendSystemMessage(Component.literal("Você morreu"));LivingEntity target=findAimedLivingTarget(player,64.0D);if(target!=null)target.kill();}default->{}}}
     private static LivingEntity findNearestLivingTarget(ServerPlayer player,double range){AABB box=player.getBoundingBox().inflate(range);return player.level().getEntitiesOfClass(LivingEntity.class,box,e->e.isAlive()&&e!=player).stream().min(Comparator.comparingDouble(player::distanceToSqr)).orElse(null);}
@@ -202,6 +284,7 @@ public final class JioSystem {
 
     @SubscribeEvent public static void tick(PlayerTickEvent.Post event){
         if(!(event.getEntity() instanceof ServerPlayer player))return;
+        tickIntangible(player);
         SpiritualState state=player.getData(ModAttachments.SPIRITUAL_STATE);
         if(!state.isSujo())return;
         onSujoTick(player);
