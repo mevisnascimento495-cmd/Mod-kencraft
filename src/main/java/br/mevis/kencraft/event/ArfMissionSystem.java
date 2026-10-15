@@ -61,16 +61,6 @@ public final class ArfMissionSystem {
         player.setData(ModAttachments.ARF_MISSION, mission.startNextTask());
         ArfMissionData started = player.getData(ModAttachments.ARF_MISSION);
 
-            player.sendSystemMessage(Component.literal("Akio Ginshō: Você concluiu 10 missões do estágio " + (started.stage()) + "."));
-            player.sendSystemMessage(Component.literal("MISSÃO DE RANK UP — alcance o próximo estágio de treinamento."));
-            player.sendSystemMessage(Component.literal("Esta missão de Rank UP usa o ID " + started.missionId() + "."));
-            player.sendSystemMessage(Component.literal("Depois dela, novas missões do estágio " + (started.stage() + 1) + " serão liberadas."));
-            return;
-        }
-
-        player.setData(ModAttachments.ARF_MISSION, mission.startNextTask());
-        ArfMissionData started = player.getData(ModAttachments.ARF_MISSION);
-
         if (started.missionId() == 1) {
             player.sendSystemMessage(Component.literal("Akio Ginshō: Tenho uma missão para você."));
             player.sendSystemMessage(Component.literal("Missão 1 — Distrito 7 → Distrito 1"));
