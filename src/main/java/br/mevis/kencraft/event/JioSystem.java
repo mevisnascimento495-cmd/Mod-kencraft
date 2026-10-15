@@ -24,6 +24,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.Comparator;
@@ -281,6 +282,17 @@ public final class JioSystem {
     static int indexOf(String t){for(int i=0;i<TECHNIQUES.length;i++)if(TECHNIQUES[i].equals(t))return i;return -1;}
     static int cost(int t,int s){if(t==0&&s==2)return 50;if(t==1&&s==2)return 100;return 30;}
     static int animationDuration(int t,int s){if(t==0)return switch(s){case 0->14;case 1->80;case 2->100;default->0;};if(t==1)return switch(s){case 0->16;case 1->140;case 2->14;default->0;};if(t==2)return switch(s){case 1->28;case 2->42;default->0;};if(t==3)return switch(s){case 1->12;case 2->200;default->0;};if(t==4)return switch(s){case 0->120;case 1->20;case 2->10;default->0;};return 0;}
+
+    @SubscribeEvent
+    public static void onPlayerDeath(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        // Never let a timed intangibility survive death/respawn on a replacement player entity.
+        restoreIntangible(player);
+        player.getPersistentData().putInt(SUJO_ATTACK, 0);
+        player.getPersistentData().putInt(SUJO_AUX, 0);
+        player.getPersistentData().putInt(SUJO_AUX2, 0);
+        if (ParadiseController.isActive(player)) ParadiseController.end(player);
+    }
 
     @SubscribeEvent public static void tick(PlayerTickEvent.Post event){
         if(!(event.getEntity() instanceof ServerPlayer player))return;

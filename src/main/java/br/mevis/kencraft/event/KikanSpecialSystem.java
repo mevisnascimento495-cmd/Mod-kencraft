@@ -13,6 +13,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 
 @EventBusSubscriber(modid = KenCraft.MOD_ID, bus = EventBusSubscriber.Bus.GAME)
 public final class KikanSpecialSystem {
@@ -28,6 +29,13 @@ public final class KikanSpecialSystem {
         player.getPersistentData().putInt(HALLUCINATION_TICKS, 16 * 20);
         player.getPersistentData().putInt(HALLUCINATION_TARGET, target.getId());
         player.sendSystemMessage(Component.literal("Borboleta: feromônios liberados. Alucinação aplicada por 16s."));
+    }
+
+    @SubscribeEvent
+    public static void onPlayerDeath(LivingDeathEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        // Clear target-bound control so a respawned player cannot retain a stale hallucination.
+        clearHallucination(player);
     }
 
     @SubscribeEvent
