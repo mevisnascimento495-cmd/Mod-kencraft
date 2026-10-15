@@ -48,8 +48,19 @@ public final class ArfMissionSystem {
         }
 
         if (mission.rankUpPending()) {
-            player.setData(ModAttachments.ARF_MISSION, mission.startNextTask());
-            ArfMissionData started = player.getData(ModAttachments.ARF_MISSION);
+            player.sendSystemMessage(Component.literal("Akio Ginshō: A missão de Rank UP ainda não foi implementada. Sua progressão foi preservada; tente novamente após a atualização."));
+            return;
+        }
+
+        int nextMissionId = mission.nextTaskId();
+        if (nextMissionId > 5) {
+            player.sendSystemMessage(Component.literal("Akio Ginshō: A missão " + nextMissionId + " ainda não tem objetivo implementado. Sua progressão foi preservada para evitar uma missão impossível de concluir."));
+            return;
+        }
+
+        player.setData(ModAttachments.ARF_MISSION, mission.startNextTask());
+        ArfMissionData started = player.getData(ModAttachments.ARF_MISSION);
+
             player.sendSystemMessage(Component.literal("Akio Ginshō: Você concluiu 10 missões do estágio " + (started.stage()) + "."));
             player.sendSystemMessage(Component.literal("MISSÃO DE RANK UP — alcance o próximo estágio de treinamento."));
             player.sendSystemMessage(Component.literal("Esta missão de Rank UP usa o ID " + started.missionId() + "."));

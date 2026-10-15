@@ -36,6 +36,18 @@ public final class KikanSpecialSystem {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         // Clear target-bound control so a respawned player cannot retain a stale hallucination.
         clearHallucination(player);
+        // Release the temporary flight grant so respawn cannot keep a stale permission marker.
+        var persistent = player.getPersistentData();
+        if (persistent.getBoolean(FLIGHT_GRANTED)) {
+            boolean previousMayfly = persistent.getBoolean(FLIGHT_PREVIOUS_MAYFLY);
+            boolean previousFlying = persistent.getBoolean(FLIGHT_PREVIOUS_FLYING);
+            player.getAbilities().mayfly = previousMayfly;
+            player.getAbilities().flying = previousMayfly && previousFlying;
+            player.onUpdateAbilities();
+            persistent.remove(FLIGHT_GRANTED);
+            persistent.remove(FLIGHT_PREVIOUS_MAYFLY);
+            persistent.remove(FLIGHT_PREVIOUS_FLYING);
+        }
     }
 
     @SubscribeEvent
